@@ -70,7 +70,7 @@
             }
             return value;
         };//ACT
-        
+
         init = function () {
             //check whether func has been provided
             if (func === undefined) {
@@ -79,7 +79,7 @@
             state('default');
             return that;
         };//INIT
-        
+
         //STATE [public]
         //allows the action state to be read or set
         that.state = state = function (parameter) {
