@@ -41,6 +41,7 @@ body {
     border:     1px solid #aaa;
     margin:     -1px 0 0 -1px;
     background: #eee;
+    z-index:    1;
 }
 
 .cardBack .text, .card .text {

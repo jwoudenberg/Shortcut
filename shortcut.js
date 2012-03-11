@@ -47,16 +47,22 @@
             disableFunc = spec.disableFunc,
             defState = spec.defState || 'enable',
             curState,
+            handlers = [],
             init,
-            state;
+            state,
+            addHandler;
         
         //ACT [public]
         //Executes function or fail-function depending on state
         that = function () {
-            var value;
+            var value, i;
             if (curState === 'enable') {
                 //this action is enabled, so execute its function
                 value = func(arguments[0], arguments[1], arguments[2]);
+                //fire all handlers
+                for (i = handlers.length; i--;) {
+                    handlers[i]();
+                }
             }
             else {
                 //this action is disabled. Execute failFunc() if it exists
@@ -74,6 +80,8 @@
             return that;
         };//INIT
         
+        //STATE [public]
+        //allows the action state to be read or set
         that.state = state = function (parameter) {
             var value;
             switch (parameter) {
@@ -99,6 +107,12 @@
             }
             return value;
         };//STATE
+
+        //ADD HANDLER [public]
+        //add a function that is called when action is succesfully performed
+        that.addHandler = addHandler = function (eventFunc) {
+            handlers.push(eventFunc);
+        };
 
         return init();
     };//ACTION
@@ -142,7 +156,6 @@
         //prints row-divs and fields inside the board-element
         print = function () {
             var i, j, row;
-            that.front.replaceAll(spec.replace);
             for (i = 0; i < height; i += 1) { //loop over rows
                 row = $('<div class="row" />').
                     appendTo(that.front);
@@ -150,6 +163,8 @@
                     fields[i][j].front.appendTo(row);
                 }
             }
+            //print to DOM
+            that.front.replaceAll(spec.replace);
             return that;
         };//PRINT
 
@@ -326,7 +341,6 @@
         //called by a card that likes to move here. If possible (vacant) then
         //card is moved and a checkout-function is returned to card for later.
         checkIn = function (newCard) {
-            that.front.append(newCard.front); //move card in DOM
             curCard = newCard; //save link to card
             doCheckIn.state('disable'); //holder no longer droppable
             return function () {
@@ -487,10 +501,11 @@
             init,
             print,
             clicked,
+            doRotate,
+            doMove,
             move,
             rotate,
-            doRotate,
-            doMove;
+            follow;
 
         //create a generic element to be extended
         that = shrtct.element('card');
@@ -498,9 +513,9 @@
         //INIT [private]
         //called (below) to run once when card is created
         init = function () {
-            var i, numPaths = spec.paths.length;
+            var i;
             //create paths
-            for (i = 0; i < numPaths; i += 1) {
+            for (i = spec.paths.length; i--;) {
                 paths[i] = shrtct.path({ports: spec.paths[i]});
             }
             print();
@@ -511,33 +526,6 @@
             if (spec.rotate !== undefined) {
                 rotate(spec.rotate);
             }
-
-            //create rotateAction
-            doRotate = shrtct.action({
-                func: function () {rotate('smooth'); },
-                //failFunc:
-                enableFunc: function () {that.front.addClass('rotateable'); },
-                disableFunc: function () {that.front.removeClass('rotateable'); },
-                defState: spec.rotateable
-            });
-
-            //create moveAction
-            that.doMove = doMove = shrtct.action({
-                func: function (field) {
-                    move(field);
-                    doMove.state('disable');
-                },
-                //failFunc:
-                enableFunc: function () {
-                    that.front.draggable('enable');
-                    that.front.addClass('draggable');
-                },
-                disableFunc:  function () {
-                    that.front.draggable('disable');
-                    that.front.removeClass('draggable');
-                },
-                defState: spec.moveable
-            });
 
             return that;
         };//INIT
@@ -557,13 +545,16 @@
                 event.stopPropagation(); //
                 clicked(event);
                 event.preventDefault();
-            }).appendTo(spec.holder.front);
+            });
+            //if a card text was provided, add it.
             if (spec.text !== undefined) {
                 that.front.append('<div class="text">' + spec.text + '</div>');
             }
             for (i = 0; i < paths.length; i += 1) {
                 paths[i].front.appendTo(that.front);
             }
+            //print to DOM
+            that.front.appendTo(spec.holder.front);
         };//PRINT
 
         //CLICKED [private]
@@ -574,16 +565,46 @@
             }
         };
 
+        //DO ROTATE
+        //action-wrapper around the rotate-function
+        doRotate = shrtct.action({
+            func: function () {rotate('smooth'); },
+            //failFunc:
+            enableFunc: function () {that.front.addClass('rotateable'); },
+            disableFunc: function () {that.front.removeClass('rotateable'); },
+            defState: spec.rotateable
+        });
+
+        //DO MOVE
+        //action-wrapper around the move-function
+        that.doMove = doMove = shrtct.action({
+            func: function (field) {
+                move(field);
+                doMove.state('disable');
+            },
+            //failFunc:
+            enableFunc: function () {
+                that.front.draggable('enable');
+                that.front.addClass('draggable');
+            },
+            disableFunc:  function () {
+                that.front.draggable('disable');
+                that.front.removeClass('draggable');
+            },
+            defState: spec.moveable
+        });
+
         //MOVE [private]
         //takes a holder and tries to move card there
         move = move = (function () {
-            //create a closure: when checking in at a holder, a checkOut-funcion
+            //create a closure: when checking in at holder, a checkOut-function
             //is saved to check out again when the card is moved again.
             var checkOut;
             return function (holder) {
                 var value;
                 value = holder.doCheckIn(that);
-                if (value) { //card is appended
+                if (value) { //card is accepted
+                    that.front.appendTo(holder.front); //move card in DOM
                     //check out of current holder (if checked in)
                     if(checkOut) {
                         checkOut();
@@ -593,6 +614,37 @@
                 return that;
             };
         })();//MOVE
+
+        //FOLLOW [public]
+        //takes a start, returns array an of ports connected to it by paths
+        that.follow = follow = (function () {
+            var cache = []; //memoization
+
+            //register event handler for rotation event (cache will be cleared)
+            doRotate.addHandler(function (){
+                cache = [];
+            });
+
+            return function (startPort) {
+                var i,
+                    //check whether solution is cached
+                    endPorts = cache[startPort];
+                if (endPorts === undefined) { //solution isn't in cache yet
+                    endPorts = [];
+                    //loop over all paths
+                    for (i = paths.length; i--;) {
+                        //check whether either port of the path is our startPort
+                        if (paths[i].ports[0] === startPort) {
+                            endPorts.push(paths[i].ports[1]);
+                        } else if (paths[i].ports[1] === startPort) {
+                            endPorts.push(paths[i].ports[0]);
+                        }
+                    }
+                    cache[startPort] = endPorts; //save solution to cache
+                }
+                return endPorts;
+            };
+        })();
 
         //ROTATE [private]
         //1 argument: can be a number (turn increment) or 'smooth' (rot. eff.)
@@ -646,7 +698,6 @@
             that,
             init,
             print,
-            follow;
 
         //create a generic element to be extended
         that = shrtct.element('path');
@@ -710,19 +761,6 @@
                 appendTo(that.front).children('g').attr('transform', transform);
             return that;
         };//PRINT
-
-        //FOLLOW [public]
-        //takes a port and returns the other port of this path
-        that.follow = follow = function (port) {
-            var port2;
-            if (port === ports[0]) {
-                port2 = ports[1];
-            }
-            else if (port === ports[1]) {
-                port2 = ports[0];
-            }
-            return port2;
-        };//FOLLOW
 
         return init();
     };//PATH
@@ -832,7 +870,7 @@
         //CREATE TEST BUTTON
         $('body').prepend('<div id="testButton" style="float: right; border: 1px solid #aaa;" >test</div>');
         $('#testButton').click(function () {
-            alert(board.getField(0,1).getCard().step(0));
+            alert(board.getField(1,1).getCard().follow(0));
         });
     });
 
