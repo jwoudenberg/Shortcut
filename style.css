@@ -1,0 +1,154 @@
+@charset "UTF-8";
+body {
+    font-family:   "Trebuchet MS", Helvetica, sans-serif;
+}
+
+#paths {
+    display:    none;
+}
+
+.row {
+    clear:      left;
+}
+
+.board {
+    z-index:    1;
+}
+
+.holder {
+    position:   relative;
+    width:      80px;
+    height:     80px;    
+}
+
+.field {
+    float:      left;
+    border:     1px solid #ddd;
+    margin:     -1px 0 0 -1px;
+}
+
+.deck {
+    border:     1px solid #aaa;
+    margin:     10px 0;
+    background: #eee;
+    z-index:    10;
+}
+
+.card, .cardBack {
+    position:   absolute;
+    width:      inherit;
+    height:     inherit;
+    border:     1px solid #aaa;
+    margin:     -1px 0 0 -1px;
+    background: #eee;
+}
+
+.cardBack .text, .card .text {
+    margin-top: 30%;
+    text-align: center;
+    color:      #666;
+}
+
+.path {
+    position:   absolute;
+    top:        0;
+    left:       0;
+    width:      inherit;
+    height:     inherit;
+}
+
+.path svg {
+    position: absolute;
+    top:      0;
+    left:     0;
+    width:    inherit;
+}
+
+/* CARD DRAGGING */
+.card.draggable, .card.rotateable {
+    background:     #fff;
+}
+
+.card.draggable:hover, .card.ui-draggable-dragging {
+    border:         2px solid blue;
+    margin:         -2px 0 0 -2px;
+    z-index:        10;
+}
+
+.card.ui-draggable-dragging {
+    box-shadow:     0 0 4px 2px #555;
+}
+
+.card.rotateable:not(.draggable):hover {
+    margin:         -2px 0 0 -2px;
+    border:         2px dotted blue;
+    z-index:        10;
+}
+
+/* ROTATION EFFECT */
+.card.rotateSmooth {
+    transition:         transform 300ms;
+    -moz-transition:    -moz-transform 300ms;
+    -webkit-transition: -webkit-transform 300ms;
+    -o-transition:      -o-transform 300ms;
+}
+
+/* FLIPPING EFFECT */
+.deck {
+    perspective:            200;
+    -moz-perspective:       200;
+    -webkit-perspective:    200;
+    -o-perspective:         200;
+}
+
+.cardWrap {
+    position:               absolute;
+    width:                  inherit;
+    height:                 inherit;
+    
+    transform-style:        preserve-3d;
+    -moz-transform-style:   preserve-3d;
+    -webkit-transform-style:preserve-3d;
+    -o-transform-style:     preserve-3d;
+    
+    transform-origin:           100% 50%;
+    -moz-transform-origin:      100% 50%;
+    -webkit-transform-origin:   100% 50%;
+    -o-transform-origin:        100% 50%;
+
+    backface-visibility:        hidden;
+    -moz-backface-visibility:   hidden;
+    -webkit-backface-visibility:hidden;
+    -o-backface-visibility:     hidden;
+
+    transform:              rotateY(-180deg) translateX(100%);
+    -moz-transform:         rotateY(-180deg) translateX(100%);
+    -webkit-transform:      rotateY(-180deg) translateX(100%);
+    -o-transform:           rotateY(-180deg) translateX(100%);
+}
+
+.cardWrap.flipped {
+    transition:             transform 500ms;
+    -moz-transition:        -moz-transform 500ms;
+    -webkit-transition:     -webkit-transform 500ms;
+    -o-transition:          -o-transform 500ms;
+
+    transform:              rotateY(0) translateX(0);
+    -moz-transform:         rotateY(0) translateX(0);
+    -webkit-transform:      rotateY(0) translateX(0);
+    -o-transform:           rotateY(0) translateX(0);
+}
+
+.cardWrap .card, .cardWrap .cardBack {
+    backface-visibility:        hidden;
+    -moz-backface-visibility:   hidden;
+    -webkit-backface-visibility:hidden;
+    -o-backface-visibility:     hidden;
+}
+
+.cardWrap .cardBack {
+    transform:              rotateY(-180deg);
+    -moz-transform:         rotateY(-180deg);
+    -webkit-transform:      rotateY(-180deg);
+    -o-transform:           rotateY(-180deg);
+}

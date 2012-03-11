@@ -1,0 +1,58 @@
+@charset "UTF-8";
+.pathContainer {
+    opacity:        0.5;
+    stroke:         black;
+    stroke-width:   14;
+    fill:           black;
+    
+    transition:         opacity 1s, fill 1s, stroke 1s;
+    -moz-transition:    opacity 1s, fill 1s, stroke 1s;
+    -webkit-transition: opacity 1s, fill 1s, stroke 1s;
+    -o-transition:      opacity 1s, fill 1s, stroke 1s;
+}
+
+.pathFill {
+    stroke:         none !important;
+    opacity:        0.2;
+    
+    transition:         opacity 1s;
+    -moz-transition:    opacity 1s;
+    -webkit-transition: opacity 1s;
+    -o-transition:      opacity 1s;
+}
+
+.pathBorder {
+    fill:           none !important;
+}
+
+.card:hover, .deck .card {
+
+}
+
+.card:hover .pathContainer, .deck .card .pathContainer {
+    opacity:    0.7;
+}
+.card:hover .pathContainer .pathFill, .deck .card .pathContainer .pathFill {
+    opacity:    0.4;
+}
+
+.card:hover .path:nth-child(1) .pathContainer,
+.deck .card .path:nth-child(1) .pathContainer {
+    fill:   red;
+    stroke: red;
+}
+.card:hover .path:nth-child(2) .pathContainer,
+.deck .card .path:nth-child(2) .pathContainer {
+    fill:   orange;
+    stroke: orange;
+}
+.card:hover .path:nth-child(3) .pathContainer,
+.deck .card .path:nth-child(3) .pathContainer {
+    fill:   seagreen;
+    stroke: seagreen;
+}
+.card:hover .path:nth-child(4) .pathContainer,
+.deck .card .path:nth-child(4) .pathContainer {
+    fill:   purple;
+    stroke: purple;
+}
