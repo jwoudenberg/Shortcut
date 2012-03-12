@@ -47,22 +47,20 @@
             disableFunc = spec.disableFunc,
             defState = spec.defState || 'enable',
             curState,
-            handlers = [],
+            event = shrtct.event(),
             init,
             state,
             addHandler;
-        
+
         //ACT [public]
         //Executes function or fail-function depending on state
         that = function () {
-            var value, i;
+            var value;
             if (curState === 'enable') {
                 //this action is enabled, so execute its function
                 value = func(arguments[0], arguments[1], arguments[2]);
-                //fire all handlers
-                for (i = handlers.length; i--;) {
-                    handlers[i]();
-                }
+                //fire the event
+                event.fire();
             }
             else {
                 //this action is disabled. Execute failFunc() if it exists
@@ -110,13 +108,61 @@
 
         //ADD HANDLER [public]
         //add a function that is called when action is succesfully performed
-        that.addHandler = addHandler = function (eventFunc) {
-            handlers.push(eventFunc);
-        };
+        that.addHandler = addHandler = event.addHandler;
 
         return init();
     };//ACTION
-    
+
+    // --- EVENT ---
+    //Functions can be added to it. When fired, all coupled functions will fire
+    shrtct.event = function () {
+        var that,
+            handlers = [],
+            init,
+            fire,
+            addHandler;
+
+        that = {};
+        
+        //INIT
+        init = function () {
+            return that;
+        };//INIT
+
+        //FIRE
+        //activate all handlers
+        that.fire = fire = function () {
+            var i;
+            for (i = handlers.length; i--;) {
+                handlers[i].func();
+            }
+            return that;
+        };
+
+        //ADD HANDLER
+        that.addHandler = addHandler = function (func) {
+            var handler = {func: func};
+
+            //allows a handler to be removed again
+            handler.remove = function () {
+                var i;
+                handler.dead = true;
+                i = 0;
+                while (!handlers[i].dead) {
+                    i += 1;
+                }
+                handlers.splice(i, 1);
+            };
+
+            //add handler to the list
+            handlers.push(handler);
+            //return a way to remove the handler
+            return handler.remove;
+        };
+
+        return init();
+    };
+
     // --- BOARD ---       
     //extends a jquery object representing the board
     //[man]spec.width:   width of the board
@@ -131,7 +177,8 @@
             print,
             createField,
             getField,
-            createBounds;
+            createBounds,
+            walk;
 
         //create a generic element to be extended
         that = shrtct.element('board');
@@ -279,6 +326,11 @@
             return that;
         };//CREATE BOUNDS
 
+        //WALK [public]
+        that.walk = walk = function (field, port) {
+            return shrtct.route(that, field, port);
+        };//WALK
+
         return init();
     };//BOARD
 
@@ -411,7 +463,6 @@
                 defState: 'enable'
             });
 
-            popCardSmooth();
             return that;
         };//INIT
         
@@ -479,7 +530,6 @@
         return init();
     };//DECK
 
-
     // --- CARD ---
     //create a new card, place it in 'field' and give it 'paths'
     //[man]spec.holder: holder in which the card will be placed
@@ -505,7 +555,7 @@
             doMove,
             move,
             rotate,
-            follow;
+            getPathEnds;
 
         //create a generic element to be extended
         that = shrtct.element('card');
@@ -567,7 +617,7 @@
 
         //DO ROTATE
         //action-wrapper around the rotate-function
-        doRotate = shrtct.action({
+        that.doRotate = doRotate = shrtct.action({
             func: function () {rotate('smooth'); },
             //failFunc:
             enableFunc: function () {that.front.addClass('rotateable'); },
@@ -575,7 +625,7 @@
             defState: spec.rotateable
         });
 
-        //DO MOVE
+        //DO MOVE [public]
         //action-wrapper around the move-function
         that.doMove = doMove = shrtct.action({
             func: function (field) {
@@ -614,37 +664,6 @@
                 return that;
             };
         })();//MOVE
-
-        //FOLLOW [public]
-        //takes a start, returns array an of ports connected to it by paths
-        that.follow = follow = (function () {
-            var cache = []; //memoization
-
-            //register event handler for rotation event (cache will be cleared)
-            doRotate.addHandler(function (){
-                cache = [];
-            });
-
-            return function (startPort) {
-                var i,
-                    //check whether solution is cached
-                    endPorts = cache[startPort];
-                if (endPorts === undefined) { //solution isn't in cache yet
-                    endPorts = [];
-                    //loop over all paths
-                    for (i = paths.length; i--;) {
-                        //check whether either port of the path is our startPort
-                        if (paths[i].ports[0] === startPort) {
-                            endPorts.push(paths[i].ports[1]);
-                        } else if (paths[i].ports[1] === startPort) {
-                            endPorts.push(paths[i].ports[0]);
-                        }
-                    }
-                    cache[startPort] = endPorts; //save solution to cache
-                }
-                return endPorts;
-            };
-        })();
 
         //ROTATE [private]
         //1 argument: can be a number (turn increment) or 'smooth' (rot. eff.)
@@ -686,6 +705,51 @@
                 }
             };
         })();//ROTATE
+
+        //GET PATH-ENDS [public]
+        //takes a port, returns the paths and end-ports that connect to it
+        that.getPathEnds = getPathEnds = (function () {
+            var cache = []; //memoization
+
+            //register event handler for rotation event (cache will be cleared)
+            doRotate.addHandler(function (){
+                cache = [];
+            });
+
+            return function (startPort) {
+                //ends is an array of end-objects
+                //these have a path and (exit)port property
+                var i, ends;
+
+                if (cache[startPort] !== undefined) { //solution is in cache
+                    ends = cache[startPort];
+                } else {  //solution isn't in cash yet
+                    ends = [];
+
+                    //loop over all paths
+                    for (i = paths.length; i--;) {
+
+                        //check whether either port of the path is our startPort
+                        //if so: add it to the ends-array
+                        if (paths[i].ports[0] === startPort) {
+                            ends.push({
+                                path: paths[i],
+                                port: paths[i].ports[1]
+                            });
+                        } else if (paths[i].ports[1] === startPort) {
+                            ends.push({
+                                path: paths[i],
+                                port: paths[i].ports[0]
+                            });
+                        }
+                    }
+
+                    //save solution to cache
+                    cache[startPort] = ends;
+                }
+                return ends;
+            };
+        })();
 
         return init();
     };//CARD
@@ -765,7 +829,6 @@
         return init();
     };//PATH
 
-
     // --- RANDOM CARD ---
     //create a unique card. no need to specify paths (unlike shrtct.card)
     shrtct.randCard = (function () {
@@ -835,6 +898,130 @@
         };
     }());//RANDOM CARD
 
+    // --- ROUTE ---
+    //takes a starting port and field, returns the entire connected route
+    shrtct.route = function (board, field, port) {
+        //init lookup-tables: exit-port to step direction and entrance-port
+        var cardLookup = ['down', 'down', 'right', 'right',
+            'up', 'up', 'left', 'left'],
+            portLookup = [5, 4, 7, 6, 1, 0, 3, 2],
+            that,
+            init,
+            destruct,
+            setColor,
+            step,
+            ends = [],
+            alive = true,
+            resets = shrtct.event();
+
+        that = {};
+
+        //INIT
+        init = function () {
+            //find all ends (recursive function)
+            step(board, ends, resets, field, port);
+
+            return that;
+        };//INIT
+
+        //DESTRUCT
+        //function to be called when a card in route is moved or rotated
+        destruct = function () {
+            //reset all alternations made to this path
+            resets.fire();
+
+            ends = undefined;
+            alive = false;
+
+            return undefined;
+        };//DESTRUCT
+
+        //SET COLOR
+        //color an entire route
+        that.setColor = setColor = function (color) {
+            var i;
+            for (i = ends.length; i--;) {
+                ends[i].path.front.find('.pathContainer').css({
+                    fill: color,
+                    stroke: color
+                }).addClass('colored');
+            }
+                
+            //create reset for when path is destroyed
+            resets.addHandler(function () {
+                for (i = ends.length; i--;) {
+                    ends[i].path.front.find('.pathContainer').css({
+                        fill: '',
+                        stroke: ''
+                    }).removeClass('colored');
+                }
+            });
+        };//SET COLOR
+
+        //STEP
+        //this step-function calls itself recursively
+        step = function (board, ends, resets, field, port) {
+            var newCard,
+                newEnds,
+                i,
+                exitPort,
+                nextPort,
+                nextCard,
+                nextField;
+
+            //check if field exists
+            if (field !== undefined) {
+                newCard = field.getCard();
+
+                //check if card exists
+                if (newCard) {
+                    newEnds = newCard.getPathEnds(port);
+    
+                    //loop over all newPaths
+                    for (i = newEnds.length; i--;) {
+
+                        //check wether we've been here before
+                        if (newEnds[i].flag === undefined) {
+
+                            newEnds[i].flag = true; //flag this port
+                            ends.push(newEnds[i]); //add path end to route-array
+
+                            //check whether we've seen this card before
+                            if (!newCard.flag) {
+                                newCard.flag = true;
+                                //add event handlers for when card is manilpulated
+                                //add returned handler-removers to own reset-event
+                                resets.addHandler(newCard.doMove.addHandler(destruct));
+                                resets.addHandler(newCard.doRotate.addHandler(destruct));
+                            }
+    
+                            //prepare next step
+                            exitPort = newEnds[i].port;
+                            nextPort = portLookup[exitPort];
+                            nextCard = cardLookup[exitPort];
+                            nextField = field.step(nextCard, nextPort);
+    
+                            //recursion
+                            step(board, ends, resets, nextField, nextPort);
+                            
+                            //now we're on our way back. Clean up flags
+                            if (newCard.flag) {
+                                newCard.flag = undefined;
+                            }
+                            if (newEnds[i].flag) {
+                                newEnds[i].flag = undefined;
+                            }
+
+                        }
+                    }
+                }
+            }
+        };
+
+        return init();
+
+    };//ROUTE
+
     // === JQUERY OBJECT FUNCTIONS ===
     //finds the shrtct-element belonging to a jQuery-object
     $.fn.shrtct = function () {
@@ -847,7 +1034,6 @@
         }
         return value;
     };
-
 
     // === EXECUTE WHEN DOCUMENT IS LOADED ===
     $(document).ready(function () {
@@ -870,7 +1056,8 @@
         //CREATE TEST BUTTON
         $('body').prepend('<div id="testButton" style="float: right; border: 1px solid #aaa;" >test</div>');
         $('#testButton').click(function () {
-            alert(board.getField(1,1).getCard().follow(0));
+            var route = board.walk(board.getField(3,1), 7);
+            route.setColor('red');
         });
     });
 
