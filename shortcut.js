@@ -161,7 +161,7 @@
         };
 
         return init();
-    };
+    };//EVENT
 
     // --- BOARD ---       
     //extends a jquery object representing the board
@@ -220,6 +220,7 @@
         createField = function (row, col) {
             //spec object will be handed to field constructor
             var spec = {};
+
             //STEP
             //provide field with step(), which returns an adjacent field.
             spec.step = (function () {
@@ -229,6 +230,7 @@
                     y = col;
                 return function (direction) {
                     var nextField;
+
                     switch (direction) {
                         case 'up':
                             nextField = getField(x-1,y);
@@ -245,7 +247,8 @@
                         default:
                             throw new Error('board.createField: Invalid direction');
                     }
-                return nextField;
+
+                    return nextField;
                 };
             })();//STEP
 
@@ -279,6 +282,8 @@
                     basesLeft = 2 * players.length, //two bases a player
                     ratio = basesLeft / fieldsLeft,
                     nextField,
+                    player,
+                    base,
                     spec;
                 while (curField.getCard() === undefined) {
                     nextField = curField.step(directions[dir]);
@@ -307,14 +312,21 @@
                         fieldsLeft -= 1;
                         if (basesLeft / fieldsLeft > ratio) {
                             //place a base
+                            player = players[basesLeft % players.length];
+                            base = {
+                                type:   base,
+                                player: player,
+                                text:   player
+                            };
                             basesLeft -= 1;
-                            spec.text = players[basesLeft % players.length];
+                            spec.text = player;
+
                             //randomly choose a port to connect the base-path to
                             if (Math.floor(Math.random() * 2) === 0) {
-                                spec.paths[2] = [0, 5];
+                                spec.paths[2] = [0, base];
                             }
                             else {
-                                spec.paths[2] = [1, 4];
+                                spec.paths[2] = [1, base];
                             }
                         }
                         //create the card
@@ -333,7 +345,6 @@
 
         return init();
     };//BOARD
-
 
     // --- HOLDER ---
     //An element that holds card. Needs extension to become truly usefull
@@ -415,7 +426,10 @@
             step;
 
         //create a gneric element to be extended
-        that = shrtct.holder({type: 'field', defDrop: 'enable'});
+        that = shrtct.holder({
+            type: 'field',
+            defDrop: 'enable'
+        });
 
         //INIT [private]
         init = function ()  {
@@ -564,15 +578,23 @@
         //called (below) to run once when card is created
         init = function () {
             var i;
+
             //create paths
             for (i = spec.paths.length; i--;) {
-                paths[i] = shrtct.path({ports: spec.paths[i]});
+                paths[i] = shrtct.path({
+                    ports: spec.paths[i],
+                    container: that.front
+                });
             }
-            print();
+
+            print(); //not yet in DOM, that happens with move() below
             if (spec.holder === undefined) {
                 throw new Error("shrtct.card: card holder not specified");
             }
-            move(spec.holder);
+
+            move(spec.holder); //places card in DOM
+
+            //set starting rotation (if none is provided, that's ok)
             if (spec.rotate !== undefined) {
                 rotate(spec.rotate);
             }
@@ -584,6 +606,7 @@
         //called once at card creation to create DOM-connection
         print = function () {
             var i;
+
             //rotation attribute
             that.front.attr('data-rotation',0).draggable({
                 //make card draggable
@@ -596,13 +619,7 @@
                 clicked(event);
                 event.preventDefault();
             });
-            //if a card text was provided, add it.
-            if (spec.text !== undefined) {
-                that.front.append('<div class="text">' + spec.text + '</div>');
-            }
-            for (i = 0; i < paths.length; i += 1) {
-                paths[i].front.appendTo(that.front);
-            }
+
             //print to DOM
             that.front.appendTo(spec.holder.front);
         };//PRINT
@@ -647,19 +664,21 @@
         //MOVE [private]
         //takes a holder and tries to move card there
         move = move = (function () {
-            //create a closure: when checking in at holder, a checkOut-function
-            //is saved to check out again when the card is moved again.
+            //when checking in, holder returns a function checkOut() for later
             var checkOut;
+
             return function (holder) {
                 var value;
                 value = holder.doCheckIn(that);
                 if (value) { //card is accepted
+
                     that.front.appendTo(holder.front); //move card in DOM
                     //check out of current holder (if checked in)
                     if(checkOut) {
                         checkOut();
                     }
                     checkOut = value; //bind new checkOut function
+
                 }
                 return that;
             };
@@ -762,6 +781,7 @@
             that,
             init,
             print,
+            setColor;
 
         //create a generic element to be extended
         that = shrtct.element('path');
@@ -775,7 +795,20 @@
 
         //PRINT draws an svg path [private]
         print = function () {
-            var distance, start, rotation, mirrored, transform;
+            var base,
+                distance,
+                start,
+                rotation,
+                mirrored,
+                transform;
+
+            //check whether this path leads to a base
+            if (typeof ports[1] === 'object') {
+                base = ports[1];
+                ports[1] = ports[0];
+                spec.container.append('<div class="text">' + base.text + '</div>');
+            }
+
             //a path is defined by its starting port and
             //  the distance it covers clockwise from start to end port
             distance = Math.abs(ports[0] - ports[1]);
@@ -798,7 +831,7 @@
             //odd ports (1,3,5,7) will use mirror images of even ports (0,2,4,6)
             if ((start % 2) === 1) {
                 mirrored = true;
-                distance = 8 - distance; //distance of the mirrored path
+                distance = (8 - distance) % 8; //distance of the mirrored path
                 start -= 1; //make is even, so we can divide by two below
 
                 //the 'distance 6'-path is a rotated 'distance 2'.
@@ -823,8 +856,30 @@
             that.front.empty(); //remove current content (if it exists)
             $('#path-' + distance).clone().removeAttr('id').
                 appendTo(that.front).children('g').attr('transform', transform);
+
+            //append path to card
+            that.front.appendTo(spec.container);
+
             return that;
         };//PRINT
+
+        //SET COLOR
+        //sets a color for this path
+        that.setColor = setColor = function (color) {
+            var container = that.front.find('.pathContainer');
+            container.css({
+                fill: color,
+                stroke: color
+            }).addClass('colored');
+
+            //return a function for resetting the color
+            return function () {
+                container.css({
+                    fill: '',
+                    stroke: ''
+                }).removeClass('colored');
+            };
+        };
 
         return init();
     };//PATH
@@ -939,23 +994,13 @@
         //SET COLOR
         //color an entire route
         that.setColor = setColor = function (color) {
-            var i;
+            var i, unset;
             for (i = ends.length; i--;) {
-                ends[i].path.front.find('.pathContainer').css({
-                    fill: color,
-                    stroke: color
-                }).addClass('colored');
+                unset = ends[i].path.setColor(color);
+
+                //create reset for when path is destroyed
+                resets.addHandler(unset);
             }
-                
-            //create reset for when path is destroyed
-            resets.addHandler(function () {
-                for (i = ends.length; i--;) {
-                    ends[i].path.front.find('.pathContainer').css({
-                        fill: '',
-                        stroke: ''
-                    }).removeClass('colored');
-                }
-            });
         };//SET COLOR
 
         //STEP
@@ -976,7 +1021,16 @@
                 //check if card exists
                 if (newCard) {
                     newEnds = newCard.getPathEnds(port);
-    
+
+                    //check whether we've seen this card before
+                    if (!newCard.flag) {
+                        newCard.flag = true;
+                        //add event handlers for when card is manilpulated
+                        //add returned handler-removers to own reset-event
+                        resets.addHandler(newCard.doMove.addHandler(destruct));
+                        resets.addHandler(newCard.doRotate.addHandler(destruct));
+                    }
+
                     //loop over all newPaths
                     for (i = newEnds.length; i--;) {
 
@@ -985,15 +1039,6 @@
 
                             newEnds[i].flag = true; //flag this port
                             ends.push(newEnds[i]); //add path end to route-array
-
-                            //check whether we've seen this card before
-                            if (!newCard.flag) {
-                                newCard.flag = true;
-                                //add event handlers for when card is manilpulated
-                                //add returned handler-removers to own reset-event
-                                resets.addHandler(newCard.doMove.addHandler(destruct));
-                                resets.addHandler(newCard.doRotate.addHandler(destruct));
-                            }
     
                             //prepare next step
                             exitPort = newEnds[i].port;
@@ -1004,16 +1049,19 @@
                             //recursion
                             step(board, ends, resets, nextField, nextPort);
                             
-                            //now we're on our way back. Clean up flags
-                            if (newCard.flag) {
-                                newCard.flag = undefined;
-                            }
+                            //on our way back; clean up card flags
                             if (newEnds[i].flag) {
                                 newEnds[i].flag = undefined;
                             }
 
                         }
                     }
+
+                    //now we're on our way back. Clean up flags
+                    if (newCard.flag) {
+                        newCard.flag = undefined;
+                    }
+
                 }
             }
         };
