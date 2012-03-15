@@ -141,13 +141,12 @@
 
         //ADD HANDLER
         that.addHandler = addHandler = function (func) {
-            var handler = {func: func};
+            var handler = {'func': func};
 
             //allows a handler to be removed again
             handler.remove = function () {
-                var i;
+                var i = 0;
                 handler.dead = true;
-                i = 0;
                 while (!handlers[i].dead) {
                     i += 1;
                 }
@@ -752,11 +751,13 @@
                         //if so: add it to the ends-array
                         if (paths[i].ports[0] === startPort) {
                             ends.push({
+                                card: that,
                                 path: paths[i],
                                 port: paths[i].ports[1]
                             });
                         } else if (paths[i].ports[1] === startPort) {
                             ends.push({
+                                card: that,
                                 path: paths[i],
                                 port: paths[i].ports[0]
                             });
@@ -871,14 +872,6 @@
                 fill: color,
                 stroke: color
             }).addClass('colored');
-
-            //return a function for resetting the color
-            return function () {
-                container.css({
-                    fill: '',
-                    stroke: ''
-                }).removeClass('colored');
-            };
         };
 
         return init();
@@ -973,8 +966,18 @@
 
         //INIT
         init = function () {
+            var i;
+
             //find all ends (recursive function)
             step(board, ends, resets, field, port);
+
+            //clean up flags
+            for (i = ends.length; i--;) {
+                if (ends[i].card.flag) {
+                    ends[i].card.flag = undefined;
+                }
+                ends[i].flag = undefined;
+            }
 
             return that;
         };//INIT
@@ -993,15 +996,25 @@
 
         //SET COLOR
         //color an entire route
-        that.setColor = setColor = function (color) {
-            var i, unset;
-            for (i = ends.length; i--;) {
-                unset = ends[i].path.setColor(color);
+        that.setColor = setColor = (function () {
+            var i,
+                colorPaths;
 
-                //create reset for when path is destroyed
-                resets.addHandler(unset);
-            }
-        };//SET COLOR
+            //create setColor function (no argument means no color)
+            colorPaths = function (color) {
+                if (!color) {
+                    color = '';
+                }
+                for (i = ends.length; i--;) {
+                    ends[i].path.setColor(color);
+                }
+            };
+
+            //when route is destroyed, set color back (register only once)
+            resets.addHandler(colorPaths);
+
+            return colorPaths;
+        })();//SET COLOR
 
         //STEP
         //this step-function calls itself recursively
@@ -1039,27 +1052,17 @@
 
                             newEnds[i].flag = true; //flag this port
                             ends.push(newEnds[i]); //add path end to route-array
-    
+
                             //prepare next step
                             exitPort = newEnds[i].port;
                             nextPort = portLookup[exitPort];
                             nextCard = cardLookup[exitPort];
                             nextField = field.step(nextCard, nextPort);
-    
+
                             //recursion
                             step(board, ends, resets, nextField, nextPort);
-                            
-                            //on our way back; clean up card flags
-                            if (newEnds[i].flag) {
-                                newEnds[i].flag = undefined;
-                            }
 
                         }
-                    }
-
-                    //now we're on our way back. Clean up flags
-                    if (newCard.flag) {
-                        newCard.flag = undefined;
                     }
 
                 }
@@ -1093,8 +1096,8 @@
         //BUILD FIELD
         var board = shrtct.board({
             replace:   $('#board'),
-            width:      6,
-            height:     6
+            width:      5,
+            height:     5
         });
 
         shrtct.deck({
