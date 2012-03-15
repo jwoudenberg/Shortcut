@@ -218,7 +218,7 @@
         //creates a field at specific coordinates
         createField = function (row, col) {
             //spec object will be handed to field constructor
-            var spec = {};
+            var spec = {'board': that};
 
             //STEP
             //provide field with step(), which returns an adjacent field.
@@ -313,16 +313,14 @@
                             //place a base
                             player = players[basesLeft % players.length];
                             base = {
-                                type:   base,
                                 player: player,
-                                text:   player
                             };
                             basesLeft -= 1;
-                            spec.text = player;
 
                             //randomly choose a port to connect the base-path to
                             if (Math.floor(Math.random() * 2) === 0) {
                                 spec.paths[2] = [0, base];
+                                
                             }
                             else {
                                 spec.paths[2] = [1, base];
@@ -350,8 +348,8 @@
     //[opt]spec.defDrop: Whether holder is droppable. 'enabled' / 'disabled'
     //[opt]spec.type:    Type of element (field, deck). Default: untyped
     shrtct.holder = function(spec) {
-        var curCard,
-            that,
+        var that,
+            curCard,
             init,
             print,
             dropped,
@@ -364,6 +362,7 @@
         //INIT [private]
         init = function () {
             print();
+
             //create action
             that.doCheckIn = doCheckIn = shrtct.action({
                 func: checkIn,
@@ -372,6 +371,7 @@
                 disableFunc: function () {that.front.droppable('disable'); },
                 defState: spec.defDrop
             });
+
             return that;
         };
 
@@ -407,7 +407,6 @@
             doCheckIn.state('disable'); //holder no longer droppable
             return function () {
                 //a function the card can use to check out again
-                //no other object will be able to check the card out
                 curCard = undefined;
                 doCheckIn.state('default'); //set doCheckIn-state to default
             };
@@ -432,6 +431,9 @@
 
         //INIT [private]
         init = function ()  {
+            //store reference to board
+            that.board = spec.board;
+
             return that;
         };//INIT
 
@@ -561,6 +563,7 @@
         //     01
         var paths = [],
             that,
+            curHolder,
             init,
             print,
             clicked,
@@ -568,7 +571,8 @@
             doMove,
             move,
             rotate,
-            getPathEnds;
+            getPathEnds,
+            addBase;
 
         //create a generic element to be extended
         that = shrtct.element('card');
@@ -576,14 +580,19 @@
         //INIT [private]
         //called (below) to run once when card is created
         init = function () {
-            var i;
+            var i, path;
 
             //create paths
             for (i = spec.paths.length; i--;) {
-                paths[i] = shrtct.path({
+                path = paths[i] = shrtct.path({
                     ports: spec.paths[i],
                     container: that.front
                 });
+
+                //if this path contains a base
+                if (path.base) {
+                    addBase(path);
+                }
             }
 
             print(); //not yet in DOM, that happens with move() below
@@ -604,8 +613,6 @@
         //PRINT [private]
         //called once at card creation to create DOM-connection
         print = function () {
-            var i;
-
             //rotation attribute
             that.front.attr('data-rotation',0).draggable({
                 //make card draggable
@@ -644,8 +651,8 @@
         //DO MOVE [public]
         //action-wrapper around the move-function
         that.doMove = doMove = shrtct.action({
-            func: function (field) {
-                move(field);
+            func: function (holder) {
+                move(holder);
                 doMove.state('disable');
             },
             //failFunc:
@@ -668,6 +675,7 @@
 
             return function (holder) {
                 var value;
+                curHolder = holder;
                 value = holder.doCheckIn(that);
                 if (value) { //card is accepted
 
@@ -771,6 +779,22 @@
             };
         })();
 
+        //ADD BASE
+        //adds a base to a specific path
+        that.addBase = addBase = function (path) {
+            var route;
+            that.front.append('<div class="text">' + path.base.player +
+                '</div>');
+            that.front.click(function () {
+                if (!route || !route.alive) {
+                    route = shrtct.route(curHolder, that, path);
+                }
+                route.setColor('blue');
+            });
+
+            return that;
+        };//ADD BASE
+
         return init();
     };//CARD
 
@@ -796,18 +820,16 @@
 
         //PRINT draws an svg path [private]
         print = function () {
-            var base,
-                distance,
+            var distance,
                 start,
                 rotation,
                 mirrored,
                 transform;
 
-            //check whether this path leads to a base
+            //check for one-ended paths
             if (typeof ports[1] === 'object') {
-                base = ports[1];
+                that.base = ports[1];//make base accessible
                 ports[1] = ports[0];
-                spec.container.append('<div class="text">' + base.text + '</div>');
             }
 
             //a path is defined by its starting port and
@@ -948,130 +970,159 @@
 
     // --- ROUTE ---
     //takes a starting port and field, returns the entire connected route
-    shrtct.route = function (board, field, port) {
+    shrtct.route = (function () {
         //init lookup-tables: exit-port to step direction and entrance-port
         var cardLookup = ['down', 'down', 'right', 'right',
             'up', 'up', 'left', 'left'],
             portLookup = [5, 4, 7, 6, 1, 0, 3, 2],
-            that,
-            init,
-            destruct,
-            setColor,
-            step,
-            ends = [],
-            alive = true,
-            resets = shrtct.event();
+            colored;
 
-        that = {};
+        return function (field, card, path) {
+            var that,
+                board = field.board,
+                init,
+                destruct,
+                setColor,
+                step,
+                ends = [],
+                alive = true,
+                resets = shrtct.event();
 
-        //INIT
-        init = function () {
-            var i;
+            that = {};
 
-            //find all ends (recursive function)
-            step(board, ends, resets, field, port);
+            //INIT
+            init = function () {
+                var i;
 
-            //clean up flags
-            for (i = ends.length; i--;) {
-                if (ends[i].card.flag) {
-                    ends[i].card.flag = undefined;
+                //check if this holder is on a board (might be a deck)
+                if (board) {
+                    //add path itself as an end
+                    ends.push({
+                        'card': card,
+                        'path': path,
+                        'port': path.ports[0],
+                        'flag': true
+                    });
+                    card.flag = true;
+
+                    //find all ends (recursive function)
+                    step(board, ends, resets, field.step(cardLookup[path.ports[0]]),
+                        portLookup[path.ports[0]]);
+
+                    //check if this path contains any paths at all
+                    if (ends.length > 0) {
+                        //clean up flags
+                        for (i = ends.length; i--;) {
+                            if (ends[i].card.flag) {
+                                ends[i].card.flag = undefined;
+                            }
+                            ends[i].flag = undefined;
+                        }
+                    }
                 }
-                ends[i].flag = undefined;
-            }
-
-            return that;
-        };//INIT
-
-        //DESTRUCT
-        //function to be called when a card in route is moved or rotated
-        destruct = function () {
-            //reset all alternations made to this path
-            resets.fire();
-
-            ends = undefined;
-            alive = false;
-
-            return undefined;
-        };//DESTRUCT
-
-        //SET COLOR
-        //color an entire route
-        that.setColor = setColor = (function () {
-            var i,
-                colorPaths;
-
-            //create setColor function (no argument means no color)
-            colorPaths = function (color) {
-                if (!color) {
-                    color = '';
+                else {
+                    return undefined;
                 }
-                for (i = ends.length; i--;) {
-                    ends[i].path.setColor(color);
+
+                return that;
+            };//INIT
+
+            //DESTRUCT
+            //function to be called when a card in route is moved or rotated
+            destruct = function () {
+                //reset all alternations made to this path
+                resets.fire();
+
+                ends = undefined;
+                alive = false;
+
+                return undefined;
+            };//DESTRUCT
+
+            //SET COLOR
+            //color an entire route
+            that.setColor = setColor = (function () {
+                var i,
+                    colorPaths;
+
+                //if another route is colored, uncolor it
+                if (colored) {
+                    colored.setColor();
+                }
+                colored = that; //this route is colored 
+
+                //create setColor function (no argument means no color)
+                colorPaths = function (color) {
+                    if (!color) {
+                        color = '';
+                    }
+                    for (i = ends.length; i--;) {
+                        ends[i].path.setColor(color);
+                    }
+                };
+
+                //when route is destroyed, set color back (register only once)
+                resets.addHandler(colorPaths);
+
+                return colorPaths;
+            })();//SET COLOR
+
+            //STEP
+            //this step-function calls itself recursively
+            step = function (board, ends, resets, field, port) {
+                var newCard,
+                    newEnds,
+                    i,
+                    exitPort,
+                    nextPort,
+                    nextCard,
+                    nextField;
+
+                //check if field exists
+                if (field !== undefined) {
+                    newCard = field.getCard();
+
+                    //check if card exists
+                    if (newCard) {
+                        newEnds = newCard.getPathEnds(port);
+
+                        //check whether we've seen this card before
+                        if (!newCard.flag) {
+                            newCard.flag = true;
+                            //add event handlers for when card is manilpulated
+                            //add returned handler-removers to own reset-event
+                            resets.addHandler(newCard.doMove.addHandler(destruct));
+                            resets.addHandler(newCard.doRotate.addHandler(destruct));
+                        }
+
+                        //loop over all newPaths
+                        for (i = newEnds.length; i--;) {
+
+                            //check wether we've been here before
+                            if (newEnds[i].flag === undefined) {
+
+                                newEnds[i].flag = true; //flag this port
+                                ends.push(newEnds[i]); //add path end to route-array
+
+                                //prepare next step
+                                exitPort = newEnds[i].port;
+                                nextPort = portLookup[exitPort];
+                                nextCard = cardLookup[exitPort];
+                                nextField = field.step(nextCard, nextPort);
+
+                                //recursion
+                                step(board, ends, resets, nextField, nextPort);
+
+                            }
+                        }
+
+                    }
                 }
             };
 
-            //when route is destroyed, set color back (register only once)
-            resets.addHandler(colorPaths);
-
-            return colorPaths;
-        })();//SET COLOR
-
-        //STEP
-        //this step-function calls itself recursively
-        step = function (board, ends, resets, field, port) {
-            var newCard,
-                newEnds,
-                i,
-                exitPort,
-                nextPort,
-                nextCard,
-                nextField;
-
-            //check if field exists
-            if (field !== undefined) {
-                newCard = field.getCard();
-
-                //check if card exists
-                if (newCard) {
-                    newEnds = newCard.getPathEnds(port);
-
-                    //check whether we've seen this card before
-                    if (!newCard.flag) {
-                        newCard.flag = true;
-                        //add event handlers for when card is manilpulated
-                        //add returned handler-removers to own reset-event
-                        resets.addHandler(newCard.doMove.addHandler(destruct));
-                        resets.addHandler(newCard.doRotate.addHandler(destruct));
-                    }
-
-                    //loop over all newPaths
-                    for (i = newEnds.length; i--;) {
-
-                        //check wether we've been here before
-                        if (newEnds[i].flag === undefined) {
-
-                            newEnds[i].flag = true; //flag this port
-                            ends.push(newEnds[i]); //add path end to route-array
-
-                            //prepare next step
-                            exitPort = newEnds[i].port;
-                            nextPort = portLookup[exitPort];
-                            nextCard = cardLookup[exitPort];
-                            nextField = field.step(nextCard, nextPort);
-
-                            //recursion
-                            step(board, ends, resets, nextField, nextPort);
-
-                        }
-                    }
-
-                }
-            }
+            return init();
         };
-
-        return init();
-
-    };//ROUTE
+    }());//ROUTE
 
     // === JQUERY OBJECT FUNCTIONS ===
     //finds the shrtct-element belonging to a jQuery-object
@@ -1081,7 +1132,7 @@
         if (test !== undefined) {
             value = shrtct.elements[test];
         } else {
-            throw new Error("jQuery.fn.shrtct: 'this' is not a card or board.");
+            throw new Error("jQuery.fn.shrtct: 'this' is not a shortcut element.");
         }
         return value;
     };
@@ -1094,7 +1145,7 @@
         });
         
         //BUILD FIELD
-        var board = shrtct.board({
+        shrtct.board({
             replace:   $('#board'),
             width:      5,
             height:     5
@@ -1104,12 +1155,13 @@
             replace:    $('#deck')
         });
         
+        /*
         //CREATE TEST BUTTON
         $('body').prepend('<div id="testButton" style="float: right; border: 1px solid #aaa;" >test</div>');
         $('#testButton').click(function () {
-            var route = board.walk(board.getField(3,1), 7);
-            route.setColor('red');
+
         });
+        */
     });
 
     }());
