@@ -194,7 +194,6 @@
             }
             //place board in DOM
             print();
-            createBounds(['jasper', 'hiske', 'iemand']); //testcode
             return that;
         };//INIT
 
@@ -269,9 +268,9 @@
             return field;
         };//GET FIELD
 
-        //CREATE BOUNDS [private]
+        //CREATE BOUNDS [public]
         //creates cards to form a ring on the outermost fields. include bases
-        createBounds = function (players) {
+        that.createBounds = createBounds = function (players) {
             //check whether board is big enough for this to make sense
             if (height > 2 && width > 2) {
                 var curField = getField(0, 1),
@@ -975,11 +974,12 @@
         var cardLookup = ['down', 'down', 'right', 'right',
             'up', 'up', 'left', 'left'],
             portLookup = [5, 4, 7, 6, 1, 0, 3, 2],
-            colored;
+            curColored;
 
         return function (field, card, path) {
             var that,
                 board = field.board,
+                colored = false,
                 init,
                 destruct,
                 setColor,
@@ -1045,17 +1045,24 @@
                 var i,
                     colorPaths;
 
-                //if another route is colored, uncolor it
-                if (colored) {
-                    colored.setColor();
-                }
-                colored = that; //this route is colored 
-
                 //create setColor function (no argument means no color)
                 colorPaths = function (color) {
+
                     if (!color) {
                         color = '';
+                        if (colored) {
+                            colored = false;
+                            curColored = undefined;
+                        }
+                    } else {
+                        //if another route is colored, uncolor it
+                        if (curColored) {
+                            curColored.setColor();
+                        }
+                        curColored = that; //this route is colored
+                        colored = true;
                     }
+
                     for (i = ends.length; i--;) {
                         ends[i].path.setColor(color);
                     }
@@ -1143,18 +1150,69 @@
         $('body').bind('contextmenu', function (event) {
             return false;
         });
-        
-        //BUILD FIELD
-        shrtct.board({
-            replace:   $('#board'),
-            width:      5,
-            height:     5
+
+        $('#numPlayers').change(function () {
+            var numPlayers = parseInt($('#numPlayers').attr('value'), 10),
+                fields = $('#playerList').children('li'),
+                numFields = parseInt(fields.length, 10),
+                html,
+                i;
+
+                if (numFields < numPlayers) {
+                    html = '';
+                    for (i = numPlayers - numFields; i--;) {
+                        html += '<li><input type="text" value="player" /></li>';
+                    }
+                    $('#playerList').append(html);
+                } else if (numFields > numPlayers) {
+                    fields.slice(numPlayers).remove();
+                }
+        }).trigger('change');
+
+        $('#backButton').click(function () {
+            location.reload();
         });
 
-        shrtct.deck({
-            replace:    $('#deck')
+        $('#ruleButton').click(function () {
+            $('#ruleBox').removeClass('hidden');
         });
-        
+
+        $('#ruleCloseButton').click(function () {
+            $('#ruleBox').addClass('hidden');
+        });
+
+        $('#beginButton').click(function (){
+            var board,
+                players = [],
+                boardSize = parseInt($('#boardSize').attr('value'), 10) + 2,
+                i;
+
+                for (i = $('#playerList').children('li').length; i--;) {
+                    players.push($('#playerList').children('li:eq(' + i + ')').
+                        children('input').attr('value'));
+                }
+            if (players.length > 2 * boardSize - 4) {
+                alert("Choose less players or a bigger board size.")
+            } else if (typeof boardSize < 3) {
+                alert("Choose a bigger board size.");
+            } else {
+
+                $('#startScreen').addClass('hidden');
+                $('#gameScreen').removeClass('hidden');
+
+                //BUILD BOARD
+                board = shrtct.board({
+                    replace:   $('#board'),
+                    width:      boardSize,
+                    height:     boardSize
+                });
+                board.createBounds(players); //testcode
+                //BUILD DECK
+                shrtct.deck({
+                    replace:    $('#deck')
+                });
+            }
+        })
         /*
         //CREATE TEST BUTTON
         $('body').prepend('<div id="testButton" style="float: right; border: 1px solid #aaa;" >test</div>');

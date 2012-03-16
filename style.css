@@ -1,12 +1,61 @@
 @charset "UTF-8";
+
+/* GENERAL STUFF */
 body {
     font-family:   "Trebuchet MS", Helvetica, sans-serif;
+    color:          #333;
 }
 
-#paths {
+.hidden {
     display:    none;
 }
 
+.container {
+    margin:     10px;
+}
+
+.button {
+    border:     1px solid #333;
+    width:      100px;
+    margin:     5px;
+    background: #eee;
+    text-align: center;
+    cursor:     default;
+}
+
+#beginButton {
+
+}
+
+#controls {
+    float:      right;
+}
+
+#backButton, #ruleButton {
+
+}
+
+#playerlist {
+    list-style: none;
+    padding:    0;
+    margin:     0;
+}
+
+#playerlist li {
+}
+
+#ruleBox {
+    position:   absolute;
+    top:        50px;
+    left:       50px;
+    right:      50px;
+    padding:    10px;
+    z-index:    20;
+    background: #fff;
+    border:     1px solid black;
+}
+
+/* GAME SPECIFIC STUFF */
 .row {
     clear:      left;
 }
