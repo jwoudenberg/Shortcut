@@ -34,81 +34,108 @@
 
     // --- ACTION ---
     //allows user-actions to be undertaken, enabled or disabled
-    //[man]spec.func:       function that will be called if succesfull
-    //[opt]spec.failFunc:   function that will be called if failed
-    //[opt]spec.enableFunc: function that will be called if enabled
-    //[opt]spec.disableFunc:function that will be called if disabled
-    //[opt]spec.defState:   defaul state (default: enabled)
-    shrtct.action = function (spec) {
+    //[man]func:       function that will be called if succesfull
+    //[opt]defState:   defaul state (default: enable)
+    shrtct.action = function (func, defState) {
         var that,
-            func = spec.func,
-            failFunc = spec.failFunc,
-            enableFunc = spec.enableFunc,
-            disableFunc = spec.disableFunc,
-            defState = spec.defState || 'enable',
             curState,
-            event = shrtct.event(),
             init,
             state,
-            addHandler;
+            enable,
+            disable,
+            reset;
 
         //ACT [public]
         //Executes function or fail-function depending on state
-        that = function () {
-            var value;
-            if (curState === 'enable') {
-                //this action is enabled, so execute its function
-                value = func(arguments[0], arguments[1], arguments[2]);
-                //fire the event
-                event.fire();
-            }
-            else {
-                //this action is disabled. Execute failFunc() if it exists
-                value = failFunc && failFunc();
-            }
-            return value;
-        };//ACT
+        that = (function () {
+            var event = shrtct.event(),
+                that,
+                result;
 
-        init = function () {
-            //check whether func has been provided
+            //check whether a function has been supplied
             if (func === undefined) {
                 throw new Error("shrtct.action: no spec.function has been provided");
             }
-            state('default');
+
+            that = function () {
+                if (curState === 'enable') {
+                    result = func.apply(null, arguments); //perform action
+                    event.fire(); //fire events
+                }
+                else {
+                    result = false;
+                }
+                return result;
+            };
+
+            that.bind = event.bind;
+
+            return that;
+        })();//ACT
+
+        init = function () {
+            reset();
             return that;
         };//INIT
 
         //STATE [public]
-        //allows the action state to be read or set
-        that.state = state = function (parameter) {
-            var value;
-            switch (parameter) {
-                case '': //request for current state-value
-                    value = curState;
-                    break;
-                case 'enable': //this is an attempt to enable an action
-                    curState = 'enable';
-                    //execute enableFunc() if it exists
-                    value = enableFunc && enableFunc();
-                    break;
-                case 'disable': //this is an attempt to disable an action
-                    curState = 'disable';
-                    //execute enableFunc() if it exists
-                    value = disableFunc && disableFunc();
-                    break;
-                case 'default': //this is an attempt to return state to default
-                    value = state(defState);
-                    break;
-                default: //some unvalid state has been provided
-                    throw new Error('shrtct.action: "' + parameter +
-                        '" is not a valid state');
-            }
-            return value;
+        //returns the current state
+        that.state = state = function () {
+            return curState;
         };//STATE
 
-        //ADD HANDLER [public]
-        //add a function that is called when action is succesfully performed
-        that.addHandler = addHandler = event.addHandler;
+        //ENABLE [public]
+        //enables the action
+        that.enable = enable = (function () {
+            var event = shrtct.event(),
+                enable;
+
+            enable = function () {
+                if (curState !== 'enable') {
+                    curState = 'enable';
+                    event.fire();
+                }
+            };
+            enable.bind = event.bind;
+
+            return enable;
+        })();//ENABLE
+
+        //DISABLE [public]
+        that.disable = disable = (function () {
+            var event = shrtct.event(),
+                disable;
+
+            disable = function () {
+                if (curState !== 'disable') {
+                    curState = 'disable';
+                    event.fire();
+                }
+            };
+            disable.bind = event.bind;
+
+            return disable;
+        })();//DISABLE
+
+        //DEFAULT [public]
+        that.reset = reset = (function () {
+            var resetFunc;
+
+            //if no defState supplied, set teh default to enable
+            if (defState === undefined) {
+                defState = 'enable';
+            }
+
+            if (defState === 'enable') {
+                resetFunc = enable;
+            } else if (defState === 'disable') {
+                resetFunc = disable;
+            } else {
+                throw new Error("action.reset: " + defState + " is not a valid state.");
+            }
+
+            return resetFunc;
+        })();//DEFAULT
 
         return init();
     };//ACTION
@@ -120,7 +147,7 @@
             handlers = [],
             init,
             fire,
-            addHandler;
+            bind;
 
         that = {};
         
@@ -134,30 +161,30 @@
         that.fire = fire = function () {
             var i;
             for (i = handlers.length; i--;) {
-                handlers[i].func();
+                if (handlers[i].dead) {
+                    handlers.splice(i, 1);
+                } else {
+                    handlers[i].func.apply(null, arguments);
+                }
             }
             return that;
-        };
+        };//FIRE
 
-        //ADD HANDLER
-        that.addHandler = addHandler = function (func) {
+        //BIND
+        //bind a new function to this event
+        that.bind = bind = function (func) {
             var handler = {'func': func};
 
             //allows a handler to be removed again
             handler.remove = function () {
-                var i = 0;
                 handler.dead = true;
-                while (!handlers[i].dead) {
-                    i += 1;
-                }
-                handlers.splice(i, 1);
             };
 
             //add handler to the list
             handlers.push(handler);
-            //return a way to remove the handler
+            //return handler-remove function
             return handler.remove;
-        };
+        };//BIND
 
         return init();
     };//EVENT
@@ -226,6 +253,7 @@
                 //providing those in a closure prevents accidental tampering
                 var x = row,
                     y = col;
+
                 return function (direction) {
                     var nextField;
 
@@ -276,6 +304,7 @@
                 var curField = getField(0, 1),
                     directions = ['right', 'down', 'left', 'up'],
                     dir = 0,
+                    i,
                     fieldsLeft = 2 * (width + height - 4), //don't count corners
                     basesLeft = 2 * players.length, //two bases a player
                     ratio = basesLeft / fieldsLeft,
@@ -283,7 +312,8 @@
                     player,
                     base,
                     spec;
-                while (curField.getCard() === undefined) {
+
+                for (i = 2 * (width + height - 2); i--;) {
                     nextField = curField.step(directions[dir]);
                     if (nextField === undefined) {//turn a corner
                         //change direction and recalculate the next field
@@ -312,7 +342,7 @@
                             //place a base
                             player = players[basesLeft % players.length];
                             base = {
-                                player: player,
+                                'player': player
                             };
                             basesLeft -= 1;
 
@@ -335,6 +365,7 @@
         };//CREATE BOUNDS
 
         //WALK [public]
+        //create a route object on this board
         that.walk = walk = function (field, port) {
             return shrtct.route(that, field, port);
         };//WALK
@@ -351,9 +382,7 @@
             curCard,
             init,
             print,
-            dropped,
-            checkIn,
-            doCheckIn;
+            dropped;
 
         //create a generic element to be extended
         that = shrtct.element('holder ' + spec.type);
@@ -361,16 +390,6 @@
         //INIT [private]
         init = function () {
             print();
-
-            //create action
-            that.doCheckIn = doCheckIn = shrtct.action({
-                func: checkIn,
-                //failFunc:
-                enableFunc: function () {that.front.droppable('enable'); },
-                disableFunc: function () {that.front.droppable('disable'); },
-                defState: spec.defDrop
-            });
-
             return that;
         };
 
@@ -390,7 +409,7 @@
 
         //DROPPED [private]
         dropped = function (dropCard) {
-            dropCard.doMove(that);
+            dropCard.move(that);
         };//DROPPED
 
         //GET CARD [public]
@@ -398,18 +417,29 @@
             return curCard;
         };
 
-        //CHECK IN [private]
-        //called by a card that likes to move here. If possible (vacant) then
-        //card is moved and a checkout-function is returned to card for later.
-        checkIn = function (newCard) {
-            curCard = newCard; //save link to card
-            doCheckIn.state('disable'); //holder no longer droppable
-            return function () {
-                //a function the card can use to check out again
-                curCard = undefined;
-                doCheckIn.state('default'); //set doCheckIn-state to default
-            };
-        };//CHECK IN
+        //CHECK IN [public] [action-function]
+        //called by card that wants to move here
+        that.checkIn = (function () {
+            var action;
+
+            action = shrtct.action(function (newCard) {
+                curCard = newCard; //save link to card
+                action.disable(); //holder no longer droppable
+
+                return function () {
+                    //a function the card can use to check out again
+                    curCard = undefined;
+                    action.reset(); //set back to default state
+                };
+
+            }, spec.defDrop);
+
+            //create handlers for enable and disable event
+            action.enable.bind(function () {that.front.droppable('enable'); });
+            action.disable.bind(function () {that.front.droppable('disable'); });
+
+            return action;
+        })();//CHECK IN
 
         return init();
     };//HOLDER
@@ -453,9 +483,7 @@
             init,
             print,
             clicked,
-            popCard,
-            popCardSmooth,
-            doPop;
+            popCard;
 
         //create a new generic element to be extended
         that = shrtct.holder({
@@ -467,16 +495,6 @@
         //called (below) to run once when deck is created
         init = function () {
             print();
-
-            //create popAction
-            doPop = shrtct.action({
-                func: popCardSmooth,
-                //failFunc:
-                //enableFunc:
-                //disableFunc:
-                defState: 'enable'
-            });
-
             return that;
         };//INIT
         
@@ -499,47 +517,53 @@
         //called when a deck is clicked
         clicked = function (event) {
             if (event.which === 1) { //check for left-click
-                doPop();
+                popCard();
             }
         };
 
-        //POP CARD [private]
-        //called when card is clicked to create and show a new card
-        popCard = function () {
-            var newCard;
-            //check whether the deck already contains a card
-            if (that.getCard() === undefined) {
-                newCard =  shrtct.randCard(that);
-                return newCard;
-            }
-        };//POP CARD
-
-        //POP CARD SMOOTH [private]
+        //POP CARD [public]
         //pop a new card with a reveal-effect
-        popCardSmooth = function () {
-            var newCard, popCardSmooth2;
+        that.popCard = popCard = (function () {
+            var action, makeCard;
 
-            newCard = popCard (); //try to create a new card
-            if (newCard !== undefined) { //if succes
-                doPop.state('disable'); //no new pops for the moment
-                that.front.addClass('flipped'); //do the flip-effect (all CSS)
+            makeCard = function () {
+                var newCard;
+                //check whether the deck already contains a card
+                if (that.getCard() === undefined) {
+                    that.checkIn.enable();
+                    newCard =  shrtct.randCard(that);
+                    that.checkIn.disable();
+                    return newCard;
+                }
+            };
 
-                //set a timer to fire when the effect is finished
-                //300ms also defined in the CSS
-                setTimeout(function () {popCardSmooth2(); }, 500);
+            action = shrtct.action(function () {
+                var popCard2,
+                    newCard = makeCard(); //try to create a new card
 
-                popCardSmooth2 = function () {
-                    //new pops allowed again
-                    doPop.state('enable');
-                    //flip back (happens instantly)
-                    that.front.removeClass('flipped');
-                    //free the new card from the cardWrap-div
-                    newCard.front.insertAfter(that.front);
-                };//popCardSmooth2
-            }
+                if (newCard !== undefined) { //if succes
+                    action.disable(); //no new pops for the moment
+                    that.front.addClass('flipped'); //do the flip-effect (CSS)
 
-            return that;
-        };//POP CARD
+                    //set a timer to fire when the effect is finished
+                    //300ms also defined in the CSS
+                    setTimeout(function () {popCard2(); }, 500);
+
+                    popCard2 = function () {
+                        //new pops allowed again
+                        action.enable();
+                        //flip back (happens instantly)
+                        that.front.removeClass('flipped');
+                        //free the new card from the cardWrap-div
+                        newCard.front.insertAfter(that.front);
+                    };//popCard2
+                }
+
+                return that;
+            });
+
+            return action;
+        })();//POP CARD
 
         return init();
     };//DECK
@@ -566,8 +590,6 @@
             init,
             print,
             clicked,
-            doRotate,
-            doMove,
             move,
             rotate,
             getPathEnds,
@@ -625,79 +647,69 @@
                 event.preventDefault();
             });
 
-            //print to DOM
-            that.front.appendTo(spec.holder.front);
         };//PRINT
 
         //CLICKED [private]
         //called when a card is clicked
         clicked = function (event) {
             if (event.which === 3) { //check for right-click
-                doRotate();
+                that.rotate('smooth');
             }
         };
 
-        //DO ROTATE
-        //action-wrapper around the rotate-function
-        that.doRotate = doRotate = shrtct.action({
-            func: function () {rotate('smooth'); },
-            //failFunc:
-            enableFunc: function () {that.front.addClass('rotateable'); },
-            disableFunc: function () {that.front.removeClass('rotateable'); },
-            defState: spec.rotateable
-        });
-
-        //DO MOVE [public]
-        //action-wrapper around the move-function
-        that.doMove = doMove = shrtct.action({
-            func: function (holder) {
-                move(holder);
-                doMove.state('disable');
-            },
-            //failFunc:
-            enableFunc: function () {
-                that.front.draggable('enable');
-                that.front.addClass('draggable');
-            },
-            disableFunc:  function () {
-                that.front.draggable('disable');
-                that.front.removeClass('draggable');
-            },
-            defState: spec.moveable
-        });
-
         //MOVE [private]
         //takes a holder and tries to move card there
-        move = move = (function () {
-            //when checking in, holder returns a function checkOut() for later
+        move = (function () {
             var checkOut;
 
             return function (holder) {
                 var value;
-                curHolder = holder;
-                value = holder.doCheckIn(that);
-                if (value) { //card is accepted
 
+                curHolder = holder;
+                value = holder.checkIn(that);
+
+                if (value) { //card is accepted
                     that.front.appendTo(holder.front); //move card in DOM
                     //check out of current holder (if checked in)
                     if(checkOut) {
                         checkOut();
                     }
                     checkOut = value; //bind new checkOut function
-
                 }
+
                 return that;
             };
+        })();
+
+        //MOVE [public]
+        //private move function wrapped in action object
+        that.move = (function () {
+            //when checking in, holder returns a function checkOut() for later
+            var action;
+
+            action = shrtct.action(move, spec.moveable);
+
+            //bind event handlers
+            action.enable.bind(function () {
+                that.front.draggable('enable');
+                that.front.addClass('draggable');
+            });
+            action.disable.bind(function () {
+                that.front.draggable('disable');
+                that.front.removeClass('draggable');
+            });
+
+            return action;
         })();//MOVE
 
         //ROTATE [private]
         //1 argument: can be a number (turn increment) or 'smooth' (rot. eff.)
         rotate = (function () {
             var rotation = 0;
-            that.front.attr('data-rotation', 0);
 
             return function (argument) {
-            var turns;
+                var turns, i;
+
                 //adds newTurns (or 1 if it is not provided) to turns
                 if (typeof argument === 'number') {
                     turns = argument;
@@ -712,8 +724,7 @@
                 else { //go to instant mode (CSS hook)
                     that.front.removeClass('rotateSmooth');    
                 }
-                
-                var i, ii;
+
                 //rotate visually (faster than reprinting all the paths)
                 rotation = (rotation + turns * 90);
                 that.front.css({
@@ -724,11 +735,28 @@
                 });
 
                 //Shift start and exit-port of all paths two places per turn
-                for (i = 0, ii = paths.length; i < ii; i += 1) {
+                for (i = paths.length; i--;) {
                     paths[i].ports[0] = (paths[i].ports[0] + 6 * turns) % 8;
                     paths[i].ports[1] = (paths[i].ports[1] + 6 * turns) % 8;
                 }
             };
+        })();//ROTATE [private]
+
+        //ROTATE [public]
+        //private rotate function wrapped in an action object
+        that.rotate = (function () {
+            var action;
+
+            that.front.attr('data-rotation', 0);
+
+            //create action object
+            action = shrtct.action(rotate, spec.rotateable);
+
+            //bind event handlers
+            action.enable.bind(function () {that.front.addClass('rotateable'); });
+            action.disable.bind(function () {that.front.removeClass('rotateable'); });
+
+            return action;
         })();//ROTATE
 
         //GET PATH-ENDS [public]
@@ -737,7 +765,7 @@
             var cache = []; //memoization
 
             //register event handler for rotation event (cache will be cleared)
-            doRotate.addHandler(function (){
+            rotate.bind(function (){
                 cache = [];
             });
 
@@ -1069,7 +1097,7 @@
                 };
 
                 //when route is destroyed, set color back (register only once)
-                resets.addHandler(colorPaths);
+                resets.bind(colorPaths);
 
                 return colorPaths;
             })();//SET COLOR
@@ -1098,8 +1126,8 @@
                             newCard.flag = true;
                             //add event handlers for when card is manilpulated
                             //add returned handler-removers to own reset-event
-                            resets.addHandler(newCard.doMove.addHandler(destruct));
-                            resets.addHandler(newCard.doRotate.addHandler(destruct));
+                            resets.bind(newCard.move.bind(destruct));
+                            resets.bind(newCard.rotate.bind(destruct));
                         }
 
                         //loop over all newPaths
