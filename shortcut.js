@@ -1,7 +1,14 @@
+// --- SHRTCT OBJECT ---
+//global that contains the rest of the program
+var shrtct = {
+    elements: [] //will contain references to all interface elements (divs)
+};
+
 (function () {"use strict";
     //OBJECT OVERVIEW:
     // shrtct
     // - shrtct.action
+    // - shrtct.event
     // - shrtct.element
     //   - shrtct.board
     //   - shrtct.holder
@@ -9,13 +16,6 @@
     //     - shrtct.deck
     //   - shrtct.card (alternative: shrtct.randCard)
     //   - shrtct.path
-
-
-    // --- SHRTCT OBJECT ---
-    //global that contains the rest of the program
-    var shrtct = {
-        elements: [] //will contain references to all interface elements (divs)
-    };
 
     // --- ELEMENT ---
     //constructs a generic object with jQuery interace and saves it in shrtct
@@ -60,7 +60,7 @@
             that = function () {
                 if (curState === 'enable') {
                     result = func.apply(null, arguments); //perform action
-                    event.fire(); //fire events
+                    event.fire(result); //fire events
                 }
                 else {
                     result = false;
@@ -194,15 +194,14 @@
     //[man]spec.width:   width of the board
     //[man]spec.height:  height of the board
     //[man]spec.replace: jQuery-element that will be replaced with the board
-    shrtct.board = function (spec) {
+    shrtct.board = shrtct.action(function (spec) {
         var that,
-            width = spec.width,
-            height = spec.height,
-            fields = [],
             init,
             print,
-            createField,
+            getWidth,
+            getHeight,
             getField,
+            createField,
             createBounds,
             walk;
 
@@ -211,16 +210,7 @@
 
         //INIT [private]
         init = function () {
-            var i, j;
-            //create fields
-            for (i = 0; i < height; i += 1) { //loop over all rows
-                fields[i] = [];
-                for (j = 0; j < width; j += 1) { //loop over all collumns
-                    createField(i, j);
-                }
-            }
-            //place board in DOM
-            print();
+            //print(); //place board in DOM
             return that;
         };//INIT
 
@@ -240,11 +230,28 @@
             return that;
         };//PRINT
 
+        //GET WIDTH [public]
+        that.getWidth = getWidth = (function () {
+            var width = spec.width;
+            return function () {
+                return width;
+            };
+        })();//GET WIDTH
+
+        //GET HEIGHT [public]
+        that.getHeight = getHeight = (function () {
+            var height = spec.height;
+            return function () {
+                return height;
+            };
+        })();//GET HEIGHT
+
         //CREATE FIELD [private]
         //creates a field at specific coordinates
         createField = function (row, col) {
             //spec object will be handed to field constructor
-            var spec = {'board': that};
+            var field,
+                spec = {'board': that};
 
             //STEP
             //provide field with step(), which returns an adjacent field.
@@ -278,40 +285,63 @@
                 };
             })();//STEP
 
-            fields[row][col] = shrtct.field(spec); //create field
-            return fields[row][col];
+            field = shrtct.field(spec); //create field
+            return field;
         };//CREATE FIELD
 
         //GET FIELD [public]
         //returns the field at specific coordinates
-        that.getField = getField = function (x, y) {
-            var field;
-            //check whether coordinates fall outside the bord
-            if (x >= height || x < 0 || y >= width || y < 0) {
-                field = undefined;
+        that.getField = getField = (function () {
+            var fields = [],
+                width = getWidth(),
+                height = getHeight(),
+                i,
+                j;
+
+            //create fields
+            for (i = height; i--;) { //loop over all rows
+                fields[i] = [];
+                for (j = width; j--;) { //loop over all collumns
+                    fields[i][j] = createField(i, j);
+                }
             }
-            else {
-                field = fields[x][y];
-            }
-            return field;
-        };//GET FIELD
+
+            //field-seeking function
+            return function (x, y) {
+                var width = getWidth(),
+                    height = getHeight(),
+                    field;
+
+                //check whether coordinates fall outside the bord
+                if (x >= height || x < 0 || y >= width || y < 0) {
+                    field = undefined;
+                }
+                else {
+                    field = fields[x][y];
+                }
+
+                return field;
+            };
+        })();//GET FIELD
 
         //CREATE BOUNDS [public]
         //creates cards to form a ring on the outermost fields. include bases
         that.createBounds = createBounds = function (players) {
+            var width = getWidth(),
+                height = getHeight(),
+                curField = getField(0, 1),
+                directions = ['right', 'down', 'left', 'up'],
+                dir = 0,
+                i,
+                fieldsLeft = 2 * (width + height - 4), //don't count corners
+                basesLeft = 2 * players.length, //two bases a player
+                ratio = basesLeft / fieldsLeft,
+                nextField,
+                player,
+                base,
+                spec;
             //check whether board is big enough for this to make sense
             if (height > 2 && width > 2) {
-                var curField = getField(0, 1),
-                    directions = ['right', 'down', 'left', 'up'],
-                    dir = 0,
-                    i,
-                    fieldsLeft = 2 * (width + height - 4), //don't count corners
-                    basesLeft = 2 * players.length, //two bases a player
-                    ratio = basesLeft / fieldsLeft,
-                    nextField,
-                    player,
-                    base,
-                    spec;
 
                 for (i = 2 * (width + height - 2); i--;) {
                     nextField = curField.step(directions[dir]);
@@ -371,7 +401,7 @@
         };//WALK
 
         return init();
-    };//BOARD
+    });//BOARD
 
     // --- HOLDER ---
     //An element that holds card. Needs extension to become truly usefull
@@ -447,7 +477,7 @@
 
     // --- FIELD --- [inherits from holder]
     //[man]spec.step(): can be used to navigate to adjecent fields
-    shrtct.field = function (spec) {
+    shrtct.field = shrtct.action(function (spec) {
         var that,
             init,
             step;
@@ -472,13 +502,13 @@
         that.step = step = spec.step;
 
         return init();
-    };//FIELD
+    });//FIELD
 
 
     // --- DECK --- [inherits from holder]
     //puts new cards on the screen
     //[man]spec.replace: jQuery-element that will be replaced with deck
-    shrtct.deck = function (spec) {
+    shrtct.deck = shrtct.action(function (spec) {
         var that,
             init,
             print,
@@ -566,7 +596,7 @@
         })();//POP CARD
 
         return init();
-    };//DECK
+    });//DECK
 
     // --- CARD ---
     //create a new card, place it in 'field' and give it 'paths'
@@ -576,7 +606,7 @@
     //[opt]spec.text:   text to display in the card. Default: no text
     //[opt]spec.moveable:   whether card is moveable: enable (def) or disable
     //[opt]spec.rotateable: whether card van be rotated: enable (def) or disable
-    shrtct.card = function (spec) {
+    shrtct.card = shrtct.action(function (spec) {
         //Paths connect two of 8 ports, numbered like below.
         //     54
         //     --
@@ -823,12 +853,12 @@
         };//ADD BASE
 
         return init();
-    };//CARD
+    });//CARD
 
     // --- PATH ---
     //takes an ID and a route (array containing start and end point).
     //[man]spec.ports: the two ports this path connects
-    shrtct.path = function (spec) {
+    shrtct.path = shrtct.action(function (spec) {
         var ports = spec.ports.slice(0), //save a copy of the ports
             that,
             init,
@@ -924,7 +954,7 @@
         };
 
         return init();
-    };//PATH
+    });//PATH
 
     // --- RANDOM CARD ---
     //create a unique card. no need to specify paths (unlike shrtct.card)
