@@ -1,8 +1,6 @@
 // --- SHRTCT OBJECT ---
 //global that contains the rest of the program
-var shrtct = {
-    elements: [] //will contain references to all interface elements (divs)
-};
+var shrtct = {};
 
 (function () {"use strict";
     //OBJECT OVERVIEW:
@@ -20,17 +18,20 @@ var shrtct = {
     // --- ELEMENT ---
     //constructs a generic object with jQuery interace and saves it in shrtct
     //[opt]type: the type of element (board, card, ...). Default: untyped
-    shrtct.element = function (type) {
-        var id = shrtct.elements.length, //give unique element-id
-            that = shrtct.elements[id] = {};
-        if(type === undefined) {
-            type = 'untyped';
-        }
-        //create jQyeury object as 'front' of the new element (don't add to DOM)
-        that.front = $('<div class="' + type +
-            '" data-shrtct="' + id + '" />');
-        return that;
-    };
+    shrtct.element = (function () {
+        var lastId = 0;
+
+        return function () {
+            var that = {},
+                id = lastId++;
+
+            that.getID = function () {
+                return id;
+            };
+
+            return that;
+        };
+    })();
 
     // --- ACTION ---
     //allows user-actions to be undertaken, enabled or disabled
@@ -60,7 +61,9 @@ var shrtct = {
             that = function () {
                 if (curState === 'enable') {
                     result = func.apply(null, arguments); //perform action
-                    event.fire(result); //fire events
+                    if (result) { //only fire events if function succeeds
+                        event.fire(result); //fire events
+                    }
                 }
                 else {
                     result = false;
@@ -197,7 +200,6 @@ var shrtct = {
     shrtct.board = shrtct.action(function (spec) {
         var that,
             init,
-            print,
             getWidth,
             getHeight,
             getField,
@@ -210,25 +212,8 @@ var shrtct = {
 
         //INIT [private]
         init = function () {
-            //print(); //place board in DOM
             return that;
         };//INIT
-
-        //PRINT [private]
-        //prints row-divs and fields inside the board-element
-        print = function () {
-            var i, j, row;
-            for (i = 0; i < height; i += 1) { //loop over rows
-                row = $('<div class="row" />').
-                    appendTo(that.front);
-                for (j = 0; j < width; j += 1) { //loop over field in row
-                    fields[i][j].front.appendTo(row);
-                }
-            }
-            //print to DOM
-            that.front.replaceAll(spec.replace);
-            return that;
-        };//PRINT
 
         //GET WIDTH [public]
         that.getWidth = getWidth = (function () {
@@ -331,63 +316,66 @@ var shrtct = {
                 height = getHeight(),
                 curField = getField(0, 1),
                 directions = ['right', 'down', 'left', 'up'],
-                dir = 0,
-                i,
-                fieldsLeft = 2 * (width + height - 4), //don't count corners
+                fieldsLeft = 2 * (width + height - 4), //don't count corners,
                 basesLeft = 2 * players.length, //two bases a player
+                dir = 0,
+                corner,
+                i,
                 ratio = basesLeft / fieldsLeft,
-                nextField,
-                player,
-                base,
-                spec;
+                createBoundCard,
+                nextField;
+
+            createBoundCard = function () {
+                var spec = {
+                        holder: curField,
+                        paths: [[1, 2]],
+                        rotate: dir,
+                        rotateable: 'disable',
+                        moveable:'disable'
+                    },
+                    player,
+                    base;
+
+                if (!corner) {
+                    spec.paths.push([0, 7]);
+
+                    if (basesLeft / fieldsLeft > ratio) {
+                        //place a base
+                        player = players[basesLeft % players.length];
+                        base = {
+                            'player': player
+                        };
+                        basesLeft -= 1;
+
+                        //randomly choose a port to connect the base-path to
+                        if (Math.floor(Math.random() * 2) === 0) {
+                            spec.paths[2] = [0, base];
+                            
+                        }
+                        else {
+                            spec.paths[2] = [1, base];
+                        }
+                    }
+                }
+
+                shrtct.card(spec);
+            };
+
             //check whether board is big enough for this to make sense
             if (height > 2 && width > 2) {
-
                 for (i = 2 * (width + height - 2); i--;) {
                     nextField = curField.step(directions[dir]);
                     if (nextField === undefined) {//turn a corner
                         //change direction and recalculate the next field
                         dir = (dir + 1) % 4;
                         nextField = curField.step(directions[dir]);
-                        shrtct.card({
-                            holder:     curField,
-                            paths:      [[1, 2]],
-                            rotate:     dir,
-                            rotateable: 'disable',
-                            moveable:   'disable'
-                        });
+                        corner = true;
                     }
                     else {//straight ahead!
-                        spec = {
-                            holder:     curField,
-                            paths:      [[0, 7], [1, 2]],
-                            rotate:     dir,
-                            rotateable: 'disable',
-                            moveable:   'disable'
-                        };
-
-                        //check whether it's time to also build a base-path
                         fieldsLeft -= 1;
-                        if (basesLeft / fieldsLeft > ratio) {
-                            //place a base
-                            player = players[basesLeft % players.length];
-                            base = {
-                                'player': player
-                            };
-                            basesLeft -= 1;
-
-                            //randomly choose a port to connect the base-path to
-                            if (Math.floor(Math.random() * 2) === 0) {
-                                spec.paths[2] = [0, base];
-                                
-                            }
-                            else {
-                                spec.paths[2] = [1, base];
-                            }
-                        }
-                        //create the card
-                        shrtct.card(spec);
+                        corner = false;
                     }
+                    createBoundCard();
                     curField = nextField; //do step
                 }
             }
@@ -403,6 +391,7 @@ var shrtct = {
         return init();
     });//BOARD
 
+
     // --- HOLDER ---
     //An element that holds card. Needs extension to become truly usefull
     //[opt]spec.defDrop: Whether holder is droppable. 'enabled' / 'disabled'
@@ -410,37 +399,15 @@ var shrtct = {
     shrtct.holder = function(spec) {
         var that,
             curCard,
-            init,
-            print,
-            dropped;
+            init;
 
         //create a generic element to be extended
         that = shrtct.element('holder ' + spec.type);
 
         //INIT [private]
         init = function () {
-            print();
             return that;
         };
-
-        //PRINT [private]
-        print = print = function () {
-            //make fields droppable
-            that.front.droppable({
-                drop: function (event, ui) {
-                    //remove positioning-css in style-attribute
-                    ui.draggable.css({left: 0, top: 0});
-                    //call function with dropped card as an argument
-                    dropped(ui.draggable.shrtct());
-                }
-            });
-            return that;
-        };//PRINT
-
-        //DROPPED [private]
-        dropped = function (dropCard) {
-            dropCard.move(that);
-        };//DROPPED
 
         //GET CARD [public]
         that.getCard = function () {
@@ -463,10 +430,6 @@ var shrtct = {
                 };
 
             }, spec.defDrop);
-
-            //create handlers for enable and disable event
-            action.enable.bind(function () {that.front.droppable('enable'); });
-            action.disable.bind(function () {that.front.droppable('disable'); });
 
             return action;
         })();//CHECK IN
@@ -508,12 +471,11 @@ var shrtct = {
     // --- DECK --- [inherits from holder]
     //puts new cards on the screen
     //[man]spec.replace: jQuery-element that will be replaced with deck
-    shrtct.deck = shrtct.action(function (spec) {
+    shrtct.deck = shrtct.action(function () {
         var that,
             init,
-            print,
             clicked,
-            popCard;
+            pop;
 
         //create a new generic element to be extended
         that = shrtct.holder({
@@ -524,76 +486,37 @@ var shrtct = {
         //INIT [private]
         //called (below) to run once when deck is created
         init = function () {
-            print();
             return that;
         };//INIT
-        
-        //PRINT [private]
-        //called once at deck creation to create DOM-connection
-        print = function () {
-            that.front.replaceAll(spec.replace).
-                mousedown(function (event) {
-                //register mousedown even handler (for card creation)
-                clicked(event);
-                event.preventDefault();
-            }).html('<div class="cardBack"><div class="text">card</div></div>').
-                wrapInner('<div class="cardWrap" />');
-            //we need an addition wrapper div for the flip effect
-            that.front = that.front.children('.cardWrap');
-            return that;
-        };//PRINT
 
-        //CLICKED [private]
+        //CLICKED [public]
         //called when a deck is clicked
-        clicked = function (event) {
+        that.clicked = clicked = function (event) {
             if (event.which === 1) { //check for left-click
-                popCard();
+                pop();
             }
         };
 
         //POP CARD [public]
         //pop a new card with a reveal-effect
-        that.popCard = popCard = (function () {
-            var action, makeCard;
+        that.pop = pop = shrtct.action(function () {
+            var newCard, value;
 
-            makeCard = function () {
-                var newCard;
-                //check whether the deck already contains a card
-                if (that.getCard() === undefined) {
-                    that.checkIn.enable();
-                    newCard =  shrtct.randCard(that);
-                    that.checkIn.disable();
-                    return newCard;
-                }
-            };
+            //check whether the deck already contains a card
+            if (that.getCard() === undefined) {
+                that.checkIn.enable();
+                newCard =  shrtct.randCard(that);
+                that.checkIn.disable();
+            }
 
-            action = shrtct.action(function () {
-                var popCard2,
-                    newCard = makeCard(); //try to create a new card
+            if (newCard === undefined) {
+                value = false;
+            } else {
+                value = newCard;
+            }
 
-                if (newCard !== undefined) { //if succes
-                    action.disable(); //no new pops for the moment
-                    that.front.addClass('flipped'); //do the flip-effect (CSS)
-
-                    //set a timer to fire when the effect is finished
-                    //300ms also defined in the CSS
-                    setTimeout(function () {popCard2(); }, 500);
-
-                    popCard2 = function () {
-                        //new pops allowed again
-                        action.enable();
-                        //flip back (happens instantly)
-                        that.front.removeClass('flipped');
-                        //free the new card from the cardWrap-div
-                        newCard.front.insertAfter(that.front);
-                    };//popCard2
-                }
-
-                return that;
-            });
-
-            return action;
-        })();//POP CARD
+            return value;
+        });//POP CARD
 
         return init();
     });//DECK
@@ -618,15 +541,15 @@ var shrtct = {
             that,
             curHolder,
             init,
-            print,
-            clicked,
             move,
             rotate,
+            getHolder,
             getPathEnds,
             addBase;
 
         //create a generic element to be extended
         that = shrtct.element('card');
+        that.paths = paths;
 
         //INIT [private]
         //called (below) to run once when card is created
@@ -636,8 +559,7 @@ var shrtct = {
             //create paths
             for (i = spec.paths.length; i--;) {
                 path = paths[i] = shrtct.path({
-                    ports: spec.paths[i],
-                    container: that.front
+                    ports: spec.paths[i]
                 });
 
                 //if this path contains a base
@@ -646,7 +568,6 @@ var shrtct = {
                 }
             }
 
-            print(); //not yet in DOM, that happens with move() below
             if (spec.holder === undefined) {
                 throw new Error("shrtct.card: card holder not specified");
             }
@@ -659,33 +580,7 @@ var shrtct = {
             }
 
             return that;
-        };//INIT
-
-        //PRINT [private]
-        //called once at card creation to create DOM-connection
-        print = function () {
-            //rotation attribute
-            that.front.attr('data-rotation',0).draggable({
-                //make card draggable
-                revert: 'invalid',  //jump back if not dropped on a droppable
-                revertDuration: 100,//jump back-animation
-                helper: 'original'
-            }).mousedown(function (event) {
-                //register mousedown even handler (for rotation)
-                event.stopPropagation(); //
-                clicked(event);
-                event.preventDefault();
-            });
-
-        };//PRINT
-
-        //CLICKED [private]
-        //called when a card is clicked
-        clicked = function (event) {
-            if (event.which === 3) { //check for right-click
-                that.rotate('smooth');
-            }
-        };
+        };//INIT;
 
         //MOVE [private]
         //takes a holder and tries to move card there
@@ -693,21 +588,24 @@ var shrtct = {
             var checkOut;
 
             return function (holder) {
-                var value;
+                var attempt, value;
 
                 curHolder = holder;
-                value = holder.checkIn(that);
+                attempt = holder.checkIn(that);
 
-                if (value) { //card is accepted
-                    that.front.appendTo(holder.front); //move card in DOM
+                if (attempt) { //card is accepted
                     //check out of current holder (if checked in)
                     if(checkOut) {
                         checkOut();
                     }
-                    checkOut = value; //bind new checkOut function
+                    checkOut = attempt; //bind new checkOut function
+                    value = true;
+                }
+                else {
+                    value = false;
                 }
 
-                return that;
+                return value;
             };
         })();
 
@@ -734,50 +632,31 @@ var shrtct = {
 
         //ROTATE [private]
         //1 argument: can be a number (turn increment) or 'smooth' (rot. eff.)
-        rotate = (function () {
-            var rotation = 0;
+        rotate = function (argument) {
+            var turns, i;
 
-            return function (argument) {
-                var turns, i;
+            //adds newTurns (or 1 if it is not provided) to turns
+            if (typeof argument === 'number') {
+                turns = argument;
+            } else {
+                turns = 1;
+            }
 
-                //adds newTurns (or 1 if it is not provided) to turns
-                if (typeof argument === 'number') {
-                    turns = argument;
-                } else {
-                    turns = 1;
-                }
-
-                //smooth or instant rotation?
-                if (argument === 'smooth') { //go to smooth mode (CSS hook)
-                    that.front.addClass('rotateSmooth');
-                }
-                else { //go to instant mode (CSS hook)
-                    that.front.removeClass('rotateSmooth');    
-                }
-
-                //rotate visually (faster than reprinting all the paths)
-                rotation = (rotation + turns * 90);
-                that.front.css({
-                    'transform':            'rotate(' + rotation + 'deg)',
-                    '-moz-transform':       'rotate(' + rotation + 'deg)',
-                    '-webkit-transform':    'rotate(' + rotation + 'deg)',
-                    '-o-transform':         'rotate(' + rotation + 'deg)'
-                });
-
-                //Shift start and exit-port of all paths two places per turn
-                for (i = paths.length; i--;) {
-                    paths[i].ports[0] = (paths[i].ports[0] + 6 * turns) % 8;
+            //Shift start and exit-port of all paths two places per turn
+            for (i = paths.length; i--;) {
+                paths[i].ports[0] = (paths[i].ports[0] + 6 * turns) % 8;
+                if (typeof paths[i].ports[1] === 'number') {
                     paths[i].ports[1] = (paths[i].ports[1] + 6 * turns) % 8;
                 }
-            };
-        })();//ROTATE [private]
+            }
+
+            return true;
+        };//ROTATE [private]
 
         //ROTATE [public]
         //private rotate function wrapped in an action object
         that.rotate = (function () {
             var action;
-
-            that.front.attr('data-rotation', 0);
 
             //create action object
             action = shrtct.action(rotate, spec.rotateable);
@@ -788,6 +667,11 @@ var shrtct = {
 
             return action;
         })();//ROTATE
+
+        //GET HOLDER [public]
+        that.getHolder = getHolder = function () {
+            return curHolder;
+        };//GET HOLDER
 
         //GET PATH-ENDS [public]
         //takes a port, returns the paths and end-ports that connect to it
@@ -862,7 +746,6 @@ var shrtct = {
         var ports = spec.ports.slice(0), //save a copy of the ports
             that,
             init,
-            print,
             setColor;
 
         //create a generic element to be extended
@@ -871,77 +754,8 @@ var shrtct = {
 
         //INIT [private]
         init = function () {
-            print();
             return that;
         };//INIT
-
-        //PRINT draws an svg path [private]
-        print = function () {
-            var distance,
-                start,
-                rotation,
-                mirrored,
-                transform;
-
-            //check for one-ended paths
-            if (typeof ports[1] === 'object') {
-                that.base = ports[1];//make base accessible
-                ports[1] = ports[0];
-            }
-
-            //a path is defined by its starting port and
-            //  the distance it covers clockwise from start to end port
-            distance = Math.abs(ports[0] - ports[1]);
-
-            //we can go A->B or B->A. pick the shortest route (avoids trouble)
-            if (distance <= 4) { //this is the shortest route
-                //small portnumber is starting point
-                start = Math.min(ports[0], ports[1]);
-            } else { //the distance is larger then 4, the other route is shorter
-                distance = 8 - distance; //distance of the new route
-                //larg portnumber is starting point
-                start = Math.max(ports[0], ports[1]);
-            }
-
-            //the 6 possible path shapes in the html file can be rotated and
-            //  mirrored to create all possible paths. Default values:
-            rotation = 0;
-            mirrored = false;
-
-            //odd ports (1,3,5,7) will use mirror images of even ports (0,2,4,6)
-            if ((start % 2) === 1) {
-                mirrored = true;
-                distance = (8 - distance) % 8; //distance of the mirrored path
-                start -= 1; //make is even, so we can divide by two below
-
-                //the 'distance 6'-path is a rotated 'distance 2'.
-                if (distance === 6) {
-                    distance = 2;
-                    rotation += 270;
-                }
-            }
-
-            //rotate path 0,1,2 or 3 turns
-            rotation = (rotation - start / 2 * 90) % 360;
-
-            //all info collected. create svg group-element attributes
-            //rotation around the centre of the image (x=375, y=375)
-            transform = 'rotate(' + rotation + ' 375 375)';
-            if (mirrored) {
-                transform += ' scale(-1 1) translate(-750 0)';
-            }
-
-            //clone the right svg element, append it to the path-div and
-            //give attributes to the group element within the svg
-            that.front.empty(); //remove current content (if it exists)
-            $('#path-' + distance).clone().removeAttr('id').
-                appendTo(that.front).children('g').attr('transform', transform);
-
-            //append path to card
-            that.front.appendTo(spec.container);
-
-            return that;
-        };//PRINT
 
         //SET COLOR
         //sets a color for this path
@@ -1188,19 +1002,6 @@ var shrtct = {
             return init();
         };
     }());//ROUTE
-
-    // === JQUERY OBJECT FUNCTIONS ===
-    //finds the shrtct-element belonging to a jQuery-object
-    $.fn.shrtct = function () {
-        var value, //to be returned later
-            test = this.attr('data-shrtct'); //all shrtct-elements have this
-        if (test !== undefined) {
-            value = shrtct.elements[test];
-        } else {
-            throw new Error("jQuery.fn.shrtct: 'this' is not a shortcut element.");
-        }
-        return value;
-    };
 
     // === EXECUTE WHEN DOCUMENT IS LOADED ===
     $(document).ready(function () {
