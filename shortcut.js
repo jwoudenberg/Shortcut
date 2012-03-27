@@ -94,10 +94,8 @@ var shrtct = {};
                 enable;
 
             enable = function () {
-                if (curState !== 'enable') {
-                    curState = 'enable';
-                    event.fire();
-                }
+                curState = 'enable';
+                event.fire();
             };
             enable.bind = event.bind;
 
@@ -110,10 +108,8 @@ var shrtct = {};
                 disable;
 
             disable = function () {
-                if (curState !== 'disable') {
-                    curState = 'disable';
-                    event.fire();
-                }
+                curState = 'disable';
+                event.fire();
             };
             disable.bind = event.bind;
 
@@ -196,7 +192,6 @@ var shrtct = {};
     //extends a jquery object representing the board
     //[man]spec.width:   width of the board
     //[man]spec.height:  height of the board
-    //[man]spec.replace: jQuery-element that will be replaced with the board
     shrtct.board = shrtct.action(function (spec) {
         var that,
             init,
@@ -470,11 +465,9 @@ var shrtct = {};
 
     // --- DECK --- [inherits from holder]
     //puts new cards on the screen
-    //[man]spec.replace: jQuery-element that will be replaced with deck
     shrtct.deck = shrtct.action(function () {
         var that,
             init,
-            clicked,
             pop;
 
         //create a new generic element to be extended
@@ -488,14 +481,6 @@ var shrtct = {};
         init = function () {
             return that;
         };//INIT
-
-        //CLICKED [public]
-        //called when a deck is clicked
-        that.clicked = clicked = function (event) {
-            if (event.which === 1) { //check for left-click
-                pop();
-            }
-        };
 
         //POP CARD [public]
         //pop a new card with a reveal-effect
@@ -572,7 +557,9 @@ var shrtct = {};
                 throw new Error("shrtct.card: card holder not specified");
             }
 
+            move.enable();
             move(spec.holder); //places card in DOM
+            move.reset();
 
             //set starting rotation (if none is provided, that's ok)
             if (spec.rotate !== undefined) {
@@ -582,12 +569,13 @@ var shrtct = {};
             return that;
         };//INIT;
 
-        //MOVE [private]
-        //takes a holder and tries to move card there
-        move = (function () {
+        //MOVE [public]
+        //private move function wrapped in action object
+        that.move = move = (function () {
+            //when checking in, holder returns a function checkOut() for later
             var checkOut;
 
-            return function (holder) {
+            return shrtct.action(function (holder) {
                 var attempt, value;
 
                 curHolder = holder;
@@ -606,28 +594,7 @@ var shrtct = {};
                 }
 
                 return value;
-            };
-        })();
-
-        //MOVE [public]
-        //private move function wrapped in action object
-        that.move = (function () {
-            //when checking in, holder returns a function checkOut() for later
-            var action;
-
-            action = shrtct.action(move, spec.moveable);
-
-            //bind event handlers
-            action.enable.bind(function () {
-                that.front.draggable('enable');
-                that.front.addClass('draggable');
-            });
-            action.disable.bind(function () {
-                that.front.draggable('disable');
-                that.front.removeClass('draggable');
-            });
-
-            return action;
+            }, spec.moveable);
         })();//MOVE
 
         //ROTATE [private]
@@ -1061,15 +1028,12 @@ var shrtct = {};
 
                 //BUILD BOARD
                 board = shrtct.board({
-                    replace:   $('#board'),
                     width:      boardSize,
                     height:     boardSize
                 });
                 board.createBounds(players); //testcode
                 //BUILD DECK
-                shrtct.deck({
-                    replace:    $('#deck')
-                });
+                shrtct.deck();
             }
         })
         /*

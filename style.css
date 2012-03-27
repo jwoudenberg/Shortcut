@@ -76,7 +76,10 @@ body {
     margin:     -1px 0 0 -1px;
 }
 
-.deck {
+.deckWrap {
+    position:   relative;
+    width:      80px;
+    height:     80px;
     border:     1px solid #aaa;
     margin:     10px 0;
     background: #eee;
@@ -150,18 +153,18 @@ body {
 }
 
 /* FLIPPING EFFECT */
-.deck {
+.deckWrap {
     perspective:            200;
     -moz-perspective:       200;
     -webkit-perspective:    200;
     -o-perspective:         200;
 }
 
-.cardWrap {
-    position:               absolute;
+.deck {
+    position:               absolute !important;
     width:                  inherit;
     height:                 inherit;
-    
+
     transform-style:        preserve-3d;
     -moz-transform-style:   preserve-3d;
     -webkit-transform-style:preserve-3d;
@@ -183,7 +186,7 @@ body {
     -o-transform:           rotateY(-180deg) translateX(100%);
 }
 
-.cardWrap.flipped {
+.deck.flipped {
     transition:             transform 500ms;
     -moz-transition:        -moz-transform 500ms;
     -webkit-transition:     -webkit-transform 500ms;
@@ -195,14 +198,14 @@ body {
     -o-transform:           rotateY(0) translateX(0);
 }
 
-.cardWrap .card, .cardWrap .cardBack {
+.deck .card, .deck .cardBack {
     backface-visibility:        hidden;
     -moz-backface-visibility:   hidden;
     -webkit-backface-visibility:hidden;
     -o-backface-visibility:     hidden;
 }
 
-.cardWrap .cardBack {
+.deck .cardBack {
     transform:              rotateY(-180deg);
     -moz-transform:         rotateY(-180deg);
     -webkit-transform:      rotateY(-180deg);
