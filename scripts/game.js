@@ -1,8 +1,8 @@
-define(function () {
+define(['action', 'event'], function (newAction, newEvent) {
     //OBJECT OVERVIEW:
     // shrtct
-    // - shrtct.action
-    // - shrtct.event
+    // - action
+    // - event
     // - shrtct.element
     //   - shrtct.board
     //   - shrtct.holder
@@ -17,7 +17,7 @@ define(function () {
 
     // --- ELEMENT ---
 
-    //constructs a generic object with jQuery interace and saves it in shrtct
+    //constructs a generic object and saves it in shrtct
     //[opt]type: the type of element (board, card, ...). Default: untyped
     shrtct.element = (function () {
         var lastId = 0;
@@ -34,175 +34,12 @@ define(function () {
         };
     })();
 
-
-
-    // --- ACTION ---
-
-    //allows user-actions to be undertaken, enabled or disabled
-    //[man]func:       function that will be called if succesfull
-    //[opt]defState:   defaul state (default: enable)
-    shrtct.action = function (func, defState) {
-        var that,
-            curState,
-            init,
-            state,
-            enable,
-            disable,
-            reset;
-
-        //ACT [public]
-        //Executes function or fail-function depending on state
-        that = (function () {
-            var event = shrtct.event(),
-                that,
-                result;
-
-            //check whether a function has been supplied
-            if (func === undefined) {
-                throw new Error("shrtct.action: no spec.function has been provided");
-            }
-
-            that = function () {
-                if (curState === 'enable') {
-                    result = func.apply(null, arguments); //perform action
-                    if (result) { //only fire events if function succeeds
-                        event.fire(result); //fire events
-                    }
-                }
-                else {
-                    result = false;
-                }
-                return result;
-            };
-
-            that.bind = event.bind;
-
-            return that;
-        })();//ACT
-
-        init = function () {
-            reset();
-            return that;
-        };//INIT
-
-        //STATE [public]
-        //returns the current state
-        that.state = state = function () {
-            return curState;
-        };//STATE
-
-        //ENABLE [public]
-        //enables the action
-        that.enable = enable = (function () {
-            var event = shrtct.event(),
-                enable;
-
-            enable = function () {
-                curState = 'enable';
-                event.fire();
-            };
-            enable.bind = event.bind;
-
-            return enable;
-        })();//ENABLE
-
-        //DISABLE [public]
-        that.disable = disable = (function () {
-            var event = shrtct.event(),
-                disable;
-
-            disable = function () {
-                curState = 'disable';
-                event.fire();
-            };
-            disable.bind = event.bind;
-
-            return disable;
-        })();//DISABLE
-
-        //DEFAULT [public]
-        that.reset = reset = (function () {
-            var resetFunc;
-
-            //if no defState supplied, set teh default to enable
-            if (defState === undefined) {
-                defState = 'enable';
-            }
-
-            if (defState === 'enable') {
-                resetFunc = enable;
-            } else if (defState === 'disable') {
-                resetFunc = disable;
-            } else {
-                throw new Error("action.reset: " + defState + " is not a valid state.");
-            }
-
-            return resetFunc;
-        })();//DEFAULT
-
-        return init();
-    };//ACTION
-
-
-
-    // --- EVENT ---
-
-    //Functions can be added to it. When fired, all coupled functions will fire
-    shrtct.event = function () {
-        var that,
-            handlers = [],
-            init,
-            fire,
-            bind;
-
-        that = {};
-        
-        //INIT
-        init = function () {
-            return that;
-        };//INIT
-
-        //FIRE
-        //activate all handlers
-        that.fire = fire = function () {
-            var i;
-            for (i = handlers.length; i--;) {
-                if (handlers[i].dead) {
-                    handlers.splice(i, 1);
-                } else {
-                    handlers[i].func.apply(null, arguments);
-                }
-            }
-            return that;
-        };//FIRE
-
-        //BIND
-        //bind a new function to this event
-        that.bind = bind = function (func) {
-            var handler = {'func': func};
-
-            //allows a handler to be removed again
-            handler.remove = function () {
-                handler.dead = true;
-            };
-
-            //add handler to the list
-            handlers.push(handler);
-            //return handler-remove function
-            return handler.remove;
-        };//BIND
-
-        return init();
-    };//EVENT
-
-
-
     // --- BOARD ---
 
     //extends a jquery object representing the board
     //[man]spec.width:   width of the board
     //[man]spec.height:  height of the board
-    shrtct.board = shrtct.action(function (spec) {
+    shrtct.board = newAction(function (spec) {
         var that,
             init,
             getWidth,
@@ -355,7 +192,7 @@ define(function () {
                         //randomly choose a port to connect the base-path to
                         if (Math.floor(Math.random() * 2) === 0) {
                             spec.paths[2] = [0, base];
-                            
+
                         }
                         else {
                             spec.paths[2] = [1, base];
@@ -426,7 +263,7 @@ define(function () {
         that.checkIn = (function () {
             var action;
 
-            action = shrtct.action(function (newCard) {
+            action = newAction(function (newCard) {
                 curCard = newCard; //save link to card
                 action.disable(); //holder no longer droppable
 
@@ -449,7 +286,7 @@ define(function () {
     // --- FIELD --- [inherits from holder]
 
     //[man]spec.step(): can be used to navigate to adjecent fields
-    shrtct.field = shrtct.action(function (spec) {
+    shrtct.field = newAction(function (spec) {
         var that,
             init,
             step;
@@ -468,7 +305,7 @@ define(function () {
             return that;
         };//INIT
 
-        //STEP [public] 
+        //STEP [public]
         //returns adjacent field. see shrtct.board for more details
         //Use: step(<direction>), <direction> = 'up'|'right'|'down'|'left'
         that.step = step = spec.step;
@@ -481,7 +318,7 @@ define(function () {
     // --- DECK --- [inherits from holder]
 
     //puts new cards on the screen
-    shrtct.deck = shrtct.action(function () {
+    shrtct.deck = newAction(function () {
         var that,
             init,
             pop;
@@ -500,7 +337,7 @@ define(function () {
 
         //POP CARD [public]
         //pop a new card with a reveal-effect
-        that.pop = pop = shrtct.action(function () {
+        that.pop = pop = newAction(function () {
             var newCard, value;
 
             //check whether the deck already contains a card
@@ -533,7 +370,7 @@ define(function () {
     //[opt]spec.text:   text to display in the card. Default: no text
     //[opt]spec.moveable:   whether card is moveable: enable (def) or disable
     //[opt]spec.rotateable: whether card van be rotated: enable (def) or disable
-    shrtct.card = shrtct.action(function (spec) {
+    shrtct.card = newAction(function (spec) {
         //Paths connect two of 8 ports, numbered like below.
         //     54
         //     --
@@ -594,7 +431,7 @@ define(function () {
             //when checking in, holder returns a function checkOut() for later
             var checkOut;
 
-            return shrtct.action(function (holder) {
+            return newAction(function (holder) {
                 var attempt, value;
 
                 attempt = holder.checkIn(that);
@@ -645,7 +482,7 @@ define(function () {
             var action;
 
             //create action object
-            action = shrtct.action(rotate, spec.rotateable);
+            action = newAction(rotate, spec.rotateable);
 
             //bind event handlers
             action.enable.bind(function () {that.front.addClass('rotateable'); });
@@ -731,7 +568,7 @@ define(function () {
 
     //takes an ID and a route (array containing start and end point).
     //[man]spec.ports: the two ports this path connects
-    shrtct.path = shrtct.action(function (spec) {
+    shrtct.path = newAction(function (spec) {
         var ports = spec.ports.slice(0), //save a copy of the ports
             that,
             init,
@@ -807,7 +644,7 @@ define(function () {
             probSum = 0,
             i;
         //Convert rough probabilities (1-4) into 'real' relative probs.
-        //Sum all probs as preperation for tower sampling. 
+        //Sum all probs as preperation for tower sampling.
         for (i = 0; i < types.length; i += 1) {
             //this probability modifies was found by experimenting
             types[i].prob = Math.pow(types[i].prob, 1.2);
@@ -853,7 +690,7 @@ define(function () {
                 step,
                 ends = [],
                 alive = true,
-                resets = shrtct.event();
+                resets = newEvent();
 
             that = {};
 
