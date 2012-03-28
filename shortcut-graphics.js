@@ -87,12 +87,14 @@
             //print to DOM
             $('#gameScreen').append(that);
 
-            that.mousedown(function (event) {
+            that.wrap('<div class="deckWrap" />').
+                html('<div class="cardBack"><div class="text">card</div></div>');
+
+            that.parent('.deckWrap').mousedown(function (event) {
                 //register mousedown even handler (for card creation)
                 clicked(event);
                 event.preventDefault();
-            }).html('<div class="cardBack"><div class="text">card</div></div>').
-            wrap('<div class="deckWrap" />');
+            });
 
             //we need an addition wrapper div for the flip effect
             //that = that.children('.cardWrap');
@@ -100,7 +102,7 @@
 
         clicked = function (event) {
             if (event.which === 1) { //check for left-click
-                deck.pop();alert('test');
+                deck.pop();
             }
         };
 
@@ -150,7 +152,7 @@
                 revert: 'invalid',  //jump back if not dropped on a droppable
                 revertDuration: 100,//jump back-animation
                 helper: 'original'
-            }).mousedown(function (event) {
+            }).css({position: 'absolute'}).mousedown(function (event) {
                 //register mousedown even handler (for rotation)
                 event.stopPropagation();
                 clicked(event);
@@ -170,7 +172,7 @@
 
         //MOVE
         move = function () {
-            frontend.elementToFront(card.getHolder()).append(that);
+            frontend.elementToFront(card.getHolder()).prepend(that);
         };
 
         card.move.enable.bind(function () {
@@ -185,8 +187,6 @@
 
         card.move.bind(move);
         card.move.reset();
-
-        if (card.move.state)
 
         //ROTATE
         rotate = (function () {
@@ -300,7 +300,7 @@
             that.droppable({
                 drop: function (event, ui) {
                     //remove positioning-css in style-attribute
-                    ui.draggable.css({left: 0, top: 0});
+                    ui.draggable.css({left: 0, top: 0, position: 'absolute'});
                     //call function with dropped card as an argument
                     dropped(frontend.jqueryToFront(ui.draggable));
                 }
@@ -324,5 +324,81 @@
     frontend.field = function (result) {
         return frontend.holder(result).addClass('field');
     };//FIELD
+
+    // === EXECUTE WHEN DOCUMENT IS LOADED ===
+
+    $(document).ready(function () {
+        //DISABLE CONTEXT-MENU
+        $('body').bind('contextmenu', function (event) {
+            return false;
+        });
+
+        $('#numPlayers').change(function () {
+            var numPlayers = parseInt($('#numPlayers').attr('value'), 10),
+                fields = $('#playerList').children('li'),
+                numFields = parseInt(fields.length, 10),
+                html,
+                i;
+
+                if (numFields < numPlayers) {
+                    html = '';
+                    for (i = numPlayers - numFields; i--;) {
+                        html += '<li><input type="text" value="player" /></li>';
+                    }
+                    $('#playerList').append(html);
+                } else if (numFields > numPlayers) {
+                    fields.slice(numPlayers).remove();
+                }
+        }).trigger('change');
+
+        $('#backButton').click(function () {
+            location.reload();
+        });
+
+        $('#ruleButton').click(function () {
+            $('#ruleBox').removeClass('hidden');
+        });
+
+        $('#ruleCloseButton').click(function () {
+            $('#ruleBox').addClass('hidden');
+        });
+
+        $('#beginButton').click(function (){
+            var board,
+                players = [],
+                boardSize = parseInt($('#boardSize').attr('value'), 10) + 2,
+                i;
+
+                for (i = $('#playerList').children('li').length; i--;) {
+                    players.push($('#playerList').children('li:eq(' + i + ')').
+                        children('input').attr('value'));
+                }
+            if (players.length > 2 * boardSize - 4) {
+                alert("Choose less players or a bigger board size.")
+            } else if (typeof boardSize < 3) {
+                alert("Choose a bigger board size.");
+            } else {
+
+                $('#startScreen').addClass('hidden');
+                $('#gameScreen').removeClass('hidden');
+
+                //BUILD BOARD
+                board = shrtct.board({
+                    width:      boardSize,
+                    height:     boardSize
+                });
+                board.createBounds(players); //testcode
+                //BUILD DECK
+                shrtct.deck();
+            }
+        })
+        /*
+        //CREATE TEST BUTTON
+        $('body').prepend('<div id="testButton" style="float: right; border: 1px solid #aaa;" >test</div>');
+        $('#testButton').click(function () {
+
+        });
+        */
+    });
 
 })();

@@ -15,7 +15,10 @@ var shrtct = {};
     //   - shrtct.card (alternative: shrtct.randCard)
     //   - shrtct.path
 
+
+
     // --- ELEMENT ---
+
     //constructs a generic object with jQuery interace and saves it in shrtct
     //[opt]type: the type of element (board, card, ...). Default: untyped
     shrtct.element = (function () {
@@ -33,7 +36,10 @@ var shrtct = {};
         };
     })();
 
+
+
     // --- ACTION ---
+
     //allows user-actions to be undertaken, enabled or disabled
     //[man]func:       function that will be called if succesfull
     //[opt]defState:   defaul state (default: enable)
@@ -139,7 +145,10 @@ var shrtct = {};
         return init();
     };//ACTION
 
+
+
     // --- EVENT ---
+
     //Functions can be added to it. When fired, all coupled functions will fire
     shrtct.event = function () {
         var that,
@@ -188,7 +197,10 @@ var shrtct = {};
         return init();
     };//EVENT
 
-    // --- BOARD ---       
+
+
+    // --- BOARD ---
+
     //extends a jquery object representing the board
     //[man]spec.width:   width of the board
     //[man]spec.height:  height of the board
@@ -387,7 +399,9 @@ var shrtct = {};
     });//BOARD
 
 
+
     // --- HOLDER ---
+
     //An element that holds card. Needs extension to become truly usefull
     //[opt]spec.defDrop: Whether holder is droppable. 'enabled' / 'disabled'
     //[opt]spec.type:    Type of element (field, deck). Default: untyped
@@ -433,7 +447,9 @@ var shrtct = {};
     };//HOLDER
 
 
+
     // --- FIELD --- [inherits from holder]
+
     //[man]spec.step(): can be used to navigate to adjecent fields
     shrtct.field = shrtct.action(function (spec) {
         var that,
@@ -463,7 +479,9 @@ var shrtct = {};
     });//FIELD
 
 
+
     // --- DECK --- [inherits from holder]
+
     //puts new cards on the screen
     shrtct.deck = shrtct.action(function () {
         var that,
@@ -506,7 +524,10 @@ var shrtct = {};
         return init();
     });//DECK
 
+
+
     // --- CARD ---
+
     //create a new card, place it in 'field' and give it 'paths'
     //[man]spec.holder: holder in which the card will be placed
     //[opt]spec.paths:  array of paths to create in card
@@ -578,7 +599,6 @@ var shrtct = {};
             return shrtct.action(function (holder) {
                 var attempt, value;
 
-                curHolder = holder;
                 attempt = holder.checkIn(that);
 
                 if (attempt) { //card is accepted
@@ -587,6 +607,7 @@ var shrtct = {};
                         checkOut();
                     }
                     checkOut = attempt; //bind new checkOut function
+                    curHolder = holder; //set reference to new holder
                     value = true;
                 }
                 else {
@@ -706,7 +727,10 @@ var shrtct = {};
         return init();
     });//CARD
 
+
+
     // --- PATH ---
+
     //takes an ID and a route (array containing start and end point).
     //[man]spec.ports: the two ports this path connects
     shrtct.path = shrtct.action(function (spec) {
@@ -737,7 +761,10 @@ var shrtct = {};
         return init();
     });//PATH
 
+
+
     // --- RANDOM CARD ---
+
     //create a unique card. no need to specify paths (unlike shrtct.card)
     shrtct.randCard = (function () {
         //all unique cards (cards that cannot be rotated into each other)
@@ -806,7 +833,10 @@ var shrtct = {};
         };
     }());//RANDOM CARD
 
+
+
     // --- ROUTE ---
+
     //takes a starting port and field, returns the entire connected route
     shrtct.route = (function () {
         //init lookup-tables: exit-port to step direction and entrance-port
@@ -969,80 +999,5 @@ var shrtct = {};
             return init();
         };
     }());//ROUTE
-
-    // === EXECUTE WHEN DOCUMENT IS LOADED ===
-    $(document).ready(function () {
-        //DISABLE CONTEXT-MENU
-        $('body').bind('contextmenu', function (event) {
-            return false;
-        });
-
-        $('#numPlayers').change(function () {
-            var numPlayers = parseInt($('#numPlayers').attr('value'), 10),
-                fields = $('#playerList').children('li'),
-                numFields = parseInt(fields.length, 10),
-                html,
-                i;
-
-                if (numFields < numPlayers) {
-                    html = '';
-                    for (i = numPlayers - numFields; i--;) {
-                        html += '<li><input type="text" value="player" /></li>';
-                    }
-                    $('#playerList').append(html);
-                } else if (numFields > numPlayers) {
-                    fields.slice(numPlayers).remove();
-                }
-        }).trigger('change');
-
-        $('#backButton').click(function () {
-            location.reload();
-        });
-
-        $('#ruleButton').click(function () {
-            $('#ruleBox').removeClass('hidden');
-        });
-
-        $('#ruleCloseButton').click(function () {
-            $('#ruleBox').addClass('hidden');
-        });
-
-        $('#beginButton').click(function (){
-            var board,
-                players = [],
-                boardSize = parseInt($('#boardSize').attr('value'), 10) + 2,
-                i;
-
-                for (i = $('#playerList').children('li').length; i--;) {
-                    players.push($('#playerList').children('li:eq(' + i + ')').
-                        children('input').attr('value'));
-                }
-            if (players.length > 2 * boardSize - 4) {
-                alert("Choose less players or a bigger board size.")
-            } else if (typeof boardSize < 3) {
-                alert("Choose a bigger board size.");
-            } else {
-
-                $('#startScreen').addClass('hidden');
-                $('#gameScreen').removeClass('hidden');
-
-                //BUILD BOARD
-                board = shrtct.board({
-                    width:      boardSize,
-                    height:     boardSize
-                });
-                board.createBounds(players); //testcode
-                //BUILD DECK
-                shrtct.deck();
-            }
-        })
-        /*
-        //CREATE TEST BUTTON
-        $('body').prepend('<div id="testButton" style="float: right; border: 1px solid #aaa;" >test</div>');
-        $('#testButton').click(function () {
-
-        });
-        */
-    });
 
     }());

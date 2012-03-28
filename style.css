@@ -169,21 +169,11 @@ body {
     -moz-transform-style:   preserve-3d;
     -webkit-transform-style:preserve-3d;
     -o-transform-style:     preserve-3d;
-    
+
     transform-origin:           100% 50%;
     -moz-transform-origin:      100% 50%;
     -webkit-transform-origin:   100% 50%;
     -o-transform-origin:        100% 50%;
-
-    backface-visibility:        hidden;
-    -moz-backface-visibility:   hidden;
-    -webkit-backface-visibility:hidden;
-    -o-backface-visibility:     hidden;
-
-    transform:              rotateY(-180deg) translateX(100%);
-    -moz-transform:         rotateY(-180deg) translateX(100%);
-    -webkit-transform:      rotateY(-180deg) translateX(100%);
-    -o-transform:           rotateY(-180deg) translateX(100%);
 }
 
 .deck.flipped {
@@ -192,10 +182,10 @@ body {
     -webkit-transition:     -webkit-transform 500ms;
     -o-transition:          -o-transform 500ms;
 
-    transform:              rotateY(0) translateX(0);
-    -moz-transform:         rotateY(0) translateX(0);
-    -webkit-transform:      rotateY(0) translateX(0);
-    -o-transform:           rotateY(0) translateX(0);
+    transform:              rotateY(-180deg) translateX(100%);
+    -moz-transform:         rotateY(-180deg) translateX(100%);
+    -webkit-transform:      rotateY(-180deg) translateX(100%);
+    -o-transform:           rotateY(-180deg) translateX(100%);
 }
 
 .deck .card, .deck .cardBack {
@@ -206,8 +196,24 @@ body {
 }
 
 .deck .cardBack {
+    z-index:                    -10;
+}
+
+.deck.flipped .card {
     transform:              rotateY(-180deg);
     -moz-transform:         rotateY(-180deg);
     -webkit-transform:      rotateY(-180deg);
     -o-transform:           rotateY(-180deg);
+}
+
+.deck:not(.flipped) .card + .cardBack {
+    visibility:             hidden;
+    opacity:                0;
+}
+
+.cardBack {
+    transition:         opacity 500ms;
+    -moz-transition:    opacity 500ms;
+    -webkit-transition: opacity 500ms;
+    -o-transition:      opacity 500ms;
 }
