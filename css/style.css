@@ -35,13 +35,13 @@ body {
 
 }
 
-#playerlist {
+#playerList {
     list-style: none;
     padding:    0;
     margin:     0;
 }
 
-#playerlist li {
+#playerList li {
 }
 
 #ruleBox {

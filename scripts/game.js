@@ -1,8 +1,4 @@
-// --- SHRTCT OBJECT ---
-//global that contains the rest of the program
-var shrtct = {};
-
-(function () {"use strict";
+define(function () {
     //OBJECT OVERVIEW:
     // shrtct
     // - shrtct.action
@@ -15,7 +11,9 @@ var shrtct = {};
     //   - shrtct.card (alternative: shrtct.randCard)
     //   - shrtct.path
 
-
+    // --- SHRTCT OBJECT ---
+    //global that contains the rest of the program
+    var shrtct = {};
 
     // --- ELEMENT ---
 
@@ -1000,4 +998,5 @@ var shrtct = {};
         };
     }());//ROUTE
 
-    }());
+    return shrtct;
+});
