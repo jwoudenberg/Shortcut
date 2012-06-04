@@ -102,10 +102,21 @@ function ($, jqueryUi, Backbone, Route, PathView) {
         click: function (event) {
         //if a dead-end path is presented, create a route
             var path = this.model.paths.where({ end: 'unconnected' })[0],
-                route;
+                goal, route;
 
             if (path !== undefined) {
-                route = new Route({ begin: path });
+                //find the other base of this owner; it is the goal of the route
+                if (path.get('owner').bases.at(0).cid === path.cid) {
+                    goal = path.get('owner').bases.at(1);
+                }
+                else {
+                    goal = path.get('owner').bases.at(0);
+                }
+
+                route = new Route({
+                    begin: path,
+                    goal: goal
+                });
 
                 //trigger event for paths in route to highlight the path
                 route.paths.forEach(function (path) {

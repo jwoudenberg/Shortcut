@@ -69,11 +69,10 @@ var cardLookup = ['down', 'down', 'right', 'right', 'up', 'up', 'left', 'left'],
 
             //build the route here
             result = this.doStep(place);
-            if (result === true) {
+            if (this.get('goalReached') === true) {
                 //the goal was reached, only the path to the goal matters now
                 this.paths = this.goalPaths;
                 this.goalPaths = undefined;
-                this.set('goalReached', true);
             }
 
             //listen for changes to card location or rotation
@@ -129,7 +128,7 @@ var cardLookup = ['down', 'down', 'right', 'right', 'up', 'up', 'left', 'left'],
             */
 
             var nextField, nextCard, nextPort,
-                nextPaths, result, i;
+                nextPaths, result, i, branch;
 
             //[ 0 ] attempt to save path
             if (!this.saveStep(place)) {
@@ -143,6 +142,7 @@ var cardLookup = ['down', 'down', 'right', 'right', 'up', 'up', 'left', 'left'],
                     place.path.cid === this.get('goal').cid) {
 
                 //we've found our goal
+                this.set('goalReached', true);
                 result = true;
 
             }
@@ -178,13 +178,18 @@ var cardLookup = ['down', 'down', 'right', 'right', 'up', 'up', 'left', 'left'],
                 else {
                     for (i = nextPaths.length; i--;) {
                         //call doStep() recursively to make next step
-                        result = this.doStep({
+                        branch = this.doStep({
                             //the place-object for the next step
                             port:   nextPort,
                             path:   nextPaths[i],
                             card:   nextCard,
                             field:  nextField
                         });
+
+                        //if one branche finds the goal, that result counts
+                        if (result !== true) {
+                            result = branch;
+                        }
                     }
                 }
             }
