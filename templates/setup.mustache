@@ -1,0 +1,13 @@
+<p>This is a work in progress. The game works best on Google Chrome and Safari. It also works, but less well, on Firefox and Opera. It doesn't work on Internet Explorer.</p>
+<p class="label">board size:</p>
+<input id="boardSize" type="number" min="1" step="1" value="{{boardSize}}" />
+
+<p class="label">player names:</p>
+<ul id="playerList">
+    {{#players}}
+    <li><input type="text" value="{{name}}" /></li>
+    {{/players}}
+    <li><input type="text" value="" /></li>
+</ul>
+
+<div id="beginButton" class="button">begin!</div>

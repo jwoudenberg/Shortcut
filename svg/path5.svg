@@ -1,0 +1,25 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" 
+"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+
+<svg xmlns:xlink="http://www.w3.org/1999/xlink"
+        xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 750 750">
+    <g class="pathContainer">
+        <path class=        "pathFill"
+              d="           M 263,0
+                            L 113,0
+                            L 113,750 
+                            L 263,750
+                            L 263,0
+                            Z "
+        />
+        <path class=        "pathBorder"
+              d="           M 263,750
+                            L 263,0 "
+        />
+        <path class=        "pathBorder"
+              d="           M 113,0
+                            L 113,750 "
+        />
+    </g>
+</svg>

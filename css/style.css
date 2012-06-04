@@ -56,10 +56,6 @@ body {
 }
 
 /* GAME SPECIFIC STUFF */
-.row {
-    clear:      left;
-}
-
 .board {
     z-index:    1;
 }
@@ -70,14 +66,19 @@ body {
     height:     80px;
 }
 
-.field {
+.board > .holder {
     float:      left;
     border:     1px solid #ddd;
     margin:     -1px 0 0 -1px;
 }
 
-.deckWrap {
-    position:   relative;
+.board > .holder[data-col="0"] {
+    clear:      left;
+}
+
+.deck {
+    position:   absolute;
+    bottom:     20px;
     width:      80px;
     height:     80px;
     border:     1px solid #aaa;
@@ -96,13 +97,13 @@ body {
     z-index:    1;
 }
 
-.cardBack .text {
+.cardBack > .text, .deck > .text {
     margin-top: 30%;
     text-align: center;
     color:      #666;
 }
 
-.card .text {
+.card > .text {
     margin-top: 15%;
     text-align: center;
     color:      #666;
@@ -145,7 +146,7 @@ body {
 }
 
 /* ROTATION EFFECT */
-.card.rotateSmooth {
+.card {
     transition:         transform 300ms;
     -moz-transition:    -moz-transform 300ms;
     -webkit-transition: -webkit-transform 300ms;
@@ -153,34 +154,32 @@ body {
 }
 
 /* FLIPPING EFFECT */
-.deckWrap {
+.deck {
     perspective:            200;
     -moz-perspective:       200;
     -webkit-perspective:    200;
     -o-perspective:         200;
 }
 
-.deck {
-    position:               absolute !important;
+.deck > .holder {
+    position:               absolute;
     width:                  inherit;
     height:                 inherit;
-
+    
     transform-style:        preserve-3d;
     -moz-transform-style:   preserve-3d;
     -webkit-transform-style:preserve-3d;
     -o-transform-style:     preserve-3d;
-
+    
     transform-origin:           100% 50%;
     -moz-transform-origin:      100% 50%;
     -webkit-transform-origin:   100% 50%;
     -o-transform-origin:        100% 50%;
-}
 
-.deck.flipped {
-    transition:             transform 500ms;
-    -moz-transition:        -moz-transform 500ms;
-    -webkit-transition:     -webkit-transform 500ms;
-    -o-transition:          -o-transform 500ms;
+    backface-visibility:        hidden;
+    -moz-backface-visibility:   hidden;
+    -webkit-backface-visibility:hidden;
+    -o-backface-visibility:     hidden;
 
     transform:              rotateY(-180deg) translateX(100%);
     -moz-transform:         rotateY(-180deg) translateX(100%);
@@ -188,32 +187,28 @@ body {
     -o-transform:           rotateY(-180deg) translateX(100%);
 }
 
-.deck .card, .deck .cardBack {
+.deck:not(.flipped) > .holder {
+    transition:             transform 500ms;
+    -moz-transition:        -moz-transform 500ms;
+    -webkit-transition:     -webkit-transform 500ms;
+    -o-transition:          -o-transform 500ms;
+
+    transform:              rotateY(0) translateX(0);
+    -moz-transform:         rotateY(0) translateX(0);
+    -webkit-transform:      rotateY(0) translateX(0);
+    -o-transform:           rotateY(0) translateX(0);
+}
+
+.deck > .holder > .card, .deck > .holder > .cardBack {
     backface-visibility:        hidden;
     -moz-backface-visibility:   hidden;
     -webkit-backface-visibility:hidden;
     -o-backface-visibility:     hidden;
 }
 
-.deck .cardBack {
-    z-index:                    -10;
-}
-
-.deck.flipped .card {
+.deck > .holder > .cardBack {
     transform:              rotateY(-180deg);
     -moz-transform:         rotateY(-180deg);
     -webkit-transform:      rotateY(-180deg);
     -o-transform:           rotateY(-180deg);
-}
-
-.deck:not(.flipped) .card + .cardBack {
-    visibility:             hidden;
-    opacity:                0;
-}
-
-.cardBack {
-    transition:         opacity 500ms;
-    -moz-transition:    opacity 500ms;
-    -webkit-transition: opacity 500ms;
-    -o-transition:      opacity 500ms;
 }

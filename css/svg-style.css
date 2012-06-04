@@ -36,23 +36,23 @@
     opacity:    0.4;
 }
 
-.card:hover .path:nth-child(1) .pathContainer,
-.deck .card .path:nth-child(1) .pathContainer {
+.card:hover .path:nth-child(2) .pathContainer,
+.deck .card .path:nth-child(2) .pathContainer {
     fill:   red;
     stroke: red;
 }
-.card:hover .path:nth-child(2) .pathContainer,
-.deck .card .path:nth-child(2) .pathContainer {
+.card:hover .path:nth-child(3) .pathContainer,
+.deck .card .path:nth-child(3) .pathContainer {
     fill:   orange;
     stroke: orange;
 }
-.card:hover .path:nth-child(3) .pathContainer,
-.deck .card .path:nth-child(3) .pathContainer {
+.card:hover .path:nth-child(4) .pathContainer,
+.deck .card .path:nth-child(4) .pathContainer {
     fill:   seagreen;
     stroke: seagreen;
 }
-.card:hover .path:nth-child(4) .pathContainer,
-.deck .card .path:nth-child(4) .pathContainer {
+.card:hover .path:nth-child(5) .pathContainer,
+.deck .card .path:nth-child(5) .pathContainer {
     fill:   purple;
     stroke: purple;
 }

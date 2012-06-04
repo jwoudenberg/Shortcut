@@ -1,0 +1,37 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" 
+"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+
+<svg xmlns:xlink="http://www.w3.org/1999/xlink"
+        xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 750 750">
+    <g class="pathContainer">
+        <path class=        "pathFill"             
+              d=            "M 488,0
+                            C 488,134 465,199 442,234
+                            C 419,268 389,284 341,308
+                            C 296,331 231,362 184,433
+                            C 137,503 113,603 113,750
+                            L 263,750
+                            C 263,616 285,551 309,516
+                            C 331,482 361,466 409,442
+                            C 455,419 519,388 566,317
+                            C 613,247 638,147 638,0
+                            L 488,0
+                            Z "
+        />
+        <path class=        "pathBorder"
+              d="           M 263,750
+                            C 263,616 285,551 309,516
+                            C 331,482 361,466 409,442
+                            C 455,419 519,388 566,317
+                            C 613,247 638,147 638,00 "
+        />
+        <path class=        "pathBorder"
+              d="           M 488,0
+                            C 488,134 465,199 442,234
+                            C 419,268 389,284 341,308
+                            C 296,331 231,362 184,433
+                            C 137,503 113,603 113,750 "
+        />
+    </g>
+</svg>
