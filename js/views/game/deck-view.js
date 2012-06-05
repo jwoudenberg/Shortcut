@@ -1,7 +1,7 @@
 // --- DECK VIEW ---
 /* Renders a deck */
 
-define(['backbone', 'js/views/holder-view'],
+define(['backbone', 'js/views/game/holder-view'],
 function (Backbone, HolderView) {
     return Backbone.View.extend({
 
@@ -15,7 +15,10 @@ function (Backbone, HolderView) {
         initialize: function () {
             var holder;
 
-            //create field-views
+            //create reference back to gameView
+            this.gameView = this.options.gameView;
+
+            //create field-view
             //this view and the holder contained within share the same model
             holder = new HolderView({ model: this.model });
             holder.$el.appendTo(this.$el);
@@ -33,7 +36,7 @@ function (Backbone, HolderView) {
         render: function () {
             //NOTE: I should consider giving the render command manually,
             //to be able to prepare the board before showing it.
-            this.$el.appendTo('#content');
+            this.$el.appendTo(this.gameView.$el);
         },
 
         click: function () {

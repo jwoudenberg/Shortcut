@@ -12,7 +12,7 @@ require.config({
     }
 });
 
-require(['js/views/main-view'],
+require(['js/views/page/main-view'],
 function(MainView) {
     'use strict';
 
@@ -20,5 +20,4 @@ function(MainView) {
     if (true) {
         new MainView();
     }
-
 });

@@ -8,7 +8,7 @@
 */
 
 define(['jquery', 'jqueryui', 'backbone', 'js/models/route',
-    'js/views/path-view'],
+    'js/views/game/path-view'],
 function ($, jqueryUi, Backbone, Route, PathView) {
     return Backbone.View.extend({
 
@@ -22,6 +22,9 @@ function ($, jqueryUi, Backbone, Route, PathView) {
 
         initialize: function () {
             var paths;
+
+            //create reference back to gameView
+            this.gameView = this.options.gameView;
 
             // --- CARD DIV SETUP
             //set attributes
@@ -164,7 +167,7 @@ function ($, jqueryUi, Backbone, Route, PathView) {
 
             if (holder !== undefined) {
                 //find holder in DOM
-                $holder = $('[data-cid=' + holder.cid + ']');
+                $holder = this.gameView.$el.find('[data-cid=' + holder.cid + ']');
 
                 //move dom-element card
                 this.$el.appendTo($holder);

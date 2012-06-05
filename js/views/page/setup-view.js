@@ -8,13 +8,13 @@ one exists) and attempt to start it. If it succeeds, this view creates a
 game-view and then destroys itself. If not, an error is displayed.
 */
 
-define(['jquery', 'backbone', 'mustache', 'js/models/gametype',
-    'js/views/game-view', 'text!templates/setup.mustache'],
-function ($, Backbone, Mustache, Gametype, GameView, setupTemplate) {
+define(['jquery', 'backbone', 'js/models/gametype',
+    'js/views/game/gametype-view', 'text!templates/setup.html'],
+function ($, Backbone, Gametype, GametypeView, setupTemplate) {
     return Backbone.View.extend({
 
-        tagName: 'div',
-        id: 'setup',
+        tagName:    'div',
+        id:         'setup',
 
         initialize: function () {
             this.render();
@@ -22,16 +22,12 @@ function ($, Backbone, Mustache, Gametype, GameView, setupTemplate) {
 
         events: {
             'change #playerList li:last-child input': 'addPlayer',
-            'click #beginButton': 'start'
+            'click button[name=start]': 'start'
         },
 
         render: function () {
         //render sets these values to defaults. call once.
-            this.$el.html(Mustache.render(setupTemplate, {
-                players: [{ name: 'Player 1' }, { name: 'Player 2' }],
-                boardSize: 2
-            }));
-            $('#content').empty().append(this.$el);
+            this.$el.html(setupTemplate).appendTo('#content');
         },
 
         addPlayer: function () {
@@ -45,7 +41,7 @@ function ($, Backbone, Mustache, Gametype, GameView, setupTemplate) {
 
             //get boardsize from page
             var boardSize = parseInt($('#boardSize').attr('value'), 10),
-                i, name, playerNames = [], game, result;
+                i, name, playerNames = [], view, result;
 
             //get players from page
             for (i = $('#playerList li').length; i--;) {
@@ -57,20 +53,21 @@ function ($, Backbone, Mustache, Gametype, GameView, setupTemplate) {
                 }
             }
 
-            //create new gametype with view and attempt to start it
-            game = new Gametype();
-            new GameView({ model: game });
-            result = game.start({
+            //create new gametype-view, which will create the corresponding game
+            view = new GametypeView();
+            result = view.model.start({
                 playerNames: playerNames,
                 boardSize: boardSize
             });
 
             //check if game-start is succesfull
             if (result === true) {
-                //this view is no longer needed
+                //this view is no longer usefull
                 this.remove();
             }
             else {
+                //delte game view again
+                view.remove();
                 //temporary and very ugly way of showing errors
                 alert(result);
             }

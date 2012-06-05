@@ -87,14 +87,8 @@ function (Backbone, Boards, Decks, Cards, Players, Turns,
         },
 
         // RULE FUNCTIONS - overwrite these in a gametype.
-
-        validateStart: function (setup) {
-            //overwrite this function with validation logic in gametype mode
-        },
-
-        setup: function (setup) {
-            //overwrite this function with validation logic in gametype mode
-        }
+        validateStart: function (setup) {},
+        setup: function (setup) {}
 
     });
 });

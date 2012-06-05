@@ -1,0 +1,97 @@
+@charset "UTF-8";
+
+/* PAGE ELEMENTS */
+body {
+    font-family:   "Trebuchet MS", Helvetica, sans-serif;
+    color:          #333;
+}
+
+#metaBar {
+    position:   absolute;
+    left:       0;
+    top:        0;
+    bottom:     0;
+    width:      200px;
+    background: #f5f5f5;
+}
+
+#content {
+    position:   absolute;
+    left:       200px;
+    right:      0px;
+    top:        0;
+    bottom:     0;
+    padding:    10px;
+}
+
+header {
+    margin:     10px;
+}
+
+header h1 {
+    font-size:  220%;
+}
+
+menu {
+    width:      100%;
+    margin:     10px;
+}
+
+menu > button {
+    margin-bottom:  10px;
+}
+
+footer {
+    position:   absolute;
+    bottom:     0;
+    margin:     10px;
+    font-size:  80%;
+}
+
+button {
+    display:    block;
+    border:     1px solid #666;
+    border-radius:  3px;
+    background: #eee;
+    font-size:  105%;
+    text-align: center;
+    cursor:     default;
+}
+button:hover {
+    background: #fff;
+}
+
+#playerList {
+    list-style: none;
+    padding:    0;
+    margin:     0;
+}
+
+#playerList li {
+}
+
+#rules {
+    position:   absolute;
+    top:        0;
+    bottom:     0;
+    left:       0;
+    right:      0;
+    padding:    10px;
+    z-index:    20;
+}
+
+#rules > .background {
+    position:   absolute;
+    top:        0;
+    bottom:     0;
+    left:       0;
+    right:      0;
+    background: #fff;
+    opacity:    0.9;
+    z-index:    -1;
+}
+
+/* HELPFULL CLASSES */
+.hidden {
+    display:    none;
+}

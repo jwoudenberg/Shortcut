@@ -2,7 +2,7 @@
 /* Renders the board by creating field-views. Automatically adds itself to
    the page. */
 
-define(['backbone', 'js/views/holder-view'],
+define(['backbone', 'js/views/game/holder-view'],
 function (Backbone, HolderView) {
     return Backbone.View.extend({
 
@@ -11,6 +11,9 @@ function (Backbone, HolderView) {
 
         initialize: function () {
             var fields, i, field;
+
+            //create reference back to gameView
+            this.gameView = this.options.gameView;
 
             //create field-views
             fields = this.model.fields;
@@ -26,9 +29,7 @@ function (Backbone, HolderView) {
         },
 
         render: function () {
-            //NOTE: I should consider giving the render command manually,
-            //to be able to prepare the board before showing it.
-            this.$el.appendTo('#content');
+            this.$el.appendTo(this.gameView.$el);
         }
 
     });
