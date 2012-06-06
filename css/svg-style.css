@@ -29,30 +29,15 @@
 
 }
 
-.card:hover .pathContainer, .deck .card .pathContainer {
+.path.colored .pathContainer {
     opacity:    0.7;
 }
-.card:hover .pathContainer .pathFill, .deck .card .pathContainer .pathFill {
+
+.path.colored .pathFill {
     opacity:    0.4;
 }
 
-.card:hover .path:nth-child(2) .pathContainer,
-.deck .card .path:nth-child(2) .pathContainer {
-    fill:   red;
-    stroke: red;
-}
-.card:hover .path:nth-child(3) .pathContainer,
-.deck .card .path:nth-child(3) .pathContainer {
-    fill:   orange;
-    stroke: orange;
-}
-.card:hover .path:nth-child(4) .pathContainer,
-.deck .card .path:nth-child(4) .pathContainer {
-    fill:   seagreen;
-    stroke: seagreen;
-}
-.card:hover .path:nth-child(5) .pathContainer,
-.deck .card .path:nth-child(5) .pathContainer {
-    fill:   purple;
-    stroke: purple;
+.card:hover .pathContainer, .deck .card .pathContainer {}
+.card:hover .pathContainer .pathFill, .deck .card .pathContainer .pathFill {
+    opacity:    0.3;
 }

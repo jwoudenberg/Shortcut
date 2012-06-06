@@ -8,7 +8,7 @@ require.config({
         backbone: 'js/lib/backbone-min',
         jquery: 'js/lib/jquery',
         jqueryui: 'js/lib/jquery-ui',
-        text: 'js/lib/text'
+        text: 'js/lib/require-text'
     },
 
     shim: {
@@ -24,4 +24,7 @@ function(MainView) {
     if (true) {
         new MainView();
     }
+}, function (err) {
+    //something went wrong with the loading of files
+    document.getElementById('content').innerHTML = '<h1>Oops...</h1><p>Something went wrong with loading.';
 });

@@ -1,0 +1,6 @@
+/* This CSS is placed in a style element to easily change the field size */
+.holder, .deck {
+    width: <%= cardSize %>px;
+    height: <%= cardSize %>px;
+    font-size: <%= fontSize %>em;
+}

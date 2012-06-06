@@ -8,8 +8,8 @@
 */
 
 define(['jquery', 'jqueryui', 'backbone', 'js/models/route',
-    'js/views/game/path-view'],
-function ($, jQueryUi, Backbone, Route, PathView) {
+    'js/views/game/path-view', 'js/functions/getRandomColor'],
+function ($, jQueryUi, Backbone, Route, PathView, getRandomColor) {
     return Backbone.View.extend({
 
         tagName:    'div',
@@ -108,6 +108,8 @@ function ($, jQueryUi, Backbone, Route, PathView) {
                 goal, route;
 
             if (path !== undefined) {
+                var color;
+
                 //find the other base of this owner; it is the goal of the route
                 if (path.get('owner').bases.at(0).cid === path.cid) {
                     goal = path.get('owner').bases.at(1);
@@ -121,17 +123,10 @@ function ($, jQueryUi, Backbone, Route, PathView) {
                     goal: goal
                 });
 
+                color = getRandomColor();
                 //trigger event for paths in route to highlight the path
                 route.paths.forEach(function (path) {
-                    path.trigger('highlight', 'blue');
-                }, this);
-
-                //when the route ceases to exits, remove the highlighting
-                route.on('destroy', function () {
-                    route.paths.forEach(function (path) {
-                        path.trigger('highlight', '');
-                    }, this);
-                    route.off('destroy', null, this); //remove this event handler
+                    path.trigger('highlight', color);
                 }, this);
             }
         },

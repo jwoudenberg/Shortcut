@@ -1,8 +1,9 @@
 // --- GAME TYPE VIEW ---
 //extends a game view with game-type specific formatting
 
-define(['js/models/gametype', 'js/views/game/game-view'],
-function (GameType, GameView) {
+define(['underscore', 'js/models/gametype', 'js/views/game/game-view',
+    'text!templates/cardsize.css'],
+function (_, GameType, GameView, cardSizeCSS) {
     return GameView.extend({
 
         GameType: GameType,
@@ -19,7 +20,7 @@ function (GameType, GameView) {
 
         resize: function () {
             //called when the game is rendered or the windows size changes
-            var height, width, size, holderSize;
+            var height, width, size, cardSize;
 
             //get the height and with of the #content div
             height = $('#content').height(),
@@ -47,10 +48,13 @@ function (GameType, GameView) {
             }
 
             //calculate the size of each field
-            holderSize = Math.floor(size / this.boardView.model.get('size')) - 2;
+            cardSize = Math.floor(size / this.boardView.model.get('size')) - 2;
 
             //need to replace this with an underscore template
-            $('style').html('.holder, .deck {width: '+holderSize+'px; height: '+holderSize+'px;}');
+            $('style').html(_.template(cardSizeCSS, {
+                cardSize: cardSize,
+                fontSize: cardSize/100
+            }));
 
         }
 
