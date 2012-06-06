@@ -9,7 +9,7 @@
 
 define(['jquery', 'jqueryui', 'backbone', 'js/models/route',
     'js/views/game/path-view'],
-function ($, jqueryUi, Backbone, Route, PathView) {
+function ($, jQueryUi, Backbone, Route, PathView) {
     return Backbone.View.extend({
 
         tagName:    'div',

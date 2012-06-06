@@ -2,7 +2,7 @@
 /* Renders a holder. Is always part of a bigger structure (board, deck). */
 
 define(['jquery', 'jqueryui', 'backbone'],
-function ($, jqueryUi, Backbone) {
+function ($, jQueryUi, Backbone) {
     return Backbone.View.extend({
 
         tagName:    'div',
