@@ -1,38 +1,47 @@
-// --- SETUP VIEW ---
+/* --- SETUP VIEW ---
 
-/*
 This view fills the content section of the page with setup-related fields.
 
 Once the user starts the game, it will create a gametype object (currently only
 one exists) and attempt to start it. If it succeeds, this view creates a
 game-view and then destroys itself. If not, an error is displayed.
+
+FUNCTIONS
+start() - attempts to start a game with whatever settings the user has selected
 */
 
-define(['jquery', 'backbone', 'js/models/gametype',
-    'js/views/game/gametype-view', 'text!templates/setup.html'],
-function ($, Backbone, Gametype, GametypeView, setupTemplate) {
+define(['jquery', 'backbone', 'js/views/game/gametype-view',
+    'text!templates/setup.html'],
+function ($, Backbone, GametypeView, setupTemplate) {
     return Backbone.View.extend({
 
         tagName:    'div',
         id:         'setup',
 
-        initialize: function () {
-            this.render();
+        initialize: function (options) {
+            //get link back to mainView variable from the initialization options
+            this.mainView = options.mainView;
         },
 
         events: {
-            'change #playerList li:last-child input': 'addPlayer',
+            'change #playerList li':    'changePlayer',
             'click button[name=start]': 'start'
         },
 
         render: function () {
         //render sets these values to defaults. call once.
-            this.$el.html(setupTemplate).appendTo('#content');
+            this.$el.html(setupTemplate);
         },
 
-        addPlayer: function () {
-        //add an additional item to the list
-            $('#playerList').append('<li><input type="text" value="" /></li>');
+        changePlayer: function (event) {
+            //add or remove a player-name input field
+            var $target = $(event.target);
+            if ($target.attr('value') !== '') {
+                $('#playerList').append('<li><input type="text" value="" /></li>');
+            }
+            else if (!$target.is('#playerList li:last')) {
+                $target.parent().remove();
+            }
         },
 
         start: function () {
@@ -41,13 +50,13 @@ function ($, Backbone, Gametype, GametypeView, setupTemplate) {
 
             //get boardsize from page
             var boardSize = parseInt($('#boardSize').attr('value'), 10),
-                i, name, playerNames = [], view, result;
+                i, name, playerNames = [], view, result, options;
 
             //get players from page
             for (i = $('#playerList li').length; i--;) {
                 //extract a name
                 name = $('#playerList li:eq(' + i + ') input').attr('value');
-                if (name !== '') {
+                if (typeof name === 'string' && name !== '') {
                     //if not an empty field, add a new player with this name
                     playerNames.push(name);
                 }
@@ -55,21 +64,24 @@ function ($, Backbone, Gametype, GametypeView, setupTemplate) {
 
             //create new gametype-view, which will create the corresponding game
             view = new GametypeView();
-            result = view.model.start({
+
+            //try to start
+            options = {
                 playerNames: playerNames,
                 boardSize: boardSize
-            });
+            };
+            result = view.model.start(options);
 
-            //check if game-start is succesfull
+            //check if start was succesfull
             if (result === true) {
-                //this view is no longer usefull
-                this.remove();
+                //hand over content area to new view
+                this.mainView.changeContentView(view);
             }
             else {
-                //delte game view again
+                //remove gametypeView again
                 view.remove();
-                //temporary and very ugly way of showing errors
-                alert(result);
+                //show error to the user
+                this.mainView.postMessage(result);
             }
         }
 

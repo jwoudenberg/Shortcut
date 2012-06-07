@@ -33,11 +33,7 @@ function (Backbone, HolderView) {
             this.render();
         },
 
-        render: function () {
-            //NOTE: I should consider giving the render command manually,
-            //to be able to prepare the board before showing it.
-            this.$el.appendTo(this.gameView.$el);
-        },
+        render: function () {},
 
         click: function () {
             //if deck is empty, set the flipped class to prepare the flip effect

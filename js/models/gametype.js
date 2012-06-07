@@ -27,13 +27,13 @@ function (Game, makeBounds, makeRandomCard) {
 
             //check if number of player isn't to large
             if (playerNum < 0) {
-                errors.push("Not enough players.");
-            }
-            if (playerNum > playerMax) {
-                errors.push("To many players for this board-size.");
+                errors.push("Negative players not allowed.");
             }
             if (boardSize < 1) {
                 errors.push("Board-size is too small.");
+            }
+            else if (playerNum > playerMax) {
+                errors.push("To many players for this board-size.");
             }
 
             //check whether any errors were found

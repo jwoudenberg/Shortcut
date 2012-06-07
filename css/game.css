@@ -1,11 +1,6 @@
 @charset "UTF-8";
 
 /* GAME ELEMENTS */
-#game {
-    width:      100%;
-    height:     100%;
-}
-
 .board {
     position:   absolute;
     z-index:    1;
@@ -96,10 +91,11 @@
 
 /* ROTATION EFFECT */
 .card {
-    transition:         transform 300ms;
+    -ms-transition:     -moz-transform 300ms;
     -moz-transition:    -moz-transform 300ms;
     -webkit-transition: -webkit-transform 300ms;
     -o-transition:      -o-transform 300ms;
+    transition:         transform 300ms;
 }
 
 /* FLIPPING EFFECT */
@@ -114,50 +110,55 @@
     position:               absolute;
     width:                  inherit;
     height:                 inherit;
-    
+
     transform-style:        preserve-3d;
     -moz-transform-style:   preserve-3d;
     -webkit-transform-style:preserve-3d;
     -o-transform-style:     preserve-3d;
-    
-    transform-origin:           100% 50%;
+
+    -ms-transform-origin:       100% 50%;
     -moz-transform-origin:      100% 50%;
     -webkit-transform-origin:   100% 50%;
     -o-transform-origin:        100% 50%;
+    transform-origin:           100% 50%;
 
     backface-visibility:        hidden;
     -moz-backface-visibility:   hidden;
     -webkit-backface-visibility:hidden;
     -o-backface-visibility:     hidden;
 
-    transform:              rotateY(-180deg) translateX(100%);
+    -ms-transform:          rotateY(-180deg) translateX(100%);
     -moz-transform:         rotateY(-180deg) translateX(100%);
     -webkit-transform:      rotateY(-180deg) translateX(100%);
     -o-transform:           rotateY(-180deg) translateX(100%);
+    transform:              rotateY(-180deg) translateX(100%);
 }
 
 .deck:not(.flipped) > .holder {
-    transition:             transform 500ms;
+    -ms-transition:         transform 500ms;
     -moz-transition:        -moz-transform 500ms;
     -webkit-transition:     -webkit-transform 500ms;
     -o-transition:          -o-transform 500ms;
+    transition:             transform 500ms;
 
-    transform:              rotateY(0) translateX(0);
+    -ms-transform:          rotateY(0) translateX(0);
     -moz-transform:         rotateY(0) translateX(0);
     -webkit-transform:      rotateY(0) translateX(0);
     -o-transform:           rotateY(0) translateX(0);
+    transform:              rotateY(0) translateX(0);
 }
 
 .deck > .holder > .card, .deck > .holder > .cardBack {
-    backface-visibility:        hidden;
     -moz-backface-visibility:   hidden;
     -webkit-backface-visibility:hidden;
     -o-backface-visibility:     hidden;
+    backface-visibility:        hidden;
 }
 
 .deck > .holder > .cardBack {
-    transform:              rotateY(-180deg);
+    -ms-transform:          rotateY(-180deg);
     -moz-transform:         rotateY(-180deg);
     -webkit-transform:      rotateY(-180deg);
     -o-transform:           rotateY(-180deg);
+    transform:              rotateY(-180deg);
 }

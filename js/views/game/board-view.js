@@ -28,9 +28,7 @@ function (Backbone, HolderView) {
             this.render();
         },
 
-        render: function () {
-            this.$el.appendTo(this.gameView.$el);
-        }
+        render: function () {}
 
     });
 });

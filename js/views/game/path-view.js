@@ -86,17 +86,30 @@ function ($, Backbone, path0Svg, path1Svg, path2Svg, path3Svg, path4Svg,
                 children('g').attr('transform', transform);
         },
 
-        highlight: function (color) {
+        highlight: function (options) {
+            var color = options.color,
+                strong = options.strong;
+
+            //set color
+            if (color === 'none') {
+                this.$el.removeClass('colored');
+                color = '';
+            }
+            else if (color !== undefined) {
+                this.$el.addClass('colored');
+            }
+
             this.$el.find('.pathContainer').css({
                 fill: color,
                 stroke: color
             });
 
-            if (color === undefined || color === '') {
-                this.$el.removeClass('colored');
+            //set strong
+            if (strong === false) {
+                this.$el.removeClass('strong');
             }
-            else {
-                this.$el.addClass('colored');
+            else if (strong === true) {
+                this.$el.addClass('strong');
             }
 
             return this;

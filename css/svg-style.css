@@ -1,39 +1,40 @@
 @charset "UTF-8";
 .pathContainer {
-    opacity:        0.5;
-    stroke:         black;
+    opacity:        0.6;
+    stroke:         #444444;
     stroke-width:   14;
-    fill:           black;
-    
-    transition:         opacity 1s, fill 1s, stroke 1s;
+    fill:           #444444;
+
+    -ms-transition:     opacity 1s, fill 1s, stroke 1s;
     -moz-transition:    opacity 1s, fill 1s, stroke 1s;
     -webkit-transition: opacity 1s, fill 1s, stroke 1s;
     -o-transition:      opacity 1s, fill 1s, stroke 1s;
+    transition:         opacity 1s, fill 1s, stroke 1s;
 }
 
 .pathFill {
     stroke:         none !important;
     opacity:        0.2;
-    
-    transition:         opacity 1s;
+
+    -ms-transition:     opacity 1s;
     -moz-transition:    opacity 1s;
     -webkit-transition: opacity 1s;
     -o-transition:      opacity 1s;
+    transition:         opacity 1s;
 }
 
 .pathBorder {
     fill:           none !important;
 }
 
-.card:hover, .deck .card {
-
+.card:hover .pathContainer {
+    opacity:    0.8;
 }
 
-.path.colored .pathContainer {
+.path.strong .pathContainer {
     opacity:    0.7;
 }
-
-.path.colored .pathFill {
+.path.strong .pathFill {
     opacity:    0.4;
 }
 

@@ -1,81 +1,120 @@
-// --- GAME VIEW ---
+/* --- GAME VIEW ---
 
-/*
-Listens to the game to create views when game-elements are created
+Renders all game elements. Needs to be extended to Gametype View to be usefull
 
-This model needs to be extended to a gametype-view to be usefull. This extension
-will layout the game corresponding to a specific gametype.
+OVERWRITE WITH GAMETYPE VIEW
+withNewBoard(boardView) - called when a new boardView is added
+withNewDeck(deckView)   - called when a new deckView is added
+withNewCard(cardView)   - called when a new cardView is added
+arrange()               - called when the gameview needs to be rearranged,
+                          for instance when the window size changes
 */
 
-define(['jquery', 'backbone', 'js/views/game/board-view', 'js/views/game/card-view',
-'js/views/game/deck-view', 'js/views/page/menu-view'],
-function ($, Backbone, BoardView, CardView, DeckView, MenuView) {
+define(['jquery', 'backbone', 'js/views/game/board-view',
+    'js/views/game/card-view', 'js/views/game/deck-view',
+    'text!templates/rules.html', 'text!templates/confirmation.html'],
+function ($, Backbone, BoardView, CardView, DeckView, ruleTemplate,
+        confirmationTemplate) {
     return Backbone.View.extend({
 
         tagName: 'div',
         id: 'game',
+        //set in initialize()
 
-        initialize: function () {
+        initialize: function (options) {
             //check if GameType is set
             if (this.GameType === undefined) {
                 throw new Error("Game View: Game View needs a GameType.");
             }
             //create the gametype
             this.model = new this.GameType();
+        },
 
-            //on the first turn, call render()
-            this.model.turns.on('add', function () {
-                this.render();
-                this.model.turns.off('add', null, this);
-            }, this);
+        //these are added to menu when this view is made contentView by mainView
+        menuOptions: {
+            'new game': function () {
+                var confirmation = this.mainView.showText(confirmationTemplate);
 
-
-            //when a board, card or deck gets added, create its view, then
-            //call a function that can be overwritten by gametype-view
-            this.model.boards.on('add', function (board) {
-                var view = new BoardView({
-                    model: board,
-                    gameView: this
+                //attach events for the confirmation, buttons
+                confirmation.delegateEvents({
+                    'click button[name=close], button[name=no]': 'remove',
+                    'click button[name=yes]':   function () {
+                        this.mainView.setup();
+                        this.remove();
+                    }
                 });
-                this.newBoard(board, view);
-            }, this);
-
-            this.model.cards.on('add', function (card) {
-                var view = new CardView({
-                    model: card,
-                    gameView: this
-                });
-                this.newCard(card, view);
-            }, this);
-
-            this.model.decks.on('add', function (deck) {
-                var view = new DeckView({
-                    model: deck,
-                    gameView: this
-                });
-                this.newDeck(deck, view);
-            }, this);
-
-
-            //when the window is resized, fire the resize() function
-            var self = this;
-            $(window).resize(function () {
-                self.resize();
-            });
+            },
+            'rules': function() {
+                this.mainView.showText(ruleTemplate);
+            }
         },
 
         render: function () {
-        //called when the game is started
-            this.resize();
-            this.$el.appendTo('#content');
-            new MenuView({ el: 'menu' });
+            //(re)renders al game elements.
+            this.$el.empty(); //start with a clean slate
+
+            //create views for all boards, decks and cards
+            this.model.boards.forEach(this.createBoardView, this);
+            this.model.decks.forEach(this.createDeckView, this);
+            this.model.cards.forEach(this.createCardView, this);
+
+            this.arrange(); //update the layout of the game
+
+            //listen for changes
+            //when a board, deck or card gets added, rerender the game
+            this.model.boards.on('add', this.render, this);
+            this.model.decks.on('add', this.render, this);
+
+            //when a card gets added create a view for it
+            this.model.cards.on('add', this.createCardView, this);
         },
 
-        // RULE FUNCTIONS - overwrite these in a gametype-view.
-        newBoard: function (board, view) {},
-        newCard: function (card, view) {},
-        newDeck: function (deck, view) {},
-        resize: function () {} //called when size of gamewindow changes
+        remove: function () {
+            //call inherited remove function
+            Backbone.View.prototype.remove.call(this);
+
+            //remove callbacks
+            this.model.boards.off(null, null, this);
+            this.model.cards.off(null, null, this);
+            this.model.decks.off(null, null, this);
+        },
+
+        createBoardView: function (board) {
+            var view = new BoardView({
+                model: board,
+                gameView: this
+            });
+            view.$el.appendTo(this.$el);
+            this.withNewBoard(view);
+            return view;
+        },
+
+        createDeckView: function (deck) {
+            var view = new DeckView({
+                model: deck,
+                gameView: this
+            });
+            view.$el.appendTo(this.$el);
+            this.withNewDeck(view);
+            return view;
+        },
+
+        createCardView: function (card) {
+            //note that cardViews are not automatically appended to the DOM,
+            //they do that themselves (as they are subviews of a holder)
+            var view = new CardView({
+                model: card,
+                gameView: this
+            });
+            this.withNewCard(view);
+            return view;
+        },
+
+        //FUNCTIONS - overwrite these in a gametype-view.
+        withNewBoard: function (boardView) {},
+        withNewDeck: function (deckView) {},
+        withNewCard: function (cardView) {},
+        arrange: function () {} //updates the layout of the game elements
 
     });
 });

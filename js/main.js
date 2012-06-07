@@ -27,4 +27,5 @@ function(MainView) {
 }, function (err) {
     //something went wrong with the loading of files
     document.getElementById('content').innerHTML = '<h1>Oops...</h1><p>Something went wrong with loading.';
+    throw err;
 });

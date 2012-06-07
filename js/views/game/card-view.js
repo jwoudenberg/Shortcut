@@ -14,6 +14,7 @@ function ($, jQueryUi, Backbone, Route, PathView, getRandomColor) {
 
         tagName:    'div',
         className:  'card',
+        $rotation:  0, //used by rotate()
 
         events: {
             'mousedown':    'mousedown',
@@ -38,8 +39,6 @@ function ($, jQueryUi, Backbone, Route, PathView, getRandomColor) {
                 revertDuration: 100,//jump back-animation
                 helper: 'original'
             });
-
-            this.$rotation = 0; //used by rotate()
 
             // --- PATH-RELATED
             //create path-views
@@ -126,7 +125,22 @@ function ($, jQueryUi, Backbone, Route, PathView, getRandomColor) {
                 color = getRandomColor();
                 //trigger event for paths in route to highlight the path
                 route.paths.forEach(function (path) {
-                    path.trigger('highlight', color);
+                    path.trigger('highlight', {
+                        color:  color,
+                        strong: true
+                        
+                    });
+                }, this);
+
+                //when the route ceases to exits, remove strong effect
+                route.on('destroy', function () {
+                    route.paths.forEach(function (path) {
+                    path.trigger('highlight', {
+                        strong: false
+                        
+                    });
+                    }, this);
+                    route.off('destroy', null, this); //remove this event handler
                 }, this);
             }
         },

@@ -1,25 +1,44 @@
-// --- MAIN VIEW ---
+/* --- MAIN VIEW ---
 
-/*
-This view sets up the outer page elements and then calls the setup view, which
-will populate the content section of the page.
+Sets up different page elements and then shows the setup screen in
+the content area
 
-A game is not yet created, because it is not yet known what type of game needs
-to be created.
+FUNCTIONS
+changeContentView(view) - show view in content area
+setup()                 - show setup view in content area
+postMessage(message)    - post a message in the messageArea
+showText(text)          - show a textScreen on top of the content area
 */
 
-define(['jquery', 'backbone', 'js/views/page/setup-view'],
-function ($, Backbone, SetupView) {
+define(['jquery', 'underscore', 'backbone', 'js/views/page/setup-view',
+    'js/views/page/message-view', 'js/views/page/menu-view',
+    'js/views/page/text-view'],
+function ($, _, Backbone, SetupView, MessageView, MenuView, TextView) {
     return Backbone.View.extend({
+
+        //future references to subviews
+        contentView:    undefined,
+        messageView:    undefined,
+        menuView:       undefined,
+        textView:       undefined,
 
         initialize: function () {
             var self = this;
             $(document).ready(function () {
                 self.render();
             });
+
+            //when the window is resized, fire resize() function
+            $(window).resize(function () {
+                //call resize, 'this' continues to refer to this view
+                self.resize.apply(self);
+            });
+
         },
 
         render: function () {
+            //creates all subviews. Call once.
+
             //set the body element as this views element
             this.setElement('body');
 
@@ -28,8 +47,109 @@ function ($, Backbone, SetupView) {
                 return false; //disable context menu
             });
 
-            //show the setup screen
-            new SetupView();
+            //creates the message area
+            this.messageView = new MessageView({ el: $('#messageArea') });
+
+            //create a menuView
+            this.menuView = new MenuView({
+                el: 'menu'
+            });
+
+            //show the setup screen to start
+            this.setup();
+        },
+
+        remove: function () {
+            //call inherited remove function
+            Backbone.View.prototype.remove.call(this);
+
+            //sever connection via menu-callBacks to other objects
+            this.messageView.remove();
+            this.menuView.remove();
+            if (this.textView) {
+                this.textView.remove();
+            }
+            if (this.contentView) {
+                delete this.contentView.mainView;
+                this.contentView.remove();
+            }
+        },
+
+        changeContentView: function (newView) {
+            //called to make a view populate the content (and menu) areas
+            var oldView = this.contentView;
+
+            //check if there already is a contentview
+            if (oldView) {
+                //remove menuOptions if they exist
+                if (oldView.menuOptions) {
+                    _.each(oldView.menuOptions, function (callback, name) {
+                        this.removeButton(name);
+                    }, this.menuView);
+                }
+
+                oldView.remove();
+                oldView.mainView = undefined;
+            }
+
+            //add new view
+            newView.mainView = this;
+            newView.$el.prependTo('#content');
+            newView.render();
+
+            //set own reference to new view
+            this.contentView = newView;
+
+            //refresh messageView
+            this.messageView.clear();
+
+            //add menuOptions if they exist
+            if (newView.menuOptions) {
+                _.each(newView.menuOptions, function (callback, name) {
+                    this.addButton(name, callback, newView);
+                }, this.menuView);
+            }
+        },
+
+        resize: function () {
+            //fire arrange function of the contentView, if it exists
+            if (this.contentView && this.contentView.arrange) {
+                this.contentView.arrange();
+            }
+        },
+
+        setup: function () {
+            //displays a new setup screen
+            var view = new SetupView({ 
+                mainView: this
+            });
+            this.changeContentView(view);
+        },
+
+        showText: function (html) {
+            //shows the provided text on top of the content area
+            var textView = this.textView;
+            if (textView) {
+                //remove current textView
+                delete textView.mainView;
+                textView.remove();
+            }
+
+            //add new nextView
+            textView = new TextView({ html: html });
+            textView.mainView = this;
+            textView.$el.appendTo('#content');
+
+            //save reference
+            this.textView = textView;
+
+            //return the textView (for instance to bind eventhandlers)
+            return textView;
+        },
+
+        postMessage: function (message) {
+            //convenience wrapper function to post a message in the messageView
+            this.messageView.post(message);
         }
 
     });

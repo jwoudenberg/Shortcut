@@ -4,6 +4,7 @@
 body {
     font-family:   "Trebuchet MS", Helvetica, sans-serif;
     color:          #333;
+    line-height:    105%;
 }
 
 #metaBar {
@@ -24,8 +25,18 @@ body {
     padding:    10px;
 }
 
+#content > div {
+    position:   absolute;
+    top:        0;
+    bottom:     0;
+    left:       0;
+    right:      0;
+    padding:    10px;
+    z-index:    20;
+}
+
 header {
-    margin:     10px;
+    margin:     20px 10px;
 }
 
 header h1 {
@@ -39,6 +50,25 @@ menu {
 
 menu > button {
     margin-bottom:  10px;
+}
+
+#messageArea {
+    list-style: none;
+    font-size: 90%;
+}
+
+#messageArea li {
+    overflow:   hidden;
+    margin-top: 2px;
+    padding:    5px 10px 5px 6px;
+    border-left:4px solid #888;
+    border-top: 1px solid #888;
+
+    -ms-transition:     height  100ms;
+    -moz-transition:    height  100ms;
+    -webkit-transition: height  100ms;
+    -o-transition:      height  100ms;
+    transition:         height  100ms;
 }
 
 footer {
@@ -70,17 +100,25 @@ button:hover {
 #playerList li {
 }
 
-#rules {
-    position:   absolute;
-    top:        0;
-    bottom:     0;
-    left:       0;
-    right:      0;
-    padding:    10px;
-    z-index:    20;
+#content h1 {
+    margin:     1em 0;
+    font-size:  130%;
+}
+#content h2 {
+    font-size:  110%;
+    margin:     1em 0 0.3em 0;
 }
 
-#rules > .background {
+#content p, #content li {
+    margin-bottom:  0.5em;
+}
+
+#content > .textScreen  ul, #content > .textScreen  ol {
+    padding-left:   2em;
+}
+
+#content > .textScreen > .background {
+    /* this is the opacity mask that hides the content behind the textscreen */
     position:   absolute;
     top:        0;
     bottom:     0;
@@ -88,5 +126,24 @@ button:hover {
     right:      0;
     background: #fff;
     opacity:    0.9;
-    z-index:    -1;
+    z-index:    -10;
+}
+
+#content > .textScreen {
+    padding-top:            3.5em;
+    -moz-column-width:      400px;
+    -webkit-column-width:   400px;
+    -ms-column-width:       400px;
+    column-width:           400px;
+}
+
+#content > .textScreen h1 {
+    position:   absolute;
+    top:        0;
+}
+
+#content > .textScreen button[name=close] {
+    position:   absolute;
+    top:        10px;
+    right:      10px;
 }
