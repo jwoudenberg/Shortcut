@@ -2,8 +2,8 @@
 /*  Refers to the player. It refers to a collection of bases. Paths can be added
     and removed from that collection by calling functions on the path
 */
-define(['backbone', 'js/collections/paths'],
-function (Backbone, Paths) {
+define(['backbone', 'js/models/path'],
+function (Backbone, Path) {
     return Backbone.Model.extend({
 
         bases: undefined,
@@ -24,7 +24,7 @@ function (Backbone, Paths) {
         },
 
         initialize: function () {
-            this.bases = new Paths();
+            this.bases = new (Backbone.Collection.extend({ model: Path }))();
         }
 
     });

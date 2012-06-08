@@ -10,10 +10,10 @@ arrange()               - called when the gameview needs to be rearranged,
                           for instance when the window size changes
 */
 
-define(['jquery', 'backbone', 'js/views/game/board-view',
+define(['jquery', 'underscore', 'backbone', 'js/views/game/board-view',
     'js/views/game/card-view', 'js/views/game/deck-view',
     'text!templates/rules.html', 'text!templates/confirmation.html'],
-function ($, Backbone, BoardView, CardView, DeckView, ruleTemplate,
+function ($, _, Backbone, BoardView, CardView, DeckView, ruleTemplate,
         confirmationTemplate) {
     return Backbone.View.extend({
 
@@ -22,6 +22,9 @@ function ($, Backbone, BoardView, CardView, DeckView, ruleTemplate,
         //set in initialize()
 
         initialize: function (options) {
+            //incorporate gametype-view
+            _.extend(this, options.type);
+
             //check if GameType is set
             if (this.model === undefined) {
                 throw new Error("Game View: Game View needs a model (Game).");
@@ -75,6 +78,9 @@ function ($, Backbone, BoardView, CardView, DeckView, ruleTemplate,
             this.model.boards.off(null, null, this);
             this.model.cards.off(null, null, this);
             this.model.decks.off(null, null, this);
+
+            //call close formula for gametype-view
+            this.close();
         },
 
         createBoardView: function (board) {
@@ -112,7 +118,8 @@ function ($, Backbone, BoardView, CardView, DeckView, ruleTemplate,
         withNewBoard: function (boardView) {},
         withNewDeck: function (deckView) {},
         withNewCard: function (cardView) {},
-        arrange: function () {} //updates the layout of the game elements
+        arrange: function () {},    //updates the layout of the game elements
+        close: function () {}       //called when the view is removed
 
     });
 });

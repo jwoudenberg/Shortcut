@@ -31,7 +31,7 @@ function ($, jQueryUi, Backbone, PathView, getRandomColor, makeRouteCached) {
             //set attributes
             this.$el.attr({
                 'data-cid': this.model.cid
-            }).append('<div class="text"></div>');
+            });
 
             //make card draggable (uses jquery-ui)
             this.$el.draggable({
@@ -40,11 +40,6 @@ function ($, jQueryUi, Backbone, PathView, getRandomColor, makeRouteCached) {
                 helper: 'original'
             });
 
-            //listen for change of path-owners
-            this.model.paths.on('change:owner', function (path) {
-                this.updateLabel(path);
-            }, this);
-
             //card state event listeners
             this.model.on('change:rotation', this.rotate, this);
             this.model.on('change:holder', this.place, this);
@@ -52,14 +47,20 @@ function ($, jQueryUi, Backbone, PathView, getRandomColor, makeRouteCached) {
             this.model.on('change:moveLock', this.updateRotateLock, this);
             this.model.paths.on('add remove change', this.render, this);
 
+            //listen for change of path-owners
+            this.model.paths.on('change:owner', function (path) {
+                this.updateLabel(path);
+            }, this);
+
             this.render();
         },
 
         render: function () {
-            this.$el.detach().empty(); //start clean
+            this.$el.detach().empty().                  //start clean
+                append('<div class="text"></div>');     //add text class
 
             //create path-views
-            this.model.paths.each(this.createPathView, this);
+            this.model.paths.each( this.createPathView, this);
 
             //set card properties
             this.updateMoveLock();  //set correct locked/unlocked behaviour

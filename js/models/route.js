@@ -12,9 +12,8 @@
     The route listens to events from cards the paths cross, as well as empty
     field(s) at the end(s) of the (sub)route(s).
 */
-define(['backbone', 'js/collections/paths', 'js/collections/cards',
-    'js/collections/fields'],
-function (Backbone, Paths, Cards, Fields) {
+define(['backbone'],
+function (Backbone) {
 
     return Backbone.Model.extend({
 
@@ -42,10 +41,10 @@ function (Backbone, Paths, Cards, Fields) {
                 port, place, result;
 
             //initialize paths collection
-            this.paths = new Paths();
-            this.goalPaths = new Paths();
-            this.emptyFields = new Fields();
-            this.cards = new Cards();
+            this.paths = new Backbone.Collection();
+            this.goalPaths = new Backbone.Collection();
+            this.emptyFields = new Backbone.Collection();
+            this.cards = new Backbone.Collection();
 
             //check if provided card is on a board (and not a deck)
             if (board === undefined) {

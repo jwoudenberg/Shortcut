@@ -1,8 +1,8 @@
 // --- BOARD ---
 //a collection of fields in which cards can be placed, placed in a grid
 
-define(['backbone', 'js/collections/fields'],
-function (Backbone, Fields) {
+define(['backbone', 'js/models/field'],
+function (Backbone, Field) {
     return Backbone.Model.extend({
 
         fields: undefined,
@@ -29,7 +29,7 @@ function (Backbone, Fields) {
             var size, col, row;
 
             //create field-collection
-            this.fields = new Fields();
+            this.fields = new (Backbone.Collection.extend({ model: Field }))();
 
             //populate collection with fields
             size = this.get('size');

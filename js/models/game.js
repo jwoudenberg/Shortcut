@@ -8,26 +8,28 @@ This model needs to be extended to a gametype to be usefull. This gametype model
 will add rule-logic by overwriting some of the game models functions.
 */
 
-define(['backbone', 'js/collections/boards', 'js/collections/decks',
-    'js/collections/cards', 'js/collections/players', 'js/collections/turns',
-    'js/models/board', 'js/models/deck', 'js/models/card', 'js/models/player'],
-function (Backbone, Boards, Decks, Cards, Players, Turns,
-    Board, Deck, Card, Player) {
+define(['underscore', 'backbone', 'js/models/board', 'js/models/deck',
+    'js/models/card', 'js/models/player', 'js/models/turn'],
+function (_, Backbone, Board, Deck, Card, Player, Turn) {
     return Backbone.Model.extend({
 
+        //defined by initialize()
         boards: undefined,
         decks: undefined,
         cards: undefined,
         players: undefined,
         turns: undefined,
 
-        initialize: function () {
+        initialize: function (attrs, options) {
+            //incorporate gametype
+            _.extend(this, options.type);
+
             //create collections
-            this.boards =  new Boards();
-            this.decks =   new Decks();
-            this.cards =   new Cards();
-            this.players = new Players();
-            this.turns =   new Turns();
+            this.boards =  new (Backbone.Collection.extend({ model: Board }))();
+            this.decks =   new (Backbone.Collection.extend({ model: Deck }))();
+            this.cards =   new (Backbone.Collection.extend({ model: Card }))();
+            this.players = new (Backbone.Collection.extend({ model: Player }))();
+            this.turns =   new (Backbone.Collection.extend({ model: Turn }))();
         },
 
         start: function (setup) {

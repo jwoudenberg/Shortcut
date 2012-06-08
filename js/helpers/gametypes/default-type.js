@@ -1,18 +1,11 @@
-// --- GAME TYPE ---
-//extends the game model with rules
-
-/*
-This model can contain several functions that can define rules for the game.
-
-For instance, certain functions are called when an attempt is made to start the
-game, go to the next turn, etc. These function calls can be found in the
-parent-model, game.js.
+/* --- GAME TYPE ---   
+    This object contain several functions that define rules for the game. These
+    functions are hooks, called at particular moments in the games run by Game
 */
 
-define(['js/models/game', 'js/helpers/makeBounds',
-'js/helpers/makeRandomCard'],
-function (Game, makeBounds, makeRandomCard) {
-    return Game.extend({
+define(['js/helpers/makeBounds', 'js/helpers/makeRandomCard'],
+function (makeBounds, makeRandomCard) {
+    return {
 
         validateStart: function (setup) {
         //This function validates the contents of the game model.
@@ -75,5 +68,5 @@ function (Game, makeBounds, makeRandomCard) {
             deck.pop();
         }
 
-    });
+    };
 });

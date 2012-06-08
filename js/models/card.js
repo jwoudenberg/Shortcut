@@ -4,8 +4,8 @@
 
     There is a bidirectional link between cards and holders. 
 */
-define(['backbone', 'js/collections/paths'],
-function (Backbone, Paths) {
+define(['backbone', 'js/models/path'],
+function (Backbone, Path) {
     return Backbone.Model.extend({
 
         paths: undefined,
@@ -30,7 +30,7 @@ function (Backbone, Paths) {
             var holder, protoPaths, protoPath, i;
 
             //create path-collection
-            this.paths = new Paths();
+            this.paths = new (Backbone.Collection.extend({ model: Path }))();
 
             //create paths
             protoPaths = options.paths;

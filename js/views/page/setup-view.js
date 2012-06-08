@@ -10,9 +10,9 @@ FUNCTIONS
 start() - attempts to start a game with whatever settings the user has selected
 */
 
-define(['jquery', 'backbone', 'js/helpers/gameTypes.js',
-    'text!templates/setup.html'],
-function ($, Backbone, gameTypes, setupTemplate) {
+define(['jquery', 'backbone', 'js/models/game.js', 'js/views/game/game-view.js',
+    'js/helpers/gametypes.js', 'text!templates/setup.html'],
+function ($, Backbone, Game, GameView, gametypes, setupTemplate) {
     return Backbone.View.extend({
 
         tagName:    'div',
@@ -62,25 +62,37 @@ function ($, Backbone, gameTypes, setupTemplate) {
                 }
             }
 
-            //create new gametype and corresponding view
-            game = new gameTypes['default'].Gametype();
-            view = new gameTypes['default'].GametypeView({ model: game });
-
-            //try to start
+            //create object to pass to game constructor
             options = {
                 playerNames: playerNames,
                 boardSize: boardSize
             };
-            result = view.model.start(options);
 
-            //check if start was succesfull
+            //check validity of options by passing to gametype function directly
+            //creation of Game object is unnecessary
+            result = gametypes['default'].type.validateStart(options);
+
+            //check if validation was succesfull
             if (result === true) {
-                //hand over content area to new view
-                this.mainView.changeContentView(view);
+                //create new game
+                game = new Game({}, { type: gametypes['default'].type });
+                //try to start
+                result = game.start(options);
+
+                //the same validation is performed, so this should be true
+                if (result === true) {
+                     view = new GameView({
+                        model:  game,
+                        type:   gametypes['default'].view
+                    });
+                    //hand over content area to new view
+                    this.mainView.changeContentView(view);
+                }
+                else {
+                    throw new Error("Setup View: Start validations not in agreement");
+                }
             }
             else {
-                //remove gametypeView again
-                view.remove();
                 //show error to the user
                 this.mainView.postMessage(result);
             }

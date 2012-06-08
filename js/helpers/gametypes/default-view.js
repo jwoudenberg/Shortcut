@@ -1,14 +1,13 @@
-// --- GAME TYPE VIEW ---
-//extends a game view with game-type specific formatting
+/* --- GAME TYPE ---   
+    This object contain several functions that determine the way the game is
+    displayed. These functions are called by gametypeView
+*/
 
-define(['underscore', 'js/views/game/game-view', 'text!templates/cardsize.css'],
-function (_, GameView, cardSizeCSS) {
-    return GameView.extend({
+define(['underscore', 'text!templates/cardsize.css'],
+function (_, cardSizeCSS) {
+    return {
 
-        remove: function () {
-            //call inherited remove function
-            GameView.prototype.remove.call(this);
-
+        close: function () {
             //remove subviews
             if (this.boardView) {
                 this.boardView.remove();
@@ -68,5 +67,5 @@ function (_, GameView, cardSizeCSS) {
             }
         }
 
-    });
+    };
 });
