@@ -1,25 +1,28 @@
-// --- ROUTE ---
-/*  Contains a collection of paths that consist the route. On creation it is
+/* --- ROUTE ---
+
+    Contains a collection of paths that consist the route. On creation it is
     provided with a beginning path and optionally a direction and goal-path.
-    The route then finds all paths connected to the beginning,
+    The route then finds all paths connected to the beginning, possibly
+    including multiple branches.
     
-    If a goal path has been provided, 
-
-    The route listens to events from cards.
+    If a goal path has been provided, the goalReached variable will tell whether
+    that goal was reached. If so, only the paths in the (sub)route(s) ending in
+    that goal will be saved.
+    
+    The route listens to events from cards the paths cross, as well as empty
+    field(s) at the end(s) of the (sub)route(s).
 */
-define(['backbone', 'js/collections/paths', 'js/collections/fields'],
-function (Backbone, Paths, Fields) {
-
-    //match port numbers to directions (for instance, ports 0,1 move downwards)
-var cardLookup = ['down', 'down', 'right', 'right', 'up', 'up', 'left', 'left'],
-    //match exit and entrance ports (for instance, port 0 is connected to port 5
-    //  on the adjacent card)
-    portLookup = [5, 4, 7, 6, 1, 0, 3, 2];
+define(['backbone', 'js/collections/paths', 'js/collections/cards',
+    'js/collections/fields'],
+function (Backbone, Paths, Cards, Fields) {
 
     return Backbone.Model.extend({
 
-        paths: undefined,
-        emptyFields: undefined,
+        //will come to contain a collection of...
+        paths: undefined,       //...paths in the route
+        goalPaths: undefined,   //...paths leading to the goal (if provided)
+        cards: undefined,       //...cards crossed in the route
+        emptyFields: undefined, //...empty field(s) at the end(s) of the route
 
         defaults: {
             //mandatory
@@ -40,12 +43,9 @@ var cardLookup = ['down', 'down', 'right', 'right', 'up', 'up', 'left', 'left'],
 
             //initialize paths collection
             this.paths = new Paths();
+            this.goalPaths = new Paths();
             this.emptyFields = new Fields();
-
-            if (this.get('goal') !== undefined) {
-                //this collection will only containt paths leading to the goal
-                this.goalPaths = new Paths();
-            }
+            this.cards = new Cards();
 
             //check if provided card is on a board (and not a deck)
             if (board === undefined) {
@@ -72,19 +72,20 @@ var cardLookup = ['down', 'down', 'right', 'right', 'up', 'up', 'left', 'left'],
             if (this.get('goalReached') === true) {
                 //the goal was reached, only the path to the goal matters now
                 this.paths = this.goalPaths;
-                this.goalPaths = undefined;
             }
+            //goalPaths roal is played
+            this.goalPaths.reset();
 
-            //listen for changes to card location or rotation
+            //add all the cards the route runs through to the cards collection
             this.paths.forEach(function (path) {
-                    path.get('card').on('change:holder change:rotation',
-                    this.remove, this);
+                this.cards.add(path.get('card'));
             }, this);
 
-            //listen for cards being added to dead-end empty fields
-            this.emptyFields.forEach(function (field) {
-                field.on('change:card', this.remove, this);
-            }, this);
+            //listen for path, card and field changes that would destroy path
+            this.paths.on('change destroy', this.destroy, this);
+            this.cards.on('change:holder change:rotation destroy',
+                this.destroy, this);
+            this.emptyFields.on('change:card', this.destroy, this);
 
             return result;
         },
@@ -152,7 +153,7 @@ var cardLookup = ['down', 'down', 'right', 'right', 'up', 'up', 'left', 'left'],
                 result = 'reached a dead-end path';
             }
             //[ 3 ] get next field.
-            else if ((nextField = place.field.step(cardLookup[nextPort])) === undefined){
+            else if ((nextField = place.field.step(this.constructor.cardLookup[nextPort])) === undefined){
 
                 result = 'reached border of the board';
 
@@ -167,7 +168,7 @@ var cardLookup = ['down', 'down', 'right', 'right', 'up', 'up', 'left', 'left'],
             }
             else {                
                 //[ 5 ] translate port, then get paths.
-                nextPort = portLookup[nextPort];
+                nextPort = this.constructor.portLookup[nextPort];
                 nextPaths = nextCard.getPaths(nextPort);
 
                 if (nextPaths.length === 0) {
@@ -205,18 +206,28 @@ var cardLookup = ['down', 'down', 'right', 'right', 'up', 'up', 'left', 'left'],
             return result;
         },
 
-        remove: function () {
-            //remove all event handlers
-            this.paths.forEach(function (path) {
-                    path.get('card').off('change:holder change:rotation',
-                        this.remove, this);
-            }, this);
-            this.emptyFields.forEach(function (field) {
-                    field.off('change:card', this.remove, this);
-            }, this);
+        destroy: function () {
+            //call inherited destroy function
+            Backbone.Model.prototype.destroy.call(this);
 
-            this.trigger('destroy');
+            //remove all event handlers
+            this.paths.off(null, this.remove, this);
+            this.cards.off(null, this.remove, this);
+            this.emptyFields.off(null, this.remove, this);
+
+            //empty collections
+            this.paths.reset();
+            this.cards.reset();
+            this.emptyFields.reset();
         }
 
+    }, {
+        //CLASS PROPERTIES (accessible by all instances of route)
+        //match ports to directions (for instance, ports 0,1 move downwards)
+        cardLookup: ['down', 'down', 'right', 'right', 'up', 'up', 'left', 'left'],
+
+        //match exit and entrance ports (for instance, port 0 leads to port 5
+        //  on the adjacent card)
+        portLookup: [5, 4, 7, 6, 1, 0, 3, 2]
     });
 });
