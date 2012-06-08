@@ -1,12 +1,9 @@
 // --- GAME TYPE VIEW ---
 //extends a game view with game-type specific formatting
 
-define(['underscore', 'js/models/gametype', 'js/views/game/game-view',
-    'text!templates/cardsize.css'],
-function (_, GameType, GameView, cardSizeCSS) {
+define(['underscore', 'js/views/game/game-view', 'text!templates/cardsize.css'],
+function (_, GameView, cardSizeCSS) {
     return GameView.extend({
-
-        GameType: GameType,
 
         remove: function () {
             //call inherited remove function

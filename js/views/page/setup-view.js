@@ -10,9 +10,9 @@ FUNCTIONS
 start() - attempts to start a game with whatever settings the user has selected
 */
 
-define(['jquery', 'backbone', 'js/views/game/gametype-view',
+define(['jquery', 'backbone', 'js/helpers/gameTypes.js',
     'text!templates/setup.html'],
-function ($, Backbone, GametypeView, setupTemplate) {
+function ($, Backbone, gameTypes, setupTemplate) {
     return Backbone.View.extend({
 
         tagName:    'div',
@@ -50,7 +50,7 @@ function ($, Backbone, GametypeView, setupTemplate) {
 
             //get boardsize from page
             var boardSize = parseInt($('#boardSize').attr('value'), 10),
-                i, name, playerNames = [], view, result, options;
+                i, name, playerNames = [], game, view, result, options;
 
             //get players from page
             for (i = $('#playerList li').length; i--;) {
@@ -62,8 +62,9 @@ function ($, Backbone, GametypeView, setupTemplate) {
                 }
             }
 
-            //create new gametype-view, which will create the corresponding game
-            view = new GametypeView();
+            //create new gametype and corresponding view
+            game = new gameTypes['default'].Gametype();
+            view = new gameTypes['default'].GametypeView({ model: game });
 
             //try to start
             options = {

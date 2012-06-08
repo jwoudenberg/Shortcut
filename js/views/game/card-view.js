@@ -8,7 +8,7 @@
 */
 
 define(['jquery', 'jqueryui', 'backbone', 'js/views/game/path-view',
-    'js/functions/getRandomColor', 'js/functions/makeRouteCached'],
+    'js/helpers/getRandomColor', 'js/helpers/makeRouteCached'],
 function ($, jQueryUi, Backbone, PathView, getRandomColor, makeRouteCached) {
     return Backbone.View.extend({
 

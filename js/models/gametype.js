@@ -9,15 +9,15 @@ game, go to the next turn, etc. These function calls can be found in the
 parent-model, game.js.
 */
 
-define(['js/models/game', 'js/functions/makeBounds',
-'js/functions/makeRandomCard'],
+define(['js/models/game', 'js/helpers/makeBounds',
+'js/helpers/makeRandomCard'],
 function (Game, makeBounds, makeRandomCard) {
     return Game.extend({
 
         validateStart: function (setup) {
-        //this function validates the contents of the game model.
-        //will return either 'true' if game can start or an array of strings
-        //.. with error messages.
+        //This function validates the contents of the game model.
+        //will return either 'true' or array of strings with failure messages
+        //Placed here to allow validation without creating a game object
             var errors = [],
                 boardSize = setup.boardSize,
                 result, playerNum, playerMax;

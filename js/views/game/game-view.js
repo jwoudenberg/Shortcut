@@ -23,11 +23,9 @@ function ($, Backbone, BoardView, CardView, DeckView, ruleTemplate,
 
         initialize: function (options) {
             //check if GameType is set
-            if (this.GameType === undefined) {
-                throw new Error("Game View: Game View needs a GameType.");
+            if (this.model === undefined) {
+                throw new Error("Game View: Game View needs a model (Game).");
             }
-            //create the gametype
-            this.model = new this.GameType();
         },
 
         //these are added to menu when this view is made contentView by mainView
