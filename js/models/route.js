@@ -1,4 +1,4 @@
-/* --- ROUTE ---
+/*  --- ROUTE ---
 
     Contains a collection of paths that consist the route. On creation it is
     provided with a beginning path and optionally a direction and goal-path.
@@ -11,6 +11,25 @@
     
     The route listens to events from cards the paths cross, as well as empty
     field(s) at the end(s) of the (sub)route(s).
+
+    METHODS
+    destroy()
+    --- private ---
+    _saveStep, _doStep
+
+    PROPERTIES
+    paths:          Collection of model Path
+    cards:          Collection of model Card
+    --- private ---
+    _goalPaths, _emptyFields
+
+    ATTRIBUTES
+    begin:          model Path
+    [direction:     number      (end-port)  ]
+    [goal:          model Path  (undefined) ]
+    [goalReached:   bool        (false)     ]
+
+    CONSTRUCTOR OPTIONS
 */
 define(['backbone'],
 function (Backbone) {
@@ -19,9 +38,9 @@ function (Backbone) {
 
         //will come to contain a collection of...
         paths: undefined,       //...paths in the route
-        goalPaths: undefined,   //...paths leading to the goal (if provided)
         cards: undefined,       //...cards crossed in the route
-        emptyFields: undefined, //...empty field(s) at the end(s) of the route
+        _goalPaths: undefined,   //...paths leading to the goal (if provided)
+        _emptyFields: undefined, //...empty field(s) at the end(s) of the route
 
         defaults: {
             //mandatory
@@ -35,16 +54,16 @@ function (Backbone) {
 
         initialize: function () {
             var path = this.get('begin'),
-                card = path.get('card'),
-                field = card.get('holder'),
-                board = field.get('board'),
+                card = path.card,
+                field = card.holder,
+                board = field.board,
                 port, place, result;
 
             //initialize paths collection
             this.paths = new Backbone.Collection();
-            this.goalPaths = new Backbone.Collection();
-            this.emptyFields = new Backbone.Collection();
             this.cards = new Backbone.Collection();
+            this._goalPaths = new Backbone.Collection();
+            this._emptyFields = new Backbone.Collection();
 
             //check if provided card is on a board (and not a deck)
             if (board === undefined) {
@@ -65,31 +84,31 @@ function (Backbone) {
                 path: path,
                 port: port
             };
-
             //build the route here
-            result = this.doStep(place);
+            result = this._doStep(place);
+
             if (this.get('goalReached') === true) {
                 //the goal was reached, only the path to the goal matters now
-                this.paths = this.goalPaths;
+                this.paths.reset();
+                this.paths = this._goalPaths;
+                delete this._goalPaths;
             }
-            //goalPaths roal is played
-            this.goalPaths.reset();
 
             //add all the cards the route runs through to the cards collection
             this.paths.forEach(function (path) {
-                this.cards.add(path.get('card'));
+                this.cards.add(path.card);
             }, this);
 
             //listen for path, card and field changes that would destroy path
             this.paths.on('change destroy', this.destroy, this);
-            this.cards.on('change:holder change:rotation destroy',
+            this.cards.on('move change:rotation destroy',
                 this.destroy, this);
-            this.emptyFields.on('change:card', this.destroy, this);
+            this._emptyFields.on('card:checkIn', this.destroy, this);
 
             return result;
         },
 
-        saveStep: function (place) {
+        _saveStep: function (place) {
             //takes a place object and saves the path contained in collection
             //does not account of possibily of walking over a path in two
             //directions (might be essential in future game version).
@@ -109,7 +128,7 @@ function (Backbone) {
             return result;
         },
 
-        doStep: function (place) {
+        _doStep: function (place) {
             /* OVERVIEW
             The doStep() function takes a step (described below) then calls
             itself recursively for the next step until it reaches an end.
@@ -131,7 +150,7 @@ function (Backbone) {
                 nextPaths, result, i, branch;
 
             //[ 0 ] attempt to save path
-            if (!this.saveStep(place)) {
+            if (!this._saveStep(place)) {
 
                 //we're walking in circles
                 result = 'made a circle';
@@ -158,10 +177,10 @@ function (Backbone) {
 
             }    
             //[ 4 ] get card in field. if none, listen for cards being placed in field
-            else if ((nextCard = nextField.get('card')) === undefined) {
+            else if ((nextCard = nextField.card) === undefined) {
 
                 //the field doesn't exist, we have tried to walk off the board
-                this.emptyFields.add(nextField); //save field
+                this._emptyFields.add(nextField); //save field
                 result = 'reached empty field';
             
             }
@@ -178,7 +197,7 @@ function (Backbone) {
                 else {
                     for (i = nextPaths.length; i--;) {
                         //call doStep() recursively to make next step
-                        branch = this.doStep({
+                        branch = this._doStep({
                             //the place-object for the next step
                             port:   nextPort,
                             path:   nextPaths[i],
@@ -198,7 +217,7 @@ function (Backbone) {
             //[ 7 ] check if goal was found   
             if (this.get('goal') !== undefined && result === true) {
                 //moving back from the goal, add this path to the goalPaths
-                this.goalPaths.add(place.path);
+                this._goalPaths.add(place.path);
             }
 
             //return result succes/failure to reach goal to previous step
@@ -212,12 +231,12 @@ function (Backbone) {
             //remove all event handlers
             this.paths.off(null, this.remove, this);
             this.cards.off(null, this.remove, this);
-            this.emptyFields.off(null, this.remove, this);
+            this._emptyFields.off(null, this.remove, this);
 
             //empty collections
             this.paths.reset();
             this.cards.reset();
-            this.emptyFields.reset();
+            this._emptyFields.reset();
         }
 
     }, {

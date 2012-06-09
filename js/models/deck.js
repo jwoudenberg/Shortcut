@@ -1,43 +1,44 @@
-// --- DECK ---
-/* A deck is a single holder, with a function pop() that puts a card in it.
-   To generate said card, a cardCreator function can be set. If said card is
-   move-locked, popping will fail. */
+/*  --- DECK --- (extends Holder)
 
-define(['js/models/holder'],
-function (Holder) {
+    A holder that can create new cards.
+
+    METHODS
+    pop (           [model Card] )
+
+    PROPERTIES
+
+    ATTRIBUTES
+    [acceptLock:    bool    (true)  ]
+    [popLock:       bool    (false) ]
+
+    CONSTRUCTOR OPTIONS
+*/
+
+define(['js/models/holder', 'js/helpers/makeRandomProtoCard'],
+function (Holder, makeRandomProtoCard) {
     return Holder.extend({
 
         defaults: {
-            //automatically set
-            game: undefined,
             //optional
-            card: undefined,
             acceptLock: true,
-            popLock: false,
-            cardCreator: undefined
+            popLock: false
         },
 
         pop: function (card) {
         //pop a card on this deck. Uses supplied card if available, otherwise
-        //generate a card using popAlgorithm.
-            var cardCreator = this.get('cardCreator'),
-                result;
+        //generate a random card
 
             if (this.get('popLock') === true) {
-                result = 'deck locked';
+                return 'deck locked';
             }
             else if (card !== undefined) {
                 //if a card is supplied, this overrules the use of cardCreator()
-                result = card.move(this, true);
-            }
-            else if (cardCreator !== undefined) {
-                card = cardCreator(this.get('game'));
-                result = card.move(this, true);
+                return card.move(this, true);
             }
             else {
-                throw new Error("Deck: deck.pop() was supplied neither a card, nor a cardCreator().");
+                card = this.game.newCard(makeRandomProtoCard());
+                return this.checkIn(card, true);
             }
-            return result;
         }
 
     });

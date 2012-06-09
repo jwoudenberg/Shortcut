@@ -6,7 +6,7 @@ function (Backbone, HolderView) {
     return Backbone.View.extend({
 
         tagName:    'div',
-        className:  'deck',
+        className:  'deck cardSized',
 
         events: {
             'click': 'click'
@@ -34,6 +34,14 @@ function (Backbone, HolderView) {
         },
 
         render: function () {},
+
+        remove: function () {
+            //call inherited function
+            Backbone.View.prototype.remove.call(this);
+
+            //remove callbacks
+            this.model.off(null, null, this);
+        },
 
         click: function () {
             //if deck is empty, set the flipped class to prepare the flip effect

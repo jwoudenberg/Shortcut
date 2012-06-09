@@ -54,7 +54,7 @@ function () {
         }
 
     //function that picks a card from above list
-    return function (game) {
+    return function () {
         var paths, rotation;
 
         //tower sampling: pick a random value between 0 and probSum
@@ -72,12 +72,11 @@ function () {
         rotation = Math.floor(Math.random()*4); //give card a random orientation
 
         //create and return card
-        return game.newCard({
+        return {
                 paths: paths,
-                holder: undefined,
                 rotation: rotation,
                 moveLock: false,
                 rotateLock: false
-            });
+            };
     };
 });

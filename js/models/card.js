@@ -1,33 +1,58 @@
-// --- CARD ---
-/*  A card is the central user-controlled object in the game. It contains paths
+/*  --- CARD ---
+
+    A card is the central user-controlled object in the game. It contains paths
     that connect its ports. They can be moved between holders and rotated.
 
-    There is a bidirectional link between cards and holders. 
+    Cards are always placed in holders. The holder is responsible for card
+    movement (using its checkIn(card) and checkOut() functions). Cards obtain
+    a reference back to the holder (this.holder).
+
+    METHODS
+    createPath (    see: 'paths' under constructor options )
+    rotate (        number turns [, bool overrideLocks] )
+    getHardPort(    number softPort )
+    getSoftPort (   number hardPort )
+    getPaths (      number softPort )
+    follow (        model path, number softPort )
+
+    PROPERTIES
+    paths:          collection of model Path
+    holder:         model Holder
+
+    ATTRIBUTES
+    [rotation:      number      (0)     ]
+    [moveLock:      bool        (false) ]
+    [rotateLock:    bool        (false) ]
+
+    CONSTRUCTOR OPTIONS
+    game:           model Game
+    [paths:         Array containging ...       (undefined) ]
+                    1.  [startport, endport]
+                    2.  model Path constructor object
+    [holder:        model Holder                (undefined) ]
 */
-define(['backbone', 'js/models/path'],
-function (Backbone, Path) {
+define(['underscore', 'backbone', 'js/models/path'],
+function (_, Backbone, Path) {
     return Backbone.Model.extend({
 
+        game: undefined,
         paths: undefined,
+        holder: undefined, //cached reference back to holder, set by holder
 
         defaults: {
-            //mandatory
-            game:           undefined,
-            //optional
-            holder:         undefined,
+            rotation:       0,
             moveLock:       false,
-            rotateLock:     false,
-            rotation:       0
-        },
-
-        validate: function (attrs) {
-            if (attrs.game === undefined) {
-                throw new Error("Card: card needs game attribute.");
-            }
+            rotateLock:     false
         },
 
         initialize: function (attrs, options) {
-            var holder, protoPaths, protoPath, i;
+            var holder, protoPaths, protoPath, i, path;
+
+            //check for and set reference to game
+            if (!options.game) {
+                throw new Error("Card: card needs reference to game.");
+            }
+            this.game = options.game;
 
             //create path-collection
             this.paths = new (Backbone.Collection.extend({ model: Path }))();
@@ -35,63 +60,59 @@ function (Backbone, Path) {
             //create paths
             protoPaths = options.paths;
             if (protoPaths !== undefined) {
-                for (i = protoPaths.length; i--;) {
-
-                    //the path is either provided as an array of ports or as an
-                    //object that can be handed to the path constructor directly
-                    if (protoPaths[i].start === undefined) {
-                        //we get an array of ports, create a protoPath
-                        protoPath = {
-                            start: protoPaths[i][0],
-                            end: protoPaths[i][1],
-                            card: this
-                        };
-                    }
-                    else {
-                        //we already have a protoPath. Add reference to card
-                        protoPath = protoPaths[i];
-                        protoPath.card = this;
-                    }
-
-                    //create the path
-                    this.paths.add(protoPath);
-                }
+                _.forEach(protoPaths, this.createPath, this);
             }
+
+            //check rotation
+            this.set('rotation', attrs.rotation % 4);
 
             //put card in holder
             holder = options.holder;
             if (holder !== undefined) {
-                this.move(holder, true);
+                holder.checkIn(this, true); //move to holder
             }
         },
 
-        move: function (newHolder, overrideLocks) {
-            var result, oldHolder;
+        end: function () {
+            //end paths
+            this.paths.forEach(function (path) {
+                path.end();
+            }, this);
 
-            //check if card is allowed to move
-            if (this.get('moveLock') && overrideLocks !== true) {
-                result = 'card move-locked';
+            //delete references
+            delete this.game;
+            delete this.paths;
+            delete this.holder;
+        },
+
+        createPath: function (input) {
+            var options = { card: this }, 
+                attrs, path;
+
+            //options is either a an array of ports or an object with options
+            if (Object.prototype.toString.call(input) === '[object Array]') {
+                //it's an array of ports
+                attrs = {
+                    start:  input[0],
+                    end:    input[1]
+                };
             }
             else {
-                result = newHolder.checkIn(this, overrideLocks);
-                if (result === true) { //attempt checkIn at holder
-
-                    //checkIn succesful. checkout from old holder
-                    oldHolder = this.get('holder');
-                    if (oldHolder !== undefined) {
-                        oldHolder.checkOut();
-                    }
-    
-                    //set reference to new holder
-                    this.set({ holder: newHolder });
+                //it's an object with options
+                attrs= {};
+                //check if an owner was provided
+                if (input.owner) {
+                    options.owner = input.owner;
+                    delete input.owner;
                 }
+                attrs = input;
             }
-            return result;
+                path = new Path(attrs, options);
+                this.paths.add(path);
         },
 
         rotate: function (turns, overrideLocks) {
-            var rotation = this.get('rotation'),
-                result;
+            var rotation = this.get('rotation');
 
             //check if argument turns was supplied, if not rotate a single turn
             if (turns === undefined) {
@@ -100,14 +121,13 @@ function (Backbone, Path) {
 
             //check if card is allowed to rotate
             if (this.get('rotateLock') && overrideLocks !== true) {
-                result = 'card rotate-locked';
+                return 'card rotate-locked';
             }
             else {
-                result = true;
                 rotation = (rotation + turns) % 4; //4 rotations make a 360
                 this.set({ rotation: rotation });
+                return true;
             }
-            return result;
         },
 
         //hardPorts are the ports saved in the paths model. They do not change
@@ -159,9 +179,7 @@ function (Backbone, Path) {
             }
 
             //compensate back
-            result = this.getSoftPort(result);
-
-            return result;
+            return this.getSoftPort(result);
         }
 
     });

@@ -1,15 +1,9 @@
-// --- CARD VIEW ---
-/* Renders a card and automatically add it to the right holder-element.
+/* --- CARD VIEW ---
 
-   Card-views contain a number of path-views and possibly a label (text).
-   This label is used to display the name of a player owning a path on the card.
-   It is assumed only a single path per card is owned. Otherwise, only one name
-   will be displayed in the label.
+    Renders a card and automatically add it to the right holder-element.
 */
-
-define(['jquery', 'jqueryui', 'backbone', 'js/views/game/path-view',
-    'js/helpers/getRandomColor', 'js/helpers/makeRouteCached'],
-function ($, jQueryUi, Backbone, PathView, getRandomColor, makeRouteCached) {
+define(['jquery', 'jqueryui', 'backbone', 'js/views/game/path-view'],
+function ($, jQueryUi, Backbone, PathView) {
     return Backbone.View.extend({
 
         tagName:    'div',
@@ -17,15 +11,14 @@ function ($, jQueryUi, Backbone, PathView, getRandomColor, makeRouteCached) {
         $rotation:  0, //utility variable for rotate()
 
         events: {
-            'mousedown':    'mousedown',
-            'click':        'click'
+            'mousedown':    'mousedown'
         },
 
-        initialize: function () {
+        initialize: function (options) {
             var paths;
 
             //create reference back to gameView
-            this.gameView = this.options.gameView;
+            this.gameView = options.gameView;
 
             //CARD DIV SETUP
             //set attributes
@@ -42,13 +35,13 @@ function ($, jQueryUi, Backbone, PathView, getRandomColor, makeRouteCached) {
 
             //card state event listeners
             this.model.on('change:rotation', this.rotate, this);
-            this.model.on('change:holder', this.place, this);
+            this.model.on('move', this.place, this);
             this.model.on('change:moveLock', this.updateMoveLock, this);
             this.model.on('change:moveLock', this.updateRotateLock, this);
             this.model.paths.on('add remove change', this.render, this);
 
             //listen for change of path-owners
-            this.model.paths.on('change:owner', function (path) {
+            this.model.paths.on('owner', function (path) {
                 this.updateLabel(path);
             }, this);
 
@@ -69,6 +62,15 @@ function ($, jQueryUi, Backbone, PathView, getRandomColor, makeRouteCached) {
             this.place();           //move the card element to its holder
         },
 
+        remove: function () {
+            //call inherited function
+            Backbone.View.prototype.remove.call(this);
+
+            //remove callbacks
+            this.model.off(null, null, this);
+            this.model.paths.off(null, null, this);
+        },
+
         createPathView: function (path) {
             var pathView = new PathView({ model: path });
             pathView.$el.appendTo(this.$el);
@@ -82,48 +84,6 @@ function ($, jQueryUi, Backbone, PathView, getRandomColor, makeRouteCached) {
             event.preventDefault();
             if (event.which === 3) { //check for right-click
                 this.model.rotate();
-            }
-        },
-
-        click: function (event) {
-        //if a dead-end path is presented, create a route
-            var path = this.model.paths.where({ end: 'unconnected' })[0],
-                goal, route;
-
-            if (path !== undefined) {
-                var color;
-
-                //find the other base of this owner; it is the goal of the route
-                if (path.get('owner').bases.at(0).cid === path.cid) {
-                    goal = path.get('owner').bases.at(1);
-                }
-                else {
-                    goal = path.get('owner').bases.at(0);
-                }
-
-                route = makeRouteCached({
-                    begin: path,
-                    goal: goal
-                });
-
-                color = getRandomColor();
-                //trigger event for paths in route to highlight the path
-                route.paths.forEach(function (path) {
-                    path.trigger('highlight', {
-                        color:  color,
-                        strong: true
-                    });
-                }, this);
-
-                //when the route ceases to exits, remove strong effect
-                route.on('destroy', function () {
-                    route.paths.forEach(function (path) {
-                    path.trigger('highlight', {
-                        strong: false
-                    });
-                    }, this);
-                    route.off('destroy', null, this); //remove this event handler
-                }, this);
             }
         },
 
@@ -153,12 +113,12 @@ function ($, jQueryUi, Backbone, PathView, getRandomColor, makeRouteCached) {
 
         place: function () {
         //place card in the DOM (in its current holder)
-            var holder  = this.model.get('holder'),
+            var holder  = this.model.holder,
                 $holder;
 
             if (holder !== undefined) {
                 //find holder in DOM
-                $holder = this.gameView.$el.find('[data-cid=' + holder.cid + ']');
+                $holder = this.gameView.$el.find('.holder[data-cid=' + holder.cid + ']');
 
                 //move dom-element card
                 this.$el.appendTo($holder);
@@ -194,7 +154,7 @@ function ($, jQueryUi, Backbone, PathView, getRandomColor, makeRouteCached) {
         },
 
         updateLabel: function (path) {
-            var owner = path.get('owner');
+            var owner = path.owner;
             if (owner !== undefined) {
                 this.$el.children('.text').html(owner.get('name'));
             }

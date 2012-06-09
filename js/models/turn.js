@@ -3,9 +3,11 @@ define(['backbone'],
 function (Backbone) {
     return Backbone.Model.extend({
 
-        defaults: {
-            active: true
-        }
+        defaults: {},
+
+        initialize: function () {},
+
+        end: function () {}
 
     });
 });

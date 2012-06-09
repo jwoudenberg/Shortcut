@@ -8,8 +8,6 @@
 
 .holder {
     position:   relative;
-    width:      80px;
-    height:     80px;
 }
 
 .board > .holder {
@@ -24,8 +22,6 @@
 
 .deck {
     position:   absolute;
-    width:      80px;
-    height:     80px;
     border:     1px solid #aaa;
     background: #eee;
     z-index:    10;
@@ -66,6 +62,12 @@
     top:      0;
     left:     0;
     width:    inherit;
+}
+
+.cardSized {
+    /* These default values will be overwritten by the game to fit the screen */
+    width:      80px;
+    height:     80px;
 }
 
 /* CARD DRAGGING */

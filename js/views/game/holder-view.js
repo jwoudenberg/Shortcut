@@ -6,7 +6,7 @@ function ($, jQueryUi, Backbone) {
     return Backbone.View.extend({
 
         tagName:    'div',
-        className:  'holder',
+        className:  'holder cardSized',
 
         events: {
             'drop': 'drop'
@@ -24,9 +24,7 @@ function ($, jQueryUi, Backbone) {
             this.$el.droppable({});
 
             //listen for change in lock
-            this.model.on('change:acceptLock', function () {
-                this.updateAcceptLock();
-            }, this);
+            this.model.on('change:acceptLock', this.updateAcceptLock, this);
 
             this.render();
         },
@@ -36,11 +34,13 @@ function ($, jQueryUi, Backbone) {
         },
 
         drop: function (event, ui) {
-            var $card = ui.draggable;
+            var $card = ui.draggable,
+                card;
             //remove positioning-css in style-attribute
             $card.css({left: 0, top: 0, position: 'absolute'});
-            this.model.get('game').cards.
-                getByCid($card.attr('data-cid')).move(this.model);
+            card = this.model.game.cards.
+                getByCid($card.attr('data-cid'));
+            this.model.checkIn(card);
         },
 
         updateAcceptLock: function () {

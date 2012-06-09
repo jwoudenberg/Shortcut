@@ -3,8 +3,8 @@
     functions are hooks, called at particular moments in the games run by Game
 */
 
-define(['js/helpers/makeBounds', 'js/helpers/makeRandomCard'],
-function (makeBounds, makeRandomCard) {
+define(['js/helpers/makeBounds'],
+function (makeBounds) {
     return {
 
         validateStart: function (setup) {
@@ -62,7 +62,6 @@ function (makeBounds, makeRandomCard) {
 
             //create deck
             var deck = this.newDeck({
-                cardCreator: makeRandomCard,
                 popLock: false
             });
             deck.pop();

@@ -12,9 +12,10 @@ arrange()               - called when the gameview needs to be rearranged,
 
 define(['jquery', 'underscore', 'backbone', 'js/views/game/board-view',
     'js/views/game/card-view', 'js/views/game/deck-view',
-    'text!templates/rules.html', 'text!templates/confirmation.html'],
-function ($, _, Backbone, BoardView, CardView, DeckView, ruleTemplate,
-        confirmationTemplate) {
+    'js/views/game/player-view', 'text!templates/rules.html',
+    'text!templates/confirmation.html'],
+function ($, _, Backbone, BoardView, CardView, DeckView, PlayerView,
+        ruleTemplate, confirmationTemplate) {
     return Backbone.View.extend({
 
         tagName: 'div',
@@ -34,13 +35,15 @@ function ($, _, Backbone, BoardView, CardView, DeckView, ruleTemplate,
         //these are added to menu when this view is made contentView by mainView
         menuOptions: {
             'new game': function () {
-                var confirmation = this.mainView.showText(confirmationTemplate);
+                var confirmation = this.mainView.showText(confirmationTemplate),
+                    gameView = this;
 
                 //attach events for the confirmation, buttons
                 confirmation.delegateEvents({
                     'click button[name=close], button[name=no]': 'remove',
                     'click button[name=yes]':   function () {
                         this.mainView.setup();
+                        gameView.model.end(); //end game
                         this.remove();
                     }
                 });
@@ -58,13 +61,15 @@ function ($, _, Backbone, BoardView, CardView, DeckView, ruleTemplate,
             this.model.boards.forEach(this.createBoardView, this);
             this.model.decks.forEach(this.createDeckView, this);
             this.model.cards.forEach(this.createCardView, this);
+            this.model.players.forEach(this.createPlayerView, this);
 
             this.arrange(); //update the layout of the game
 
             //listen for changes
-            //when a board, deck or card gets added, rerender the game
+            //when a board, deck or player gets added, rerender the game
             this.model.boards.on('add', this.render, this);
             this.model.decks.on('add', this.render, this);
+            this.model.players.on('add', this.render, this);
 
             //when a card gets added create a view for it
             this.model.cards.on('add', this.createCardView, this);
@@ -78,6 +83,7 @@ function ($, _, Backbone, BoardView, CardView, DeckView, ruleTemplate,
             this.model.boards.off(null, null, this);
             this.model.cards.off(null, null, this);
             this.model.decks.off(null, null, this);
+            this.model.players.off(null, null, this);
 
             //call close formula for gametype-view
             this.close();
@@ -103,6 +109,16 @@ function ($, _, Backbone, BoardView, CardView, DeckView, ruleTemplate,
             return view;
         },
 
+        createPlayerView: function (player) {
+            var view = new PlayerView({
+                model: player,
+                gameView: this
+            });
+            view.$el.appendTo(this.$el);
+            this.withNewPlayer(view);
+            return view;
+        },
+
         createCardView: function (card) {
             //note that cardViews are not automatically appended to the DOM,
             //they do that themselves (as they are subviews of a holder)
@@ -118,6 +134,7 @@ function ($, _, Backbone, BoardView, CardView, DeckView, ruleTemplate,
         withNewBoard: function (boardView) {},
         withNewDeck: function (deckView) {},
         withNewCard: function (cardView) {},
+        withNewPlayer: function (playerView) {},
         arrange: function () {},    //updates the layout of the game elements
         close: function () {}       //called when the view is removed
 

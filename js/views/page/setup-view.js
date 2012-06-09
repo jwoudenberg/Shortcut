@@ -37,7 +37,9 @@ function ($, Backbone, Game, GameView, gametypes, setupTemplate) {
             //add or remove a player-name input field
             var $target = $(event.target);
             if ($target.attr('value') !== '') {
-                $('#playerList').append('<li><input type="text" value="" /></li>');
+                if ($('#playerList li:last input').attr('value') !== '') {
+                    $('#playerList').append('<li><input type="text" value="" /></li>');
+                }
             }
             else if (!$target.is('#playerList li:last')) {
                 $target.parent().remove();

@@ -1,51 +1,58 @@
-// --- PATH ---
-/*  A path has a start and optionally an end port. If no end port is provided,
-    the path is a dead end.
+/*  --- Path ---
 
-    A path can have an owner.
+    A path connects ports in a card. It always has at least a start port, and
+    possibly an end port. Without an end port, the path is a dead end.
+
+    METHODS
+    setOwner (      model Player )
+
+    PROPERTIES
+    card:           model Card
+
+    ATTRIBUTES
+    start:          number
+    [end:           number          ('unconnected') ]
+    [owner:         model Player    (undefined)     ]
+
+    CONSTRUCTOR OPTIONS
+    card:           model Card
 */
 define(['backbone'],
 function (Backbone) {
     return Backbone.Model.extend({
 
+    card: undefined,
+    owner: undefined, //cached reference back to owner, set by owner
+
         defaults: {
             //mandatory
             start: undefined,
-            card: undefined,
             //optional
-            end: 'unconnected',
-            owner: undefined
+            end: 'unconnected'
         },
 
         validate: function (attrs) {
             if (attrs.start === undefined) {
                 return "Path: path needs at least a starting port.";
             }
-            if (attrs.card === undefined) {
-                return "Path: path needs a card.";
-            }
         },
 
         initialize: function (attrs, options) {
-            //if initialized with an owner, checkin with that owner.
-            var owner = attrs.owner;
-            if (owner !== undefined) {
-                owner.bases.add(this);
+            //check for and set reference to game
+            if (!options.card) {
+                throw new Error("Path: path needs reference to card.");
+            }
+            this.card = options.card;
+
+            //check if an owner was provided
+            if (options.owner) {
+                options.owner.addBase(this);
             }
         },
 
-        setOwner: function (newOwner) {
-            //if path already has an owner, remove it
-            if (this.get('owner') !== undefined) {
-                this.removeOwner();
-            }
-            newOwner.bases.add(this);
-            this.set('owner', newOwner);
-        },
-
-        removeOwner: function () {
-            this.get('owner').bases.remove(this);
-            this.set('owner', undefined);
+        end: function () {
+            delete this.card;
+            delete this.owner;
         }
 
     });
