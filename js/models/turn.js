@@ -1,13 +1,24 @@
-// --- TURN ---
+/* --- TURN ---
+    
+*/
 define(['backbone'],
 function (Backbone) {
     return Backbone.Model.extend({
 
+            owner: undefined,
+            actions: undefined,
+
         defaults: {},
 
-        initialize: function () {},
+        initialize: function () {
+            this.actions = [];
+        },
 
-        end: function () {}
+        end: function () {
+            //delete references
+            delete this.owner;
+            delete this.actions;
+        }
 
     });
 });

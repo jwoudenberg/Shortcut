@@ -40,7 +40,7 @@ function ($, jQueryUi, Backbone) {
             $card.css({left: 0, top: 0, position: 'absolute'});
             card = this.model.game.cards.
                 getByCid($card.attr('data-cid'));
-            this.model.checkIn(card);
+            card.set('holder', this.model);
         },
 
         updateAcceptLock: function () {

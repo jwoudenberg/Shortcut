@@ -1,11 +1,10 @@
-// --- GAME ---
+/* --- GAME ---
 
-/*
-Contains collections of containing all game-related model-types and methods
-to start a game and go to the next turn.
-
-This model needs to be extended to a gametype to be usefull. This gametype model
-will add rule-logic by overwriting some of the game models functions.
+    Contains collections of containing all game-related model-types and methods
+    to start a game and go to the next turn.
+    
+    This model needs to be extended to a gametype to be usefull. This gametype
+    will add rule-logic by overwriting some of the game models functions.
 */
 
 define(['underscore', 'backbone', 'js/models/board', 'js/models/deck',
@@ -78,12 +77,12 @@ function (_, Backbone, Board, Deck, Card, Player, Turn) {
 
         newCard: function (options) {
             var card = new Card({
+                holder:     options.holder,
                 rotation:   options.rotation,
                 rotateLock: options.rotateLock,
                 moveLock:   options.moveLock
             }, {
                 game:       this,
-                holder:     options.holder,
                 paths:      options.paths
             });
             this.cards.add(card);

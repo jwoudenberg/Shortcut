@@ -35,7 +35,7 @@ function ($, jQueryUi, Backbone, PathView) {
 
             //card state event listeners
             this.model.on('change:rotation', this.rotate, this);
-            this.model.on('move', this.place, this);
+            this.model.on('change:holder', this.place, this);
             this.model.on('change:moveLock', this.updateMoveLock, this);
             this.model.on('change:moveLock', this.updateRotateLock, this);
             this.model.paths.on('add remove change', this.render, this);
@@ -113,7 +113,7 @@ function ($, jQueryUi, Backbone, PathView) {
 
         place: function () {
         //place card in the DOM (in its current holder)
-            var holder  = this.model.holder,
+            var holder  = this.model.get('holder'),
                 $holder;
 
             if (holder !== undefined) {

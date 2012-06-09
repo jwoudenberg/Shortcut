@@ -36,8 +36,7 @@ function (Holder, makeRandomProtoCard) {
                 return card.move(this, true);
             }
             else {
-                card = this.game.newCard(makeRandomProtoCard());
-                return this.checkIn(card, true);
+                return this.game.newCard(makeRandomProtoCard(this));
             }
         }
 

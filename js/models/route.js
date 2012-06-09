@@ -55,7 +55,7 @@ function (Backbone) {
         initialize: function () {
             var path = this.get('begin'),
                 card = path.card,
-                field = card.holder,
+                field = card.get('holder'),
                 board = field.board,
                 port, place, result;
 
@@ -101,7 +101,7 @@ function (Backbone) {
 
             //listen for path, card and field changes that would destroy path
             this.paths.on('change destroy', this.destroy, this);
-            this.cards.on('move change:rotation destroy',
+            this.cards.on('change:holder change:rotation destroy',
                 this.destroy, this);
             this._emptyFields.on('card:checkIn', this.destroy, this);
 
@@ -172,12 +172,11 @@ function (Backbone) {
             }
             //[ 3 ] get next field.
             else if ((nextField = place.field.step(this.constructor.cardLookup[nextPort])) === undefined){
-
                 result = 'reached border of the board';
 
             }    
             //[ 4 ] get card in field. if none, listen for cards being placed in field
-            else if ((nextCard = nextField.card) === undefined) {
+            else if ((nextCard = nextField.card()) === undefined) {
 
                 //the field doesn't exist, we have tried to walk off the board
                 this._emptyFields.add(nextField); //save field

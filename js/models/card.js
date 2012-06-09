@@ -8,8 +8,8 @@
     a reference back to the holder (this.holder).
 
     METHODS
+    rotate (        number turns )
     createPath (    see: 'paths' under constructor options )
-    rotate (        number turns [, bool overrideLocks] )
     getHardPort(    number softPort )
     getSoftPort (   number hardPort )
     getPaths (      number softPort )
@@ -17,9 +17,9 @@
 
     PROPERTIES
     paths:          collection of model Path
-    holder:         model Holder
 
     ATTRIBUTES
+    holder:         model Holder
     [rotation:      number      (0)     ]
     [moveLock:      bool        (false) ]
     [rotateLock:    bool        (false) ]
@@ -29,7 +29,6 @@
     [paths:         Array containging ...       (undefined) ]
                     1.  [startport, endport]
                     2.  model Path constructor object
-    [holder:        model Holder                (undefined) ]
 */
 define(['underscore', 'backbone', 'js/models/path'],
 function (_, Backbone, Path) {
@@ -37,16 +36,16 @@ function (_, Backbone, Path) {
 
         game: undefined,
         paths: undefined,
-        holder: undefined, //cached reference back to holder, set by holder
 
         defaults: {
+            holder:         undefined,
             rotation:       0,
             moveLock:       false,
             rotateLock:     false
         },
 
         initialize: function (attrs, options) {
-            var holder, protoPaths, protoPath, i, path;
+            var holder, protoPaths;
 
             //check for and set reference to game
             if (!options.game) {
@@ -65,12 +64,49 @@ function (_, Backbone, Path) {
 
             //check rotation
             this.set('rotation', attrs.rotation % 4);
+        },
 
-            //put card in holder
-            holder = options.holder;
-            if (holder !== undefined) {
-                holder.checkIn(this, true); //move to holder
+        validate: function (attrs) {
+            var holder = attrs.holder,
+                rotation = attrs.rotation;
+
+            if (!holder) {
+                //return this.end();
             }
+
+            //card movement
+            if (holder !== this.get('holder')) {
+                if (this.get('moveLock') === true) {
+                    return new Error("Cannot move card: card move-locked.");
+                }
+                if (holder.get('acceptLock') === true) {
+                    return new Error("Cannot move card: holder locked.");       
+                }
+                if (holder.card() !== undefined) {
+                    return new Error("Cannot move card: holder occupied.");
+                }
+            }
+
+            //card rotation
+            if (rotation !== this.get('rotation')) {
+                if (this.get('rotateLock') === true) {
+                    return new Error("Cannot rotate card: card rotate-locked.");
+                }
+            }
+        },
+
+        rotate: function (turns) {
+            var rotation = this.get('rotation');
+
+            //check if argument turns was supplied, if not rotate a single turn
+            if (turns === undefined) {
+                turns = 1;
+            }
+
+            rotation = (rotation + turns) % 4; //4 rotations make a 360
+            this.set({ rotation: rotation });
+
+            return this;
         },
 
         end: function () {
@@ -82,7 +118,6 @@ function (_, Backbone, Path) {
             //delete references
             delete this.game;
             delete this.paths;
-            delete this.holder;
         },
 
         createPath: function (input) {
@@ -109,25 +144,6 @@ function (_, Backbone, Path) {
             }
                 path = new Path(attrs, options);
                 this.paths.add(path);
-        },
-
-        rotate: function (turns, overrideLocks) {
-            var rotation = this.get('rotation');
-
-            //check if argument turns was supplied, if not rotate a single turn
-            if (turns === undefined) {
-                turns = 1;
-            }
-
-            //check if card is allowed to rotate
-            if (this.get('rotateLock') && overrideLocks !== true) {
-                return 'card rotate-locked';
-            }
-            else {
-                rotation = (rotation + turns) % 4; //4 rotations make a 360
-                this.set({ rotation: rotation });
-                return true;
-            }
         },
 
         //hardPorts are the ports saved in the paths model. They do not change

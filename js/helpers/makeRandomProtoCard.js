@@ -54,7 +54,7 @@ function () {
         }
 
     //function that picks a card from above list
-    return function () {
+    return function (holder) {
         var paths, rotation;
 
         //tower sampling: pick a random value between 0 and probSum
@@ -73,9 +73,10 @@ function () {
 
         //create and return card
         return {
-                paths: paths,
-                rotation: rotation,
-                moveLock: false,
+                holder:     holder,
+                paths:      paths,
+                rotation:   rotation,
+                moveLock:   false,
                 rotateLock: false
             };
     };

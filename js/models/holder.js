@@ -3,29 +3,26 @@
     A holder is a general card container. It is generally extended before use.
 
     METHODS
-    checkIn (       model Card [, bool overrideLocks] )
-    checkOut ()
+    card ()
 
     PROPERTIES
     game:           model Game
-    card:           model Card
+    _card:          model Card
 
     ATTRIBUTES
-    [acceptLock:    bool    (false) ]
+    [acceptLock:    bool    (false)     ]
 
     CONSTRUCTOR OPTIONS
     game:           model Game
-    [card:          model Card      (undefined) ]
 */
 define(['backbone'],
 function (Backbone) {
     return Backbone.Model.extend({
 
         game: undefined,
-        card: undefined,
+        _card: undefined, //cached reference
 
         defaults: {
-            //optional
             acceptLock: false
         },
 
@@ -35,65 +32,48 @@ function (Backbone) {
                 throw new Error("Holder: holder needs reference to game.");
             }
             this.game = options.game;
+
+            //listen to card events to trigger own events
+            this.game.cards.on('change:holder', function (card, newHolder) {
+                if (newHolder === this) {
+                    this._card = card;
+                    this.trigger('card:checkIn', card);
+                }
+                else if (card.previous('holder') === this) {
+                    delete this._card;
+                    this.trigger('card:checkOut', card);
+                }
+            }, this);
+        },
+
+        card: function () {
+            //first, check if we have a cached reference to card
+            if (this._card) {
+                return this._card;
+            }
+            else {
+                //find the card placed in this holder
+                var cards = this.game.cards.where({ holder: this });
+                if (cards.length === 0) {
+                    //none found
+                    return undefined;
+                }
+                else {
+                    //one found (it should be the only one)
+                    return cards[0];
+                }
+            }
         },
 
         end: function () {
+            //stop listening
+            this.game.cards.off(null, null, this);
+
             //delete references
             delete this.game;
-            delete this.card;
-        },
-
-        checkIn: function (card, overrideLocks) {
-            //adds a card to this holder, if this is allowe
-            var problems;
-
-            //check if newCard is supplied
-            if (card === undefined) {
-                throw new Error("Holder: checkIn called without card argument");
+            if (this._card) {
+                delete this._card;
             }
-
-            //check if action is allowed by checking all possible obstacles
-            problems = [];
-            if (this.card !== undefined) {
-                //holder cannot contain more than one card
-                problems.push('holder already occupied');
-            }
-            if (overrideLocks !== true) {
-                //locks aren't overridden
-                if (this.get('acceptLock') === false) {
-                    problems.push('holder locked');       
-                }
-                if (this.get('moveLock') === false) {
-                    problems.push('card move-locked');
-                }
-            }
-
-            if (problems.length > 0) {
-                //could not check card in
-                return problems;
-            }
-            else {
-                //no problems encountered actually move the card
-                if (card.holder) {
-                    card.holder.checkOut();     //checkout at old holder
-                }
-                this.card = card;               //add to this holder
-                card.holder = this;             //add reference back here
-
-                //trigger events on the holder and the card
-                this.trigger('card:checkIn', [card]);
-                card.trigger('move', this);
-
-                return true;
-            }
-        },
-
-        //remove card from holder
-        checkOut: function () {
-            var oldCard = this.card;
-            delete this.card;
-            this.trigger('card:checkOut', [oldCard]);
-            return true;
         }
 
     });
