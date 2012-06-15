@@ -47,10 +47,10 @@ function (Holder) {
         },
 
         end: function () {
-            delete this.board;
-
             //call inherited function
             Holder.prototype.end.call(this);
+
+            delete this.board;
         },
 
         step: function (direction) {

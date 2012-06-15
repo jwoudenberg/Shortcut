@@ -2,6 +2,8 @@
 
     A board is a collection of fields placed in a (rectangular) grid.
 
+    rows and colums are counted from the top-left border of the board
+
     METHODS
     getField (      number row, number col )
 
@@ -61,9 +63,16 @@ function (Backbone, Field) {
                     });
                 }
             }
+
+            //listen to fields and retrigger all their events on the board
+            this.fields.on('change', function () {
+                this.trigger('fields', arguments);
+            }, this);
         },
 
         end: function () {
+            this.trigger('end');
+
             //end fields
             this.fields.forEach(function (field) {
                 field.end();

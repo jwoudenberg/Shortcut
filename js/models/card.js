@@ -7,22 +7,40 @@
     movement (using its checkIn(card) and checkOut() functions). Cards obtain
     a reference back to the holder (this.holder).
 
+    STATIC AND ROTATED PORTS
+    - static ports are the ports as they are saved in the pats models
+    - rotated ports do not rotate with the card. They are numbered like so:
+         5 4
+         ___
+      6 |   | 3
+      7 |___| 2
+      
+         0 1
+    If card rotation is 0, static and rotated ports have the same values
+
+    - getStaticPort() and getRotatedPort() to go from one to the other.
+    - getPaths() and follow() take and return rotated ports.
+    
+    All can take an optional rotation argument that allows you to find
+    their result for a different rotation of this card.
+
+
     METHODS
     rotate (        number turns )
     createPath (    see: 'paths' under constructor options )
-    getHardPort(    number softPort )
-    getSoftPort (   number hardPort )
-    getPaths (      number softPort )
-    follow (        model path, number softPort )
+    getHardPort(    number softPort [, number rotation ] )
+    getSoftPort (   number hardPort [, number rotation ] )
+    getPaths (      number softPort [, number rotation ] )
+    follow (        model path, number softPort [, number rotation ] )
 
     PROPERTIES
     paths:          collection of model Path
 
     ATTRIBUTES
-    holder:         model Holder
-    [rotation:      number      (0)     ]
-    [moveLock:      bool        (false) ]
-    [rotateLock:    bool        (false) ]
+    [holder:        model Holder    (underined) ]
+    [rotation:      number          (0)         ]
+    [moveLock:      bool            (false)     ]
+    [rotateLock:    bool            (false)     ]
 
     CONSTRUCTOR OPTIONS
     game:           model Game
@@ -44,14 +62,19 @@ function (_, Backbone, Path) {
             rotateLock:     false
         },
 
+        flags: {}, //to be overwritten in initialize()
+
         initialize: function (attrs, options) {
-            var holder, protoPaths;
+            var protoPaths;
 
             //check for and set reference to game
-            if (!options.game) {
-                throw new Error("Card: card needs reference to game.");
-            }
+            if (!options.game) throw new Error("Card: card needs reference to game.");
+
+            //set reference back to game
             this.game = options.game;
+
+            //create flags object
+            this.flags = {};
 
             //create path-collection
             this.paths = new (Backbone.Collection.extend({ model: Path }))();
@@ -70,13 +93,10 @@ function (_, Backbone, Path) {
             var holder = attrs.holder,
                 rotation = attrs.rotation;
 
-            if (!holder) {
-                //return this.end();
-            }
-
             //card movement
-            if (holder !== this.get('holder')) {
-                if (this.get('moveLock') === true) {
+            if (holder !== this.get('holder') && holder !== undefined) {
+                //if either lock is active, that is enough
+                if (this.get('moveLock') === true  || this.flags.holder) {
                     return new Error("Cannot move card: card move-locked.");
                 }
                 if (holder.get('acceptLock') === true) {
@@ -89,13 +109,14 @@ function (_, Backbone, Path) {
 
             //card rotation
             if (rotation !== this.get('rotation')) {
-                if (this.get('rotateLock') === true) {
+                //if either lock is set, do not rotate
+                if (this.get('rotateLock') === true  || this.flags.rotation) {
                     return new Error("Cannot rotate card: card rotate-locked.");
                 }
             }
         },
 
-        rotate: function (turns) {
+        rotate: function (turns, options) {
             var rotation = this.get('rotation');
 
             //check if argument turns was supplied, if not rotate a single turn
@@ -104,12 +125,14 @@ function (_, Backbone, Path) {
             }
 
             rotation = (rotation + turns) % 4; //4 rotations make a 360
-            this.set({ rotation: rotation });
+            this.set({ rotation: rotation }, options);
 
             return this;
         },
 
         end: function () {
+            this.trigger('end');
+
             //end paths
             this.paths.forEach(function (path) {
                 path.end();
@@ -146,47 +169,44 @@ function (_, Backbone, Path) {
                 this.paths.add(path);
         },
 
-        //hardPorts are the ports saved in the paths model. They do not change
-        //upon card rotation. Softports are ports that account for card rotation
-        getHardPort: function (softPort) {
-            if (softPort === 'unconnected') {
-                return softPort;
-            }
+        getStaticPort: function (rotPort, rotation) {
+            rotation = rotation || this.get('rotation');
+            if (rotPort === 'unconnected') return rotPort;
             else {
-                return ( softPort + (2 * this.get('rotation')) ) % 8;
+                return ( rotPort + (2 * rotation) ) % 8;
             }
         },
-        getSoftPort: function (hardPort) {
-            if (hardPort === 'unconnected') {
-                return hardPort;
-            }
+        getRotatedPort: function (statPort, rotation) {
+            rotation = rotation || this.get('rotation');
+            if (statPort === 'unconnected') return statPort;
             else {
-                return ( hardPort + (6 * this.get('rotation')) ) % 8;
+                return ( statPort + (6 * rotation ) ) % 8;
             }
         },
 
-        getPaths: function (softPort) {
+        getPaths: function (rotPort, rotation) {
         //returns paths connected to a port
-            var hardPort;
+            var statPort;
 
             //compensate for rotation of card
-            hardPort = this.getHardPort(softPort);
+            statPort = this.getStaticPort(rotPort, rotation);
 
             return this.paths.filter(function (path) {
-                return (path.get('start') === hardPort || path.get('end') === hardPort);
+                //iterator for the filter function
+                return (path.get('start') === statPort || path.get('end') === statPort);
             });
         },
 
-        follow: function (path, softPort) {
-            var result, hardPort;
+        follow: function (path, rotPort, rotation) {
+            var result, statPort;
 
             //compensate for rotation of card
-            hardPort = this.getHardPort(softPort);
+            statPort = this.getStaticPort(rotPort, rotation);
 
-            if (hardPort === path.get('start')) {
+            if (statPort === path.get('start')) {
                 result = path.get('end');
             }
-            else if (hardPort === path.get('end')) {
+            else if (statPort === path.get('end')) {
                 result = path.get('start');
             }
             else {
@@ -195,8 +215,66 @@ function (_, Backbone, Path) {
             }
 
             //compensate back
-            return this.getSoftPort(result);
+            return this.getRotatedPort(result, rotation);
         }
 
+    }, {
+        //CLASS PROPERTIES
+
+        //these functions can properly compare two values for the same attribute
+        //when ordinary comparison could fail
+        compare: {
+            holder: function (holder1, holder2) {
+                //the holder-attribute contains a model. Use cids to compare.
+                if (holder1 && holder2 && holder1.cid === holder2.cid) return true;
+                if (holder1 === undefined && holder2 === undefined) return true;
+            },
+
+            rotation: (function () {
+                var hashPath;
+
+                hashPath = function (port1, port2) {
+                    //turn an unconnected port into a port 8 (number not used)
+                    if (port1 === 'unconnected') port1 = 8;
+                    if (port2 === 'unconnected') port2 = 8;
+
+                    //the following creates a unique number for each path
+                    if (port1 < port2)  return port1 * 9 + port2;
+                    else                return port2 * 9 + port1;
+                };
+
+                return function (rot1, rot2, model) {
+                    //because some cards look the same for different rotations
+                    if (rot1 === rot2) return true; //trivial case
+    
+                    /*  method:
+                        1.  rotate each path's ports twice (rot1, rot2)
+                        2.  combine ports to a hash-number
+                        3.  compare lists of hash-numbers for both sets of paths
+                            if they are the same: succes!
+                    */
+                    var rots = {}, start, end, tStart, tEnd;
+                    rots[rot1] = [];
+                    rots[rot2] = [];
+    
+                    model.paths.forEach(function (path) {
+                        start = path.get('start');
+                        end = path.get('end');
+    
+                        for (var rot in rots) {
+                            //get transformed values
+                            tStart = this.getRotatedPort(start, rot);
+                            tEnd = this.getRotatedPort(end, rot);
+                            //get the hash of the rotated path
+                            rots[rot].push(hashPath(tStart, tEnd));
+                        }
+                    }, model);
+    
+    
+                    //check if both path-arrays ended up the same
+                    if (!_.difference(rots[rot1], rots[rot2]).length) return true;
+                };
+            }())
+        }
     });
 });

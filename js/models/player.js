@@ -12,6 +12,7 @@
 
     ATTRIBUTES
     name:           string
+    winner:         bool
 
     CONSTRUCTOR OPTIONS
 */
@@ -24,7 +25,8 @@ function (Backbone, Path) {
 
         defaults: {
             //mandatory
-            name: undefined
+            name: undefined,
+            winner: false
         },
 
         validate: function (attrs) {
@@ -44,6 +46,8 @@ function (Backbone, Path) {
         },
 
         end: function () {
+            this.trigger('end');
+
             //delete references
             delete this.game;
             delete this.bases;

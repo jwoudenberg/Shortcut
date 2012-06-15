@@ -74,7 +74,7 @@ function (Backbone) {
             port = this.get('direction');
             if (port === undefined) {
                 //call to getSoftPort() takes rotation of card into account
-                port = card.getSoftPort(path.get('end'));
+                port = card.getRotatedPort(path.get('end'));
             }
 
             //the place object contains all information on one location
@@ -106,6 +106,21 @@ function (Backbone) {
             this._emptyFields.on('card:checkIn', this.destroy, this);
 
             return result;
+        },
+
+        destroy: function () {
+            //call inherited destroy function
+            Backbone.Model.prototype.destroy.call(this);
+
+            //remove all event handlers
+            this.paths.off(null, this.remove, this);
+            this.cards.off(null, this.remove, this);
+            this._emptyFields.off(null, this.remove, this);
+
+            //empty collections
+            delete this.paths;
+            delete this.cards;
+            delete this._emptyFields;
         },
 
         _saveStep: function (place) {
@@ -221,21 +236,6 @@ function (Backbone) {
 
             //return result succes/failure to reach goal to previous step
             return result;
-        },
-
-        destroy: function () {
-            //call inherited destroy function
-            Backbone.Model.prototype.destroy.call(this);
-
-            //remove all event handlers
-            this.paths.off(null, this.remove, this);
-            this.cards.off(null, this.remove, this);
-            this._emptyFields.off(null, this.remove, this);
-
-            //empty collections
-            this.paths.reset();
-            this.cards.reset();
-            this._emptyFields.reset();
         }
 
     }, {

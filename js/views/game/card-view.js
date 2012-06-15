@@ -1,9 +1,10 @@
 /* --- CARD VIEW ---
 
-    Renders a card and automatically add it to the right holder-element.
+    Renders a card. The card is placed (and moved) in the DOM by the holder(s)
+    that contain it.
 */
-define(['jquery', 'jqueryui', 'backbone', 'js/views/game/path-view'],
-function ($, jQueryUi, Backbone, PathView) {
+define(['jqueryui', 'backbone', 'js/views/game/path-view'],
+function (jQueryUi, Backbone, PathView) {
     return Backbone.View.extend({
 
         tagName:    'div',
@@ -14,12 +15,7 @@ function ($, jQueryUi, Backbone, PathView) {
             'mousedown':    'mousedown'
         },
 
-        initialize: function (options) {
-            var paths;
-
-            //create reference back to gameView
-            this.gameView = options.gameView;
-
+        initialize: function () {
             //CARD DIV SETUP
             //set attributes
             this.$el.attr({
@@ -35,9 +31,11 @@ function ($, jQueryUi, Backbone, PathView) {
 
             //card state event listeners
             this.model.on('change:rotation', this.rotate, this);
-            this.model.on('change:holder', this.place, this);
-            this.model.on('change:moveLock', this.updateMoveLock, this);
-            this.model.on('change:moveLock', this.updateRotateLock, this);
+            this.model.on('change:moveLock flag:holder',
+                this.updateMoveLock, this);
+            this.model.on('change:rotateLock flag:rotation',
+                this.updateRotateLock, this);
+            this.model.on('end', this.remove, this);
             this.model.paths.on('add remove change', this.render, this);
 
             //listen for change of path-owners
@@ -50,7 +48,8 @@ function ($, jQueryUi, Backbone, PathView) {
 
         render: function () {
             this.$el.detach().empty().                  //start clean
-                append('<div class="text"></div>');     //add text class
+                append('<div class="text"></div>').     //add text div
+                append('<div class="effect"></div>');   //add effect div
 
             //create path-views
             this.model.paths.each( this.createPathView, this);
@@ -59,7 +58,6 @@ function ($, jQueryUi, Backbone, PathView) {
             this.updateMoveLock();  //set correct locked/unlocked behaviour
             this.updateRotateLock();
             this.rotate();          //give card correct rotation
-            this.place();           //move the card element to its holder
         },
 
         remove: function () {
@@ -111,43 +109,33 @@ function ($, jQueryUi, Backbone, PathView) {
             return this;
         },
 
-        place: function () {
-        //place card in the DOM (in its current holder)
-            var holder  = this.model.get('holder'),
-                $holder;
-
-            if (holder !== undefined) {
-                //find holder in DOM
-                $holder = this.gameView.$el.find('.holder[data-cid=' + holder.cid + ']');
-
-                //move dom-element card
-                this.$el.appendTo($holder);
-            }
-
-            return this;
-        },
-
         updateMoveLock: function () {
-            var moveLock = this.model.get('moveLock');
-            if (moveLock) {
-                this.$el.draggable('disable');
-                this.$el.removeClass('draggable');
+            var model = this.model,
+                $el = this.$el;
+
+            //if either lock is in place, that suffices
+            if (model.flags.holder || model.get('moveLock')) {
+                $el.draggable('disable');
+                $el.removeClass('draggable');
             }
             else {
-                this.$el.draggable('enable');
-                this.$el.addClass('draggable');
+                $el.draggable('enable');
+                $el.addClass('draggable');
             }
 
             return this;
         },
 
         updateRotateLock: function () {
-            var moveLock = this.model.get('rotateLock');
-            if (moveLock) {
-                this.$el.removeClass('rotateable');
+            var model = this.model,
+                $el = this.$el;
+
+            //if either lock is in place, that suffices
+            if (model.flags.rotation || model.get('rotateLock')) {
+                $el.removeClass('rotateable');
             }
             else {
-                this.$el.addClass('rotateable');
+                $el.addClass('rotateable');
             }
 
             return this;

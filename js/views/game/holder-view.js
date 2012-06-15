@@ -1,18 +1,20 @@
 // --- HOLDER VIEW ---
 /* Renders a holder. Is always part of a bigger structure (board, deck). */
 
-define(['jquery', 'jqueryui', 'backbone'],
-function ($, jQueryUi, Backbone) {
+define(['jqueryui', 'backbone', 'js/views/game/card-view'],
+function (jQueryUi, Backbone, CardView) {
     return Backbone.View.extend({
 
         tagName:    'div',
-        className:  'holder cardSized',
+        className:  'holder',
 
         events: {
             'drop': 'drop'
         },
 
         initialize: function () {
+            var card;
+
             //set attributes
             this.$el.attr({
                 'data-col': this.model.get('col'),
@@ -23,14 +25,36 @@ function ($, jQueryUi, Backbone) {
             //make holder droppable (uses jquery-ui)
             this.$el.droppable({});
 
-            //listen for change in lock
+            //create view for card in holder, if it exists
+            card = this.model.card();
+            if (card) this.createCardView(card);
+
+            //listen for change to model
             this.model.on('change:acceptLock', this.updateAcceptLock, this);
+            this.model.on('card:checkIn', this.createCardView, this);
+            this.model.on('card:checkOut', function () {
+                this.$el.empty();
+            }, this);
+            this.model.on('end', this.remove, this);
 
             this.render();
         },
 
         render: function () {
             this.updateAcceptLock(); //set correct locked/unlocked behaviour
+        },
+
+        remove: function () {
+            //call inherited function
+            Backbone.View.prototype.remove.call(this);
+
+            //remove callbacks
+            this.model.off(null, null, this);
+        },
+
+        createCardView: function (card) {
+            var view = new CardView({ model: card });
+            view.$el.appendTo(this.$el);
         },
 
         drop: function (event, ui) {

@@ -21,6 +21,7 @@ function ($, Backbone, path0Svg, path1Svg, path2Svg, path3Svg, path4Svg,
             this.model.on('highlight', function (color) {
                 this.highlight(color);
             }, this);
+            this.model.on('end', this.remove, this);
 
             this.render();
         },
@@ -84,6 +85,14 @@ function ($, Backbone, path0Svg, path1Svg, path2Svg, path3Svg, path4Svg,
             //give attributes to the group element within the svg
             $(this.pathSvgs[distance]).appendTo(this.$el).
                 children('g').attr('transform', transform);
+        },
+
+        remove: function () {
+            //call inherited function
+            Backbone.View.prototype.remove.call(this);
+
+            //remove callbacks
+            this.model.off(null, null, this);
         },
 
         highlight: function (options) {

@@ -6,7 +6,8 @@ function () {
         //all unique cards (cards that cannot be rotated into each other)
         //the more symmetries a card has, the lower its probability
         var types = [
-                {paths: [[0, 7], [1, 2], [3, 4], [5, 6]], prob: 1},
+                //card disabled because it can trap a player completely
+                //{paths: [[0, 7], [1, 2], [3, 4], [5, 6]], prob: 1},
                 {paths: [[0, 7], [1, 2], [3, 5], [4, 6]], prob: 3},
                 {paths: [[0, 7], [1, 2], [3, 6], [4, 5]], prob: 3},
                 {paths: [[0, 7], [1, 3], [2, 5], [4, 6]], prob: 3},
@@ -54,7 +55,7 @@ function () {
         }
 
     //function that picks a card from above list
-    return function (holder) {
+    return function () {
         var paths, rotation;
 
         //tower sampling: pick a random value between 0 and probSum
@@ -73,11 +74,8 @@ function () {
 
         //create and return card
         return {
-                holder:     holder,
-                paths:      paths,
-                rotation:   rotation,
-                moveLock:   false,
-                rotateLock: false
-            };
+            paths:      paths,
+            rotation:   rotation
+        };
     };
 });

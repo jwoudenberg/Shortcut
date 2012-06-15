@@ -1,7 +1,29 @@
 @charset "UTF-8";
 
-/* GAME ELEMENTS */
+/*  GAME ELEMENTS
+    The size of the game-div size is inherited by all game elements. Thereby
+    code can easily place elements on a 'grid' by defining distances in
+    multiples of 100%.
+
+    The size of the game-div itself as a percentage of the size it has available
+    can be set by the code at the start of the game depending on, for instance,
+    the number of fields on the board.
+*/
+#game {
+    /* will be overwritten by code */
+    width:      80px;
+    height:     80px;
+    position:   absolute;
+}
+
+.board, .holder, .deck, .card, .path {
+    width:      inherit;
+    height:     inherit;
+}
+
 .board {
+    white-space:nowrap;
+    line-height:0;
     position:   absolute;
     z-index:    1;
 }
@@ -11,13 +33,14 @@
 }
 
 .board > .holder {
-    float:      left;
+    display:    inline-block;
+    /*float:      left;*/
     border:     1px solid #ddd;
     margin:     -1px 0 0 -1px;
 }
 
 .board > .holder[data-col="0"] {
-    clear:      left;
+    /*clear:      left;*/
 }
 
 .deck {
@@ -27,14 +50,24 @@
     z-index:    10;
 }
 
+.deck:not(.popable) {
+
+}
+.deck:not(.popable) > .text {
+    color:      #aaa;
+}
+
 .card, .cardBack {
     position:   absolute;
-    width:      inherit;
-    height:     inherit;
     border:     1px solid #aaa;
     margin:     -1px 0 0 -1px;
     background: #eee;
     z-index:    1;
+    -ms-transition:     background 300ms, border-radius 300ms, -ms-transform 300ms;
+    -moz-transition:    background 300ms, border-radius 300ms, -moz-transform 300ms;
+    -webkit-transition: background 300ms, border-radius 300ms, -webkit-transform 300ms;
+    -o-transition:      background 300ms, border-radius 300ms, -o-transform 300ms;
+    transition:         background 300ms, border-radius 300ms, transform 300ms;
 }
 
 .cardBack > .text, .deck > .text {
@@ -44,17 +77,26 @@
 }
 
 .card > .text {
-    margin-top: 15%;
+    position:   absolute;
+    width:      100%;
+    top:        25%;
     text-align: center;
     color:      #666;
+}
+
+.card > .effect {
+    position:   absolute;
+    box-sizing: border-box;
+    top:        0;
+    right:      0;
+    bottom:     0;
+    left:       0;
 }
 
 .path {
     position:   absolute;
     top:        0;
     left:       0;
-    width:      inherit;
-    height:     inherit;
 }
 
 .path svg {
@@ -64,40 +106,29 @@
     width:    inherit;
 }
 
-.cardSized {
-    /* These default values will be overwritten by the game to fit the screen */
-    width:      80px;
-    height:     80px;
-}
-
 /* CARD DRAGGING */
-.card.draggable, .card.rotateable {
+.card.rotateable {
     background:     #fff;
 }
 
-.card.draggable:hover, .card.ui-draggable-dragging {
-    border:         2px solid blue;
+.card.draggable  {
+    border-color:   #336dff;
+    z-index:        2
+}
+.card.draggable > .effect {
+    box-sizing:     border-box;
+    border:         4px solid #336dff;
+    opacity:        0.2;
+}
+
+.card.draggable:hover, .card.rotateable:hover, .card.ui-draggable-dragging {
+    border:         2px solid #336dff;
     margin:         -2px 0 0 -2px;
     z-index:        10;
 }
 
 .card.ui-draggable-dragging {
     box-shadow:     0 0 4px 2px #555;
-}
-
-.card.rotateable:not(.draggable):hover {
-    margin:         -2px 0 0 -2px;
-    border:         2px dotted blue;
-    z-index:        10;
-}
-
-/* ROTATION EFFECT */
-.card {
-    -ms-transition:     -moz-transform 300ms;
-    -moz-transition:    -moz-transform 300ms;
-    -webkit-transition: -webkit-transform 300ms;
-    -o-transition:      -o-transform 300ms;
-    transition:         transform 300ms;
 }
 
 /* FLIPPING EFFECT */
@@ -110,8 +141,6 @@
 
 .deck > .holder {
     position:               absolute;
-    width:                  inherit;
-    height:                 inherit;
 
     transform-style:        preserve-3d;
     -moz-transform-style:   preserve-3d;

@@ -75,7 +75,8 @@ function ($, Backbone, Game, GameView, gametypes, setupTemplate) {
             result = gametypes['default'].type.validateStart(options);
 
             //check if validation was succesfull
-            if (result === true) {
+            if (result !== true) this.mainView.postMessage(result);
+            else {
                 //create new game
                 game = new Game({}, { type: gametypes['default'].type });
                 //try to start
@@ -85,7 +86,8 @@ function ($, Backbone, Game, GameView, gametypes, setupTemplate) {
                 if (result === true) {
                      view = new GameView({
                         model:  game,
-                        type:   gametypes['default'].view
+                        type:   gametypes['default'].view,
+                        mainView:   this.mainView
                     });
                     //hand over content area to new view
                     this.mainView.changeContentView(view);
@@ -93,10 +95,6 @@ function ($, Backbone, Game, GameView, gametypes, setupTemplate) {
                 else {
                     throw new Error("Setup View: Start validations not in agreement");
                 }
-            }
-            else {
-                //show error to the user
-                this.mainView.postMessage(result);
             }
         }
 

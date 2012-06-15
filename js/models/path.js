@@ -51,6 +51,8 @@ function (Backbone) {
         },
 
         end: function () {
+            this.trigger('end');
+
             delete this.card;
             delete this.owner;
         }

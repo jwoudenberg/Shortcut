@@ -9,11 +9,19 @@ function ($, Backbone) {
         events: {},
 
         initialize: function (options) {
-            //create reference back to gameView
-            this.gameView = options.gameView;
+            //listen for model events
+            this.model.on('end', this.remove, this);
         },
 
-        render: function () {}
+        render: function () {},
+
+        remove: function () {
+            //call inherited function
+            Backbone.View.prototype.remove.call(this);
+
+            //remove callbacks
+            this.model.off(null, null, this);
+        }
 
     });
 });

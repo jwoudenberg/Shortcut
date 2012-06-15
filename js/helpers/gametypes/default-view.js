@@ -1,15 +1,19 @@
-/* --- GAME TYPE ---   
+/* --- GAME TYPE ---
     This object contain several functions that determine the way the game is
     displayed. These functions are called by gametypeView
 */
 
 define(['underscore', 'text!templates/cardsize.css',
-    'js/helpers/getRandomColor', 'js/helpers/makeRouteCached'],
-function (_, cardSizeCSS, getRandomColor, makeRouteCached) {
+    'js/helpers/getRandomColor', 'text!templates/turn.html'],
+function (_, cardSizeCSS, getRandomColor, turnTemplate) {
     return {
 
         boardView:  undefined,
         deckView:   undefined,
+
+        onStart: function () {
+            this.onNewTurn(this.model.turns.last());
+        },
 
         close: function () {
             //delete references
@@ -25,89 +29,65 @@ function (_, cardSizeCSS, getRandomColor, makeRouteCached) {
             this.deckView = deckView; //this gametype has only one deck
         },
 
-        withNewCard: function (cardView) {
-            //try to create a route
-            cardView.events.click = this.cardClick;
-            cardView.delegateEvents();
+        onNewTurn: function (turn) {
+            this.mainView.showText(_.template(turnTemplate,
+                { player: turn.get('player').get('name') }));
         },
 
         arrange: function () {
             //only attempt a resize of all game elements are present
             if (this.boardView && this.deckView) {
-                //called when the game is rendered or the windows size changes
-                var boardSize, height, width, size, diff, cardSize;
+                var boardSize, gridSize, cardSize, height, width;
 
+                //number of fields the board is long and hight
                 boardSize = this.boardView.model.get('size');
-    
-                //get the height and with of the #content div
-                height = this.$el.height(),
-                width = this.$el.width();
-    
-                //the board is made as large as possible
-                size = Math.min(height, width);
-                this.boardView.$el.css({
-                    width:  size+'px',
-                    height: size+'px'
-                });
-    
-                //calculate the size of each field
-                cardSize = Math.floor(size / boardSize - 2); //-2 for borders
+                //the view needs an adition 1.5 fields of space in one direction
+                gridSize = [boardSize + 1.5, boardSize];
 
-                //deal with almost rectangular boards
-                diff = Math.abs(height - width);
-                if (diff < cardSize + 30) {
-                    //almost rectangular board: not enough space for deck
-                    //every field, including the deck, has to give a little
-                    cardSize -= Math.ceil((cardSize + 30 - diff) / (boardSize  + 1));
+                //get the height and with of the parent div
+                height = this.$el.parent().height(),
+                width = this.$el.parent().width();
 
-                    //recalculate total size
-                    size = (cardSize + 2) * boardSize;
-                }
+                //cardsize is shortest dimensions of view and grid devided, or
+                //longest dimensions devided, whichever is smaller
+                cardSize = Math.floor(Math.min(
+                    Math.min(width, height) / Math.min(gridSize[0], gridSize[1]),
+                    Math.max(width, height) / Math.max(gridSize[0], gridSize[1])
+                ));
 
-                //place deck
-                if (height > width) {
+                if (width > height) {
                     this.deckView.$el.css({
-                        top:    size+30+'px',
-                        left:   '9px'
+                        top:    0,
+                        left:   (boardSize + 0.5)*100 + '%'
                     });
                 }
                 else {
                     this.deckView.$el.css({
-                        top:    '9px',
-                        left:   size+30+'px'
+                        top:    (boardSize + 0.5)*100 + '%',
+                        left:   0
                     });
                 }
 
-                //apply relevent css
+                //place board in the top-left corner
+                this.boardView.$el.css({
+                    top:    '1px',
+                    left:   '1px'
+                });
+
+                //resize the fields
                 $('#cardSizeStyle').html(_.template(cardSizeCSS, {
                     cardSize: cardSize,
                     fontSize: cardSize/100
                 }));
+
             }
         },
 
-        cardClick: function (event) {
-        //if a dead-end path is presented, create a route
-            var path = this.model.paths.where({ end: 'unconnected' })[0],
-                goal, route;
+        onNewRoute: function (route) {
+            //only create a path if no goal was specified or a goal was reached
+            if (!route.get('goal') || route.get('goalReached')) {
+                var color = getRandomColor();
 
-            if (path !== undefined) {
-                var color;
-
-                //find the other base of this owner; it is the goal of the route
-                if (path.owner.bases.at(0).cid === path.cid) {
-                    goal = path.owner.bases.at(1);
-                }
-                else {
-                    goal = path.owner.bases.at(0);
-                }
-
-                route = makeRouteCached({
-                    begin: path,
-                    goal: goal
-                });
-
-                color = getRandomColor();
                 //trigger event for paths in route to highlight the path
                 route.paths.forEach(function (path) {
                     path.trigger('highlight', {
@@ -119,14 +99,35 @@ function (_, cardSizeCSS, getRandomColor, makeRouteCached) {
                 //when the route ceases to exits, remove strong effect
                 route.on('destroy', function () {
                     route.paths.forEach(function (path) {
-                    path.trigger('highlight', {
-                        strong: false
-                    });
+                        path.trigger('highlight', {
+                            strong: false
+                        });
                     }, this);
                     route.off('destroy', null, this); //remove this event handler
                 }, this);
             }
         },
+
+        onFinish: function (winners) {
+            var length = winners.length,
+                string, i;
+
+            if (length === 0) {
+                string = 'Game has ended in a draw.';
+            }
+            else if (length === 1) {
+                string = winners[0].get('name') + ' has won!';
+            }
+            else {
+                string = '';
+                for (i = length-1; i > 0; i--) {
+                    string += winners[i].get('name') + ', ';
+                }
+                string += ' and ' + winners[0].get('name');
+            }
+
+            this.mainView.showText('<h1>' + string + '</h1>');
+        }
 
     };
 });

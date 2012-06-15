@@ -10,16 +10,16 @@ function (Backbone, HolderView) {
         className:  'board',
 
         initialize: function () {
-            var fields, i, field;
-
-            //create reference back to gameView
-            this.gameView = this.options.gameView;
+            var fields, i, field, view;
 
             //create field-views
             fields = this.model.fields;
             for (i = 0; i < fields.length; i++) {
-                field = new HolderView({ model: fields.at(i) });
-                field.$el.appendTo(this.$el);
+                field = fields.at(i);
+                //append a break at the start of a new row
+                if (field.get('col') === 0) this.$el.append('<br />');
+                view = new HolderView({ model: field });
+                view.$el.appendTo(this.$el);
             }
 
             //add attributes
@@ -28,7 +28,15 @@ function (Backbone, HolderView) {
             this.render();
         },
 
-        render: function () {}
+        render: function () {},
+
+        remove: function () {
+            //call inherited function
+            Backbone.View.prototype.remove.call(this);
+
+            //remove callbacks
+            this.model.off(null, null, this);
+        }
 
     });
 });

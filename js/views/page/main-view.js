@@ -24,6 +24,7 @@ function ($, _, Backbone, SetupView, MessageView, MenuView, TextView) {
 
         initialize: function () {
             var self = this;
+
             $(document).ready(function () {
                 self.render();
             });
@@ -94,8 +95,9 @@ function ($, _, Backbone, SetupView, MessageView, MenuView, TextView) {
 
             //add new view
             newView.mainView = this;
-            newView.$el.prependTo('#content');
             newView.render();
+            newView.$el.prependTo('#content');
+            if (newView.arrange) newView.arrange(); //let view arrange itself
 
             //set own reference to new view
             this.contentView = newView;
@@ -111,16 +113,17 @@ function ($, _, Backbone, SetupView, MessageView, MenuView, TextView) {
             }
         },
 
-        resize: function () {
+        resize: _.debounce(function () {
             //fire arrange function of the contentView, if it exists
+            //_.debounce() returns a version of this function that waits
             if (this.contentView && this.contentView.arrange) {
                 this.contentView.arrange();
             }
-        },
+        }, 100),
 
         setup: function () {
             //displays a new setup screen
-            var view = new SetupView({ 
+            var view = new SetupView({
                 mainView: this
             });
             this.changeContentView(view);

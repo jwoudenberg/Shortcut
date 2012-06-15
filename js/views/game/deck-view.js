@@ -6,7 +6,7 @@ function (Backbone, HolderView) {
     return Backbone.View.extend({
 
         tagName:    'div',
-        className:  'deck cardSized',
+        className:  'deck',
 
         events: {
             'click': 'click'
@@ -14,9 +14,6 @@ function (Backbone, HolderView) {
 
         initialize: function () {
             var holder;
-
-            //create reference back to gameView
-            this.gameView = this.options.gameView;
 
             //create field-view
             //this view and the holder contained within share the same model
@@ -26,14 +23,16 @@ function (Backbone, HolderView) {
             this.$el.append('<div class="text">card</div>');
 
             //listen for change in poplock
-            this.model.on('change:popLock', function () {
+            this.model.on('change:popLock flag:pop', function () {
                 this.updatePopLock();
             }, this);
 
             this.render();
         },
 
-        render: function () {},
+        render: function () {
+            this.updatePopLock();
+        },
 
         remove: function () {
             //call inherited function
@@ -58,8 +57,9 @@ function (Backbone, HolderView) {
         },
 
         updatePopLock: function () {
-            var popLock = this.model.get('popLock');
-            if (popLock) {
+            var model = this.model;;
+
+            if (model.flags.pop || model.get('popLock')) {
                 this.$el.removeClass('popable');
             }
             else {

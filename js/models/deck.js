@@ -24,19 +24,26 @@ function (Holder, makeRandomProtoCard) {
             popLock: false
         },
 
-        pop: function (card) {
-        //pop a card on this deck. Uses supplied card if available, otherwise
-        //generate a random card
+        flags: {},
 
-            if (this.get('popLock') === true) {
-                return 'deck locked';
-            }
-            else if (card !== undefined) {
-                //if a card is supplied, this overrules the use of cardCreator()
-                return card.move(this, true);
-            }
-            else {
-                return this.game.newCard(makeRandomProtoCard(this));
+        initialize: function () {
+            //call inherited function
+            Holder.prototype.initialize.apply(this, arguments);
+
+            this.flags = {};
+        },
+
+        pop: function () {
+        //pop a random card
+            var card;
+            if (this.get('popLock') || this.flags.pop) return 'deck locked';
+            else if (!this.card()) { //if not occupied
+                card = this.game.newCard(makeRandomProtoCard(this));
+                //create an opportunity for the new card to move to the deck
+                this.set('acceptLock', false);
+                card.set('holder', this);
+                this.set('acceptLock', true);
+                return card;
             }
         }
 

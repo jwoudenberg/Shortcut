@@ -66,6 +66,8 @@ function (Backbone) {
         },
 
         end: function () {
+            this.trigger('end');
+
             //stop listening
             this.game.cards.off(null, null, this);
 
