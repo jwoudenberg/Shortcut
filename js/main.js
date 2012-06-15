@@ -8,7 +8,9 @@ require.config({
         backbone: 'js/lib/backbone-min',
         jquery: 'js/lib/jquery',
         jqueryui: 'js/lib/jquery-ui',
-        text: 'js/lib/require-text'
+        modernizr: 'js/lib/modernizr',
+        text: 'js/lib/require-text',
+        domready: 'js/lib/require-domready'
     },
 
     shim: {
@@ -16,16 +18,21 @@ require.config({
     }
 });
 
-require(['js/views/page/main-view'],
-function(MainView) {
-    'use strict';
+require(['domready', 'modernizr', 'js/views/page/main-view'],
+function(domReady, Modernizr, MainView) {
+    domReady(function () {
 
-    //feature detection here
-    if (true) {
+        //feature detection here
+        if (!Modernizr.inlinesvg) {
+            document.getElementById('content').innerHTML = "<h1>Sorry!</h1><p>Shortcut won't run in this browser.</p>";
+        };
+
+
         new MainView();
-    }
+    });
+
 }, function (err) {
     //something went wrong with the loading of files
-    document.getElementById('content').innerHTML = '<h1>Oops...</h1><p>Something went wrong with loading.';
+    document.getElementById('content').innerHTML = '<h1>Oops...</h1><p>Something went wrong with loading.</p>';
     throw err;
 });

@@ -23,12 +23,9 @@ function ($, _, Backbone, SetupView, MessageView, MenuView, TextView) {
         textView:       undefined,
 
         initialize: function () {
+            this.render();
+
             var self = this;
-
-            $(document).ready(function () {
-                self.render();
-            });
-
             //when the window is resized, fire resize() function
             $(window).resize(function () {
                 //call resize, 'this' continues to refer to this view

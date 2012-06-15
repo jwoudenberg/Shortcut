@@ -1,11 +1,6 @@
-<?xml version="1.0" standalone="no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" 
-"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-
-<svg xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 750 750">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 750 750">
     <g class="pathContainer">
-        <path class=        "pathFill"             
+        <path class=        "pathFill"
               d=            "M 488,0
                             C 488,134 465,199 442,234
                             C 419,268 389,284 341,308
