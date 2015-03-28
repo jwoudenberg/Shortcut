@@ -1,3 +1,9 @@
+**WARNING: THIS IS VERY, VERY OLD.**
+But I still like the idea behind the game, so I'm thinking about rewriting the thing using some of the things learned in the past.
+Plans include to use React.js, so let's see what happens...
+
+**OLD README BELOW**
+
 # Shortcut version 0.1
 Shortcut is web-based card-laying game. Players have to bases between which
 they must create a route, by drawing, placing and rotating cards.
