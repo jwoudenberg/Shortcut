@@ -8,7 +8,10 @@
   },
   "author": "Jasper Woudenberg",
   "license": "ISC",
-  "dependencies": {},
+  "dependencies": {
+    "ramda": "^0.13.0",
+    "react": "^0.13.1"
+  },
   "devDependencies": {
     "babelify": "^5.0.4",
     "browserify": "^9.0.3",

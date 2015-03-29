@@ -1,8 +1,10 @@
 {
     "plugins": [
-        "nodeca"
+        "nodeca",
+        "react"
     ],
     "env": {
+        "browser": true,
         "node": true,
         "es6": true
     },
@@ -25,6 +27,7 @@
         "no-trailing-spaces": 2,
         "max-len": [2, 120],
         "no-underscore-dangle": 0,
+        "react/jsx-uses-vars": 2,
         "strict": 0,
         "no-shadow": 0
     }

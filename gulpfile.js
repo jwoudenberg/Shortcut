@@ -12,6 +12,7 @@ bundler.add('./src/index.js');
 bundler.transform(babelify);
 
 gulp.task('js', bundle);
+bundler.on('update', bundle);
 bundler.on('log', gutil.log);
 
 function bundle() {
