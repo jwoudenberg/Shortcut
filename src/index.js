@@ -26,22 +26,22 @@ var world = {
     }]
 };
 
-var Field = React.createClass({
-    render: function render() {
+class Field extends React.Component {
+    render() {
         return <div style={{ width: '100px', height: '100px', border: '1px solid ' + this.props.color }}>
             {this.props.children}
         </div>;
     }
-});
+}
 
-var Card = React.createClass({
-    render: function render() {
+class Card extends React.Component {
+    render() {
         return <div>{this.props.text}</div>;
     }
-});
+}
 
-var Board = React.createClass({
-    render: function render() {
+class Board extends React.Component {
+    render() {
         var fields = this.props.fields;
         return (
             <div>
@@ -51,13 +51,14 @@ var Board = React.createClass({
             </div>
         );
     }
-});
+}
 
-var Game = React.createClass({
-    getInitialState: function getInitialState() {
-        return world;
-    },
-    getFieldsWithCards: function getFieldsWithCards() {
+class Game extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = world;
+    }
+    getFieldsWithCards() {
         var cards = this.state.cards;
         var fieldsWithCards = R.map(addCardToField, this.state.board.fields);
         function addCardToField(field) {
@@ -66,11 +67,11 @@ var Game = React.createClass({
         }
         console.log(fieldsWithCards);
         return fieldsWithCards;
-    },
-    render: function render() {
+    }
+    render() {
         var fieldsWithCards = this.getFieldsWithCards();
         return <Board fields={fieldsWithCards} />;
     }
-});
+}
 
 React.render(<Game />, document.getElementById('playground'));
