@@ -7,8 +7,15 @@ let world = require('./world.mock');
 
 class Field extends React.Component {
     render() {
+        let {row, col} = this.props;
+        let style = {
+            left: 100 * col + '%',
+            top: 100 * row + '%',
+            'margin-left': -col,
+            'margin-top': -row
+        };
         return <div className="field"
-                    style={{ width: '100px', height: '100px', border: '1px solid ' + this.props.color }}>
+                    style={style}>
             {this.props.children}
         </div>;
     }
@@ -32,11 +39,16 @@ class Card extends React.Component {
 class Board extends React.Component {
     render() {
         let fields = this.props.fields;
+        //TODO: make this size depend on the available screen area.
+        let style = {
+            width: '100px',
+            height: '100px'
+        };
         return (
-            <div className="board">
+            <div className="board" style={style}>
                 {fields.map(function printField(field) {
-                    let card = field.card;
-                    return <Field key={field.id} color={field.color}>
+                    let {card, row, col} = field;
+                    return <Field key={field.id} col={col} row={row}>
                         <Card paths={card.paths} />
                     </Field>;
                 })}

@@ -2,13 +2,16 @@ module.exports = {
     board: {
         fields: [{
             id: '1',
-            color: 'red'
+            row: 0,
+            col: 0
         }, {
             id: '2',
-            color: 'blue'
+            row: 0,
+            col: 1
         }, {
             id: '3',
-            color: 'black'
+            row: 1,
+            col: 1
         }]
     },
     cards: [{
