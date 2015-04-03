@@ -1,3 +1,5 @@
-body {
-    color: red;
-}
+@import 'mixins';
+@import 'path';
+@import 'field';
+@import 'card';
+@import 'board';

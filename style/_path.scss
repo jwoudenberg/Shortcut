@@ -1,0 +1,21 @@
+.path {
+    @include component();
+}
+
+.pathContainer {
+    opacity:        0.6;
+    stroke:         #444444;
+    stroke-width:   14;
+    fill:           #444444;
+    transition:     opacity 1s, fill 1s, stroke 1s;
+}
+
+.pathFill {
+    stroke:         none !important;
+    opacity:        0.2;
+    transition:     opacity 1s;
+}
+
+.pathBorder {
+    fill:           none !important;
+}
