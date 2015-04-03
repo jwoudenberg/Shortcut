@@ -1,8 +1,9 @@
-var React = require('react');
-var R = require('ramda');
+const React = require('react');
+const R = require('ramda');
+const Path = require('./path');
 
 //TODO: replace constant world object with real one.
-var world = require('./world.mock');
+let world = require('./world.mock');
 
 class Field extends React.Component {
     render() {
@@ -18,39 +19,23 @@ class Card extends React.Component {
         return { paths: [] };
     }
     render() {
-        var paths = this.props.paths;
+        let paths = this.props.paths;
         return <div className="card">
             {paths.map(function drawPath(path) {
-                var key = [path.begin, path.end].join('-');
+                let key = path.ports.join('-');
                 return <Path key={key} {...path} />;
             })}
         </div>;
     }
 }
 
-var PATH_SVG_DATA = require('./pathSVGData');
-class Path extends React.Component {
-    render() {
-        //TODO: calculate pathShape based on begin and end props.
-        var pathShape = 'u_turn';
-        var svgPaths = PATH_SVG_DATA[pathShape];
-        return <svg version="1.1" viewBox="0 0 750 750">
-            <g className="pathContainer">
-                {svgPaths.map(function drawSVGPath(svgPath) {
-                    return <path key={svgPath.d} {...svgPath} />;
-                })}
-            </g>
-        </svg>;
-    }
-}
-
 class Board extends React.Component {
     render() {
-        var fields = this.props.fields;
+        let fields = this.props.fields;
         return (
             <div className="board">
                 {fields.map(function printField(field) {
-                    var card = field.card;
+                    let card = field.card;
                     return <Field key={field.id} color={field.color}>
                         <Card paths={card.paths} />
                     </Field>;
@@ -66,16 +51,16 @@ class Game extends React.Component {
         this.state = world;
     }
     getFieldsWithCards() {
-        var cards = this.state.cards;
-        var fieldsWithCards = R.map(addCardToField, this.state.board.fields);
+        let cards = this.state.cards;
+        let fieldsWithCards = R.map(addCardToField, this.state.board.fields);
         function addCardToField(field) {
-            var card = R.find(R.propEq('field', field.id), cards);
+            let card = R.find(R.propEq('field', field.id), cards);
             return R.assoc('card', card, field);
         }
         return fieldsWithCards;
     }
     render() {
-        var fieldsWithCards = this.getFieldsWithCards();
+        let fieldsWithCards = this.getFieldsWithCards();
         return <Board fields={fieldsWithCards} />;
     }
 }

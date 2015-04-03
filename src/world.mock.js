@@ -14,17 +14,17 @@ module.exports = {
     cards: [{
         field: '1',
         paths: [{
-            begin: 5,
-            end: 2
-        }, {
-            begin: 6,
-            end: 5
+            ports: [1, 6]
         }]
     }, {
         field: '2',
-        paths: []
+        paths: [{
+            ports: [4, 0]
+        }]
     }, {
         field: '3',
-        paths: []
+        paths: [{
+            ports: [5, 2]
+        }]
     }]
 };
