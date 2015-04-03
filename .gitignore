@@ -59,7 +59,7 @@ public
 tmtags
 
 # vim - for real developers
-*.swp
+*.sw[a-z]
 *.un~
 Session.vim
 .netrwhist
