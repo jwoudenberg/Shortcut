@@ -2,7 +2,7 @@ const React = require('react');
 const R = require('ramda');
 const PATH_SVG_DATA = require('./pathSVGData');
 const PATH_DISTANCE_TO_SHAPE_MAP = {
-    '-4': { type: 's_turn', mirrored: true },
+    '-4': { type: 's_turn' },
     '-3': { type: 'straight' },
     '-2': { type: 'l_turn', rotation: 270 },
     '-1': { type: 'sharp_turn' },
@@ -63,13 +63,15 @@ class Path extends React.Component {
         if (mirrored) {
             transform += ' scale(-1 1) translate(-750, 0)';
         }
-        return <svg version="1.1" viewBox="0 0 750 750">
-            <g className="pathContainer" transform={transform}>
-                {svgPaths.map(function drawSVGPath(svgPath) {
-                    return <path key={svgPath.d} {...svgPath} />;
-                })}
-            </g>
-        </svg>;
+        return <div className="path">
+            <svg version="1.1" viewBox="0 0 750 750">
+                <g className="pathContainer" transform={transform}>
+                    {svgPaths.map(function drawSVGPath(svgPath) {
+                        return <path key={svgPath.d} {...svgPath} />;
+                    })}
+                </g>
+            </svg>
+        </div>;
     }
 }
 
