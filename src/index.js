@@ -11,8 +11,8 @@ class Field extends React.Component {
         let style = {
             left: 100 * col + '%',
             top: 100 * row + '%',
-            'margin-left': -col,
-            'margin-top': -row
+            marginLeft: -col,
+            marginTop: -row
         };
         return <div className="field"
                     style={style}>
