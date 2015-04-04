@@ -1,6 +1,6 @@
 const React = require('react');
 const R = require('ramda');
-const PATH_SVG_DATA = require('./pathSVGData');
+const PATH_SVG_DATA = require('./data/pathSVGData');
 const PATH_DISTANCE_TO_SHAPE_MAP = {
     '-4': { type: 's_turn' },
     '-3': { type: 'straight' },
