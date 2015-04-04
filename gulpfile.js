@@ -46,4 +46,18 @@ gulp.task('sass', function watchSass() {
     }
 });
 
-gulp.task('default', ['js', 'sass']);
+gulp.task('html', function watchHtml() {
+    var HTML_PATH = './index.html';
+    watch(HTML_PATH, bundle);
+
+    return bundle();
+
+    function bundle() {
+        return gulp.src(HTML_PATH)
+        .pipe(gulp.dest('./dist'))
+        .on('finish', function logResult() { console.log('HTML copied.'); });
+    }
+
+});
+
+gulp.task('default', ['js', 'sass', 'html']);
