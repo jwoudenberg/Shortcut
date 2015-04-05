@@ -2,11 +2,17 @@ const React = require('react');
 const R = require('ramda');
 const Path = require('./path');
 const getRandomCard = require('./get-random-card');
+const addBoardToWorld = require('./add-board-to-world');
 
 //TODO: replace constant world object with real one.
-let world = require('./world.mock');
-//DEBUG: replace all cards with random ones.
-world.cards = world.cards.map(card => R.merge(card, getRandomCard()));
+let world = addBoardToWorld({ width: 5, height: 4 }, { cards: [] });
+//DEBUG: place a random card in every field.
+world.cards = world.board.fields.map(function createCard(field) {
+    let card = getRandomCard();
+    card.field = field.id;
+    return card;
+});
+// world.cards = world.cards.map(card => R.merge(card, getRandomCard()));
 
 class Field extends React.Component {
     render() {
@@ -51,9 +57,8 @@ class Board extends React.Component {
             <div className="board" style={style}>
                 {fields.map(function printField(field) {
                     let {card, row, col} = field;
-                    return <Field key={field.id} col={col} row={row}>
-                        <Card paths={card.paths} />
-                    </Field>;
+                    let cardJSX = card ? <Card paths={card.paths} /> : '';
+                    return <Field key={field.id} col={col} row={row}>{cardJSX}</Field>;
                 })}
             </div>
         );

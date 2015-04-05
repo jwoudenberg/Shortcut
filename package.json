@@ -9,6 +9,7 @@
   "author": "Jasper Woudenberg",
   "license": "ISC",
   "dependencies": {
+    "node-uuid": "^1.4.3",
     "ramda": "^0.13.0",
     "react": "^0.13.1"
   },
