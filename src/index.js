@@ -32,11 +32,14 @@ class Field extends React.Component {
 
 class Card extends React.Component {
     static defaultProps() {
-        return { paths: [] };
+        return { paths: [], rotation: 0 };
     }
     render() {
-        let paths = this.props.paths;
-        return <div className="card">
+        let { paths, rotation } = this.props;
+        let style = {
+            transform: `rotate(${rotation}deg)`
+        };
+        return <div className="card" style={style}>
             {paths.map(function drawPath(path) {
                 let key = path.ports.join('-');
                 return <Path key={key} {...path} />;
@@ -57,7 +60,7 @@ class Board extends React.Component {
             <div className="board" style={style}>
                 {fields.map(function printField(field) {
                     let {card, row, col} = field;
-                    let cardJSX = card ? <Card paths={card.paths} /> : '';
+                    let cardJSX = card ? <Card paths={card.paths} rotation={card.rotation} /> : '';
                     return <Field key={field.id} col={col} row={row}>{cardJSX}</Field>;
                 })}
             </div>

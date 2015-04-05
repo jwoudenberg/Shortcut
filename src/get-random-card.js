@@ -7,10 +7,10 @@ const PROBABILITY_SUM = CARDS.reduce((sum, card) => sum + card.prob, 0);
 function getRandomCard() {
     //Using tower sampling to find a card among a list of cards with weighted probabilities.
     const RAND = Math.random() * PROBABILITY_SUM;
-    console.log(RAND);
     const CARD = findCard(RAND, CARDS);
     return {
-        paths: CARD.paths.map(ports => ({ ports: ports }))
+        paths: CARD.paths.map(ports => ({ ports: ports })),
+        rotation: Math.floor(Math.random() * 4) * 90
     };
 }
 
