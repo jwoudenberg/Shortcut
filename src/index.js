@@ -1,9 +1,12 @@
 const React = require('react');
 const R = require('ramda');
 const Path = require('./path');
+const getRandomCard = require('./get-random-card');
 
 //TODO: replace constant world object with real one.
 let world = require('./world.mock');
+//DEBUG: replace all cards with random ones.
+world.cards = world.cards.map(card => R.merge(card, getRandomCard()));
 
 class Field extends React.Component {
     render() {
