@@ -4,7 +4,7 @@ const PATH_SVG_DATA = require('./data/pathSVGData');
 const PATH_DISTANCE_TO_SHAPE_MAP = {
     '-4': { type: 's_turn' },
     '-3': { type: 'straight' },
-    '-2': { type: 'l_turn', rotation: 270 },
+    '-2': { type: 'l_turn', transforms: [{ rotate: 90 }] },
     '-1': { type: 'sharp_turn' },
     '0': { type: 'dead_end' },
     '1': { type: 'u_turn' },
@@ -18,27 +18,19 @@ class Path extends React.Component {
         let addDefaults = R.merge({
             type: null,
             rotation: 0,
-            mirrored: false
+            transforms: []
         });
-        let addRotation = R.evolve({
-            rotation: R.pipe(
-                R.add(-Math.floor(start / 2) * 90),
-                R.flip(R.mathMod)(360)
-            )
-        });
-        let shape = R.pipe(
-            addDefaults,
-            addRotation
-        )(PATH_DISTANCE_TO_SHAPE_MAP[distance]);
+        let shape = addDefaults(PATH_DISTANCE_TO_SHAPE_MAP[distance]);
         return shape;
     }
     _getOddPathShape(start, distance) {
         //Odd ports (1,3,5,7) will use mirror images of even ports (0,2,4,6)
         distance = -distance;
-        return R.pipe(
+        let shape = R.pipe(
             this._getEvenPathShape.bind(this),
-            R.evolve({ mirrored: R.not })
+            R.evolve({ transforms: R.append({ mirror: true })})
         )(start, distance);
+        return shape;
     }
     _getPathShape(port1, port2) {
         //If only one port is given, set the second one to equal the first.
@@ -54,18 +46,28 @@ class Path extends React.Component {
         let start = Math.min(port1, port2);
 
         let even = n => !(n % 2);
-        return R.ifElse(even, this._getEvenPathShape.bind(this), this._getOddPathShape.bind(this))(start, distance);
+        let getShape = R.ifElse(even, this._getEvenPathShape.bind(this), this._getOddPathShape.bind(this));
+        let rotation = R.mathMod(-Math.floor(start / 2) * 90, 360);
+        let rotate = R.evolve({ transforms: R.append({ rotate: rotation })});
+        let shape = R.pipe(getShape, rotate)(start, distance);
+        return shape;
+    }
+    _getTransformString(transform) {
+        let [type, amount] = R.toPairs(transform)[0];
+        let transformString = R.cond(
+            [R.eq('rotate'), (type, rotation) => `rotate(${rotation} 375 375)`],
+            [R.eq('mirror'), () => 'scale(-1 1) translate(-750, 0)'],
+            [R.T, (type) => { throw new Error('Unknown transform type ' + type); }]
+        )(type, amount);
+        return transformString;
     }
     render() {
-        let { type, mirrored, rotation } = this._getPathShape(...this.props.ports);
+        let { type, transforms } = this._getPathShape(...this.props.ports);
         let svgPaths = PATH_SVG_DATA[type];
-        let transform = `rotate(${rotation} 375 375)`;
-        if (mirrored) {
-            transform += ' scale(-1 1) translate(-750, 0)';
-        }
+        let transformAttr = transforms.reverse().map(this._getTransformString).join(' ');
         return <div className="path">
             <svg version="1.1" viewBox="0 0 750 750">
-                <g className="pathContainer" transform={transform}>
+                <g className="pathContainer" transform={transformAttr}>
                     {svgPaths.map(function drawSVGPath(svgPath) {
                         return <path key={svgPath.d} {...svgPath} />;
                     })}
