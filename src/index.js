@@ -1,18 +1,21 @@
 const React = require('react');
 const R = require('ramda');
 const Path = require('./path');
-const getRandomCard = require('./logic/get-random-card');
 const addBoardToWorld = require('./logic/add-board-to-world');
 
 //TODO: replace constant world object with real one.
-let world = addBoardToWorld({ width: 5, height: 4 }, { cards: [] });
-//DEBUG: place a random card in every field.
-world.cards = world.board.fields.map(function createCard(field) {
-    let card = getRandomCard();
-    card.field = field.id;
-    return card;
-});
-// world.cards = world.cards.map(card => R.merge(card, getRandomCard()));
+let world = addBoardToWorld({ width: 5, height: 5 }, { cards: [] });
+//DEBUG: place build a border around the board.
+const addBorder = require('./logic/add-border-to-board');
+world = addBorder(world);
+
+// //DEBUG: place a random card in every field.
+// const getRandomCard = require('./logic/get-random-card');
+// world.cards = world.board.fields.map(function createCard(field) {
+//     let card = getRandomCard();
+//     card.field = field.id;
+//     return card;
+// });
 
 class Field extends React.Component {
     render() {
