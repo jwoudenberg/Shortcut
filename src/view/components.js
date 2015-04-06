@@ -11,8 +11,7 @@ class Field extends React.Component {
             marginLeft: -col,
             marginTop: -row
         };
-        return <div className="field"
-                    style={style}>
+        return <div className="field" style={style}>
             {this.props.children}
         </div>;
     }

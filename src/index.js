@@ -1,5 +1,6 @@
 const React = require('react');
 const Game = require('./view/components').Game;
+const GameCreator = require('./view/page').GameCreator;
 const addBoardToWorld = require('./logic/add-board-to-world');
 
 //TODO: replace constant world object with real one.
@@ -16,4 +17,12 @@ world = addBorder(world);
 //     return card;
 // });
 
-React.render(<Game world={world} />, document.getElementById('playground'));
+React.render(
+    <GameCreator />,
+    document.getElementById('app-navbar')
+);
+
+React.render(
+    <div className="container-fluid"><Game world={world} /></div>,
+    document.getElementById('app-content')
+);

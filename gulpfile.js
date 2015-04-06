@@ -39,7 +39,8 @@ gulp.task('sass', function watchSass() {
             .pipe(sourcemaps.init())
             .pipe(sass({
                 onSuccess: function logResult() { console.log('SASS recompiled.'); },
-                errLogToConsole: true
+                errLogToConsole: true,
+                includePaths: [ './node_modules/bootstrap-sass/assets/stylesheets/' ]
             }))
             .pipe(sourcemaps.write('./'))
             .pipe(gulp.dest('./dist'));
