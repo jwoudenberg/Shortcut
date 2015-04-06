@@ -1,7 +1,6 @@
 .card {
     @include component();
     border:     1px solid #aaa;
-    margin:     -1px 0 0 -1px;
     background: #eee;
     z-index:    1;
     transition: background 300ms, border-radius 300ms, transform 300ms;
