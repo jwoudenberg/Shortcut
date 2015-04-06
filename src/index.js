@@ -1,8 +1,8 @@
 const React = require('react');
 const R = require('ramda');
 const Path = require('./path');
-const getRandomCard = require('./get-random-card');
-const addBoardToWorld = require('./add-board-to-world');
+const getRandomCard = require('./logic/get-random-card');
+const addBoardToWorld = require('./logic/add-board-to-world');
 
 //TODO: replace constant world object with real one.
 let world = addBoardToWorld({ width: 5, height: 4 }, { cards: [] });

@@ -1,7 +1,7 @@
 const R = require('ramda');
 //This probability exponent was found by experimentation.
 const PROBABILITY_EXPONENT = 1.2;
-const CARDS = require('./data/cards').map(R.evolve({ prob: p => Math.pow(p, PROBABILITY_EXPONENT) }));
+const CARDS = require('./cards').map(R.evolve({ prob: p => Math.pow(p, PROBABILITY_EXPONENT) }));
 const PROBABILITY_SUM = CARDS.reduce((sum, card) => sum + card.prob, 0);
 
 function getRandomCard() {
