@@ -56,13 +56,10 @@ class Board extends React.Component {
 }
 
 class Game extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = props.world;
-    }
     getFieldsWithCards() {
-        let cards = this.state.cards;
-        let fieldsWithCards = R.map(addCardToField, this.state.board.fields);
+        let world = this.props.world;
+        let cards = world.cards;
+        let fieldsWithCards = R.map(addCardToField, world.board.fields);
         function addCardToField(field) {
             let card = R.find(R.propEq('field', field.id), cards);
             return R.assoc('card', card, field);

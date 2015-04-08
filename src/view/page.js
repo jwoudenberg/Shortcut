@@ -1,53 +1,63 @@
-const React = require('react');
-var R = require('ramda');
+const React = require('react/addons');
+const R = require('ramda');
 const uiEventStream = require('./ui-event-stream');
+const OverlayTrigger = require('react-bootstrap').OverlayTrigger;
+const Tooltip = require('react-bootstrap').Tooltip;
 
 class GameCreator extends React.Component {
-    constructor() {
-        //TODO: Consider moving state out of this component.
+    constructor(props) {
         this.state = {
-            numberOfPlayers: 2,
-            boardSize: 4
+            numberOfPlayers: props.numberOfPlayers.default,
+            boardSize: props.boardSize.default,
+            boardSizeError: false,
+            numberOfPlayersError: false
         };
     }
     handleBoardSizeChange(event) {
+        let { min, max } = this.props.boardSize;
         let boardSize = parseInt(event.target.value);
-        if (Number.isNaN(boardSize) || boardSize < 2) {
-            return null;
+        let boardSizeError = (Number.isNaN(boardSize) || boardSize < min || boardSize > max);
+        this.setState({ boardSizeError });
+        if (boardSizeError) {
+            return;
         }
-        this.setState({ boardSize });
-        this.sendCreateGameEvent();
+        this.setState({ boardSize }, this.onStateUpdate.bind(this));
     }
     handleNumberOfPlayersChange(event) {
+        let { min } = this.props.numberOfPlayers;
         let numberOfPlayers = parseInt(event.target.value);
-        if (Number.isNaN(numberOfPlayers) || numberOfPlayers < 2) {
-            return null;
+        let numberOfPlayersError = (Number.isNaN(numberOfPlayers) || numberOfPlayers < min);
+        this.setState({ numberOfPlayersError });
+        if (numberOfPlayersError) {
+            return;
         }
-        this.setState({ numberOfPlayers });
-        this.sendCreateGameEvent();
+        this.setState({ numberOfPlayers }, this.onStateUpdate.bind(this));
     }
-    sendCreateGameEvent() {
+    onStateUpdate() {
         let gameEvent = R.merge(this.state, {
             action: 'create_game'
         });
         uiEventStream.emit(gameEvent);
     }
     render() {
-        let { numberOfPlayers, boardSize } = this.state;
+        let cx = React.addons.classSet;
+        let { numberOfPlayers, boardSize, numberOfPlayersError, boardSizeError } = this.state;
+        let boardSizeTooltip = <Tooltip>Must be at least 2 and no larger than 10</Tooltip>;
+        let numberOfPlayersTooltip = <Tooltip>Must be at least 2</Tooltip>;
         return <form className="game-creator navbar-form navbar-left" role="create-game">
-            <div className="form-group">
-                <div className="input-group">
-                    <div className="input-group-addon">Players:</div>
-                    <input className="form-control" name="numberOfPlayers" min="2" type="number"
-                        value={numberOfPlayers} onChange={this.handleNumberOfPlayersChange.bind(this)}/>
-                </div>
+            <div className={cx({ 'input-group': true, 'col-xs-3': true, 'has-error': numberOfPlayersError })}>
+                <div className="input-group-addon">Players:</div>
+                <OverlayTrigger placement="bottom" overlay={numberOfPlayersTooltip}>
+                    <input className="form-control" name="numberOfPlayers" type="number"
+                        defaultValue={numberOfPlayers} onChange={this.handleNumberOfPlayersChange.bind(this)}/>
+                </OverlayTrigger>
             </div>
-            <div className="form-group">
-                <div className="input-group">
-                    <div className="input-group-addon">Board Size:</div>
-                    <input className="form-control" name="boardSize" min="2" type="number" value={boardSize}
+            <div className={cx({ 'input-group': true, 'col-xs-3': true, 'has-error': boardSizeError })}>
+                <div className="input-group-addon">Board Size:</div>
+                <OverlayTrigger placement="bottom" overlay={boardSizeTooltip}>
+                    <input className="form-control" name="boardSize" type="number" defaultValue={boardSize}
                         onChange={this.handleBoardSizeChange.bind(this)}/>
-                </div>
+                </OverlayTrigger>
             </div>
             <input name="start-game" type="button" className="btn btn-primary" value="Start Game" />
         </form>;

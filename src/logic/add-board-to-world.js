@@ -3,6 +3,9 @@ const uuid = require('node-uuid').v4;
 
 function addBoardToWorld(boardProperties, world) {
     let {width, height} = boardProperties;
+    if (!width || !height) {
+        throw new Error('Invalid board size: ' + [width, height].join(','));
+    }
     let rows = R.range(0, height);
     let cols = R.range(0, width);
     let coords = R.xprod(rows, cols);
