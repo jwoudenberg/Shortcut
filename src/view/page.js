@@ -1,8 +1,7 @@
-const React = require('react/addons');
+const React = require('react');
 const R = require('ramda');
 const uiEventStream = require('./ui-event-stream');
-const OverlayTrigger = require('react-bootstrap').OverlayTrigger;
-const Tooltip = require('react-bootstrap').Tooltip;
+const { Input, OverlayTrigger, Tooltip } = require('react-bootstrap');
 
 class GameCreator extends React.Component {
     constructor(props) {
@@ -40,26 +39,40 @@ class GameCreator extends React.Component {
         uiEventStream.emit(gameEvent);
     }
     render() {
-        let cx = React.addons.classSet;
         let { numberOfPlayers, boardSize, numberOfPlayersError, boardSizeError } = this.state;
         let boardSizeTooltip = <Tooltip>Must be at least 2 and no larger than 10</Tooltip>;
         let numberOfPlayersTooltip = <Tooltip>Must be at least 2</Tooltip>;
         return <form className="game-creator navbar-form navbar-left" role="create-game">
-            <div className={cx({ 'input-group': true, 'col-xs-3': true, 'has-error': numberOfPlayersError })}>
-                <div className="input-group-addon">Players:</div>
-                <OverlayTrigger placement="bottom" overlay={numberOfPlayersTooltip}>
-                    <input className="form-control" name="numberOfPlayers" type="number"
-                        defaultValue={numberOfPlayers} onChange={this.handleNumberOfPlayersChange.bind(this)}/>
-                </OverlayTrigger>
-            </div>
-            <div className={cx({ 'input-group': true, 'col-xs-3': true, 'has-error': boardSizeError })}>
-                <div className="input-group-addon">Board Size:</div>
-                <OverlayTrigger placement="bottom" overlay={boardSizeTooltip}>
-                    <input className="form-control" name="boardSize" type="number" defaultValue={boardSize}
-                        onChange={this.handleBoardSizeChange.bind(this)}/>
-                </OverlayTrigger>
-            </div>
-            <input name="start-game" type="button" className="btn btn-primary" value="Start Game" />
+            <OverlayTrigger placement="bottom" overlay={numberOfPlayersTooltip}>
+                <Input
+                    type='number'
+                    defaultValue={numberOfPlayers}
+                    label='The number of players in the new game.'
+                    bsStyle={numberOfPlayersError ? 'error' : undefined}
+                    groupClassName='col-xs-4'
+                    labelClassName='sr-only'
+                    addonBefore='Players:'
+                    onChange={this.handleNumberOfPlayersChange.bind(this)}
+                />
+            </OverlayTrigger>
+            <OverlayTrigger placement="bottom" overlay={boardSizeTooltip}>
+                <Input
+                    type='number'
+                    defaultValue={boardSize}
+                    label='The size of the board in the new game.'
+                    bsStyle={boardSizeError ? 'error' : undefined}
+                    groupClassName='col-xs-4'
+                    labelClassName='sr-only'
+                    addonBefore='Board Size:'
+                    onChange={this.handleBoardSizeChange.bind(this)}
+                />
+            </OverlayTrigger>
+            <Input
+                type='button'
+                standAlone
+                className='btn btn-primary'
+                value='Start Game'
+            />
         </form>;
     }
 }
