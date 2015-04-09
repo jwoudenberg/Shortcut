@@ -1,7 +1,7 @@
 const R = require('ramda');
 const uuid = require('node-uuid').v4;
 
-function addBoardToWorld(boardProperties, world) {
+function addBoardToWorld(boardProperties) {
     let {width, height} = boardProperties;
     if (!width || !height) {
         throw new Error('Invalid board size: ' + [width, height].join(','));
@@ -10,8 +10,8 @@ function addBoardToWorld(boardProperties, world) {
     let cols = R.range(0, width);
     let coords = R.xprod(rows, cols);
     let fields = coords.map(R.apply(makeField));
-    let board = { fields: fields };
-    return R.assoc('board', board, world);
+    let board = { fields };
+    return board;
 }
 
 function makeField(row, col) {

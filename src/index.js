@@ -4,27 +4,19 @@ const parameters = require('./parameters');
 const uiEventStream = require('./view/ui-event-stream');
 const Game = require('./view/components').Game;
 const GameCreator = require('./view/page').GameCreator;
-const addBoardToWorld = require('./logic/add-board-to-world');
-const addBorder = require('./logic/add-border-to-board');
+
+const workerFunction = require('./util/worker-function');
+const createWorld = workerFunction(require('./logic-workers/create-world'));
 
 React.render(
     <GameCreator {...parameters.gameCreation} />,
     document.getElementById('app-navbar')
 );
 
-let world = initWorld({ boardSize: parameters.gameCreation.boardSize.default });
-renderWorld(world);
+createWorld({ boardSize: parameters.gameCreation.boardSize.default })
+    .then(renderWorld);
 
-
-uiEventStream.onValue(R.pipe(initWorld, renderWorld));
-
-function initWorld(options) {
-    let { boardSize } = options;
-    let boardSizeWithBorders = boardSize + 2;
-    let world = addBoardToWorld({ width: boardSizeWithBorders, height: boardSizeWithBorders }, { cards: [] });
-    world = addBorder(world);
-    return world;
-}
+uiEventStream.onValue(R.pipeP(createWorld, renderWorld));
 
 function renderWorld(world) {
     React.render(
