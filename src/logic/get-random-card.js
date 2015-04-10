@@ -1,4 +1,5 @@
 const R = require('ramda');
+const uuid = require('node-uuid').v4;
 //This probability exponent was found by experimentation.
 const PROBABILITY_EXPONENT = 1.2;
 const CARDS = require('./cards').map(R.evolve({ prob: p => Math.pow(p, PROBABILITY_EXPONENT) }));
@@ -9,6 +10,7 @@ function getRandomCard() {
     const RAND = Math.random() * PROBABILITY_SUM;
     const CARD = findCard(RAND, CARDS);
     return {
+        id: uuid(),
         paths: CARD.paths.map(ports => ({ ports: ports })),
         rotation: Math.floor(Math.random() * 4) * 90
     };

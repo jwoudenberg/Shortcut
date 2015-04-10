@@ -22,12 +22,20 @@ class Card extends React.Component {
     static defaultProps() {
         return { paths: [], rotation: 0 };
     }
+    handleClick(event) {
+        let gameEvent = {
+            action: 'rotate_card',
+            cardId: this.props.id
+        };
+        uiEventStream.emit(gameEvent);
+        event.stopPropagation();
+    }
     render() {
         let { paths, rotation } = this.props;
         let style = {
             transform: `rotate(${rotation}deg)`
         };
-        return <div className="card" style={style}>
+        return <div className="card" style={style} onClick={this.handleClick.bind(this)} >
             {paths.map(function drawPath(path) {
                 let key = path.ports.join('-');
                 return <Path key={key} {...path} />;
@@ -48,7 +56,7 @@ class Board extends React.Component {
             <div className="board" style={style}>
                 {fields.map(function printField(field) {
                     let {card, row, col} = field;
-                    let cardJSX = card ? <Card paths={card.paths} rotation={card.rotation} /> : '';
+                    let cardJSX = card ? <Card {...card} /> : '';
                     return <Field key={field.id} col={col} row={row}>{cardJSX}</Field>;
                 })}
             </div>
@@ -57,7 +65,7 @@ class Board extends React.Component {
 }
 
 class Deck extends React.Component {
-    handleDeckClick() {
+    handleClick() {
         let gameEvent = {
             action: 'take_card'
         };
@@ -69,7 +77,7 @@ class Deck extends React.Component {
             width: fieldSize,
             height: fieldSize
         };
-        return <div className="deck" style={style} onClick={this.handleDeckClick.bind(this)} >
+        return <div className="deck" style={style} onClick={this.handleClick} >
             {this.props.children}
         </div>;
     }
@@ -96,7 +104,7 @@ class Game extends React.Component {
         let fieldSize = '100px';
         let fieldsWithCards = this.getFieldsWithCards();
         let deckCard = this.getDeckCard();
-        let deckCardJSX = deckCard ? <Card paths={deckCard.paths} rotation={deckCard.rotation} /> : '';
+        let deckCardJSX = deckCard ? <Card {...deckCard} /> : '';
         return <div className="row">
             <div className="col-md-1">
                 <Deck fieldSize={fieldSize} >{deckCardJSX}</Deck>

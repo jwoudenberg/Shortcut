@@ -1,4 +1,5 @@
 const R = require('ramda');
+const uuid = require('node-uuid').v4;
 const getNeighbours = require('./field-neighbours').getAll;
 
 //Beware: this action removes any existing cards in the world.
@@ -46,6 +47,7 @@ function createBorderCard(field) {
         R.map(ports => ({ports}))
     )(ports);
     return {
+        id: uuid(),
         field: field.id,
         paths,
         rotation: 0
