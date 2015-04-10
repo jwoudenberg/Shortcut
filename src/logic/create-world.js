@@ -1,6 +1,5 @@
 const createBoard = require('./create-board');
 const addBorder = require('./add-border-to-board');
-const Promise = require('bluebird');
 
 function createWorld(options) {
     let { boardSize } = options;
@@ -8,7 +7,7 @@ function createWorld(options) {
     let board = createBoard({ width: boardSizeWithBorders, height: boardSizeWithBorders });
     let cards = [];
     let world = addBorder({ board, cards });
-    return Promise.resolve(world);
+    return world;
 }
 
 module.exports = createWorld;

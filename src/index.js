@@ -3,11 +3,12 @@ const parameters = require('./parameters');
 const uiEventStream = require('./view/ui-event-stream');
 const Game = require('./view/components').Game;
 const GameCreator = require('./view/page').GameCreator;
-const createGame = require('./logic/create-game');
+const work = require('webworkify');
+const engineWorker = work(require('./game-worker'));
 
-/* Render game */
-const gameEngine = createGame(uiEventStream);
-gameEngine.onValue(renderWorld);
+uiEventStream.onValue(event => engineWorker.postMessage(event));
+engineWorker.addEventListener('message', event => renderWorld(event.data));
+
 function renderWorld(world) {
     React.render(
         <div className="container-fluid"><Game world={world} /></div>,
