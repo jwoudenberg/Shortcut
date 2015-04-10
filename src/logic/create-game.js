@@ -6,7 +6,8 @@ const Kefir = require('kefir');
 const isAction = R.curry((action, event) => action === event.action);
 function createGame(events) {
     const actions = [
-        events.filter(isAction('create_game')).map(createWorld)
+        events.filter(isAction('create_game')).map(createWorld),
+        events.filter(isAction('take_card')).map(addRandomCard)
     ];
     let stateChanges = Kefir.merge(actions);
     let state = stateChanges.scan((previous, modifier) => modifier(previous), {}).changes();
@@ -14,8 +15,16 @@ function createGame(events) {
 }
 
 /* Create world action */
-const _createWorld = require('../logic/create-world');
+const _createWorld = require('./create-world');
 function createWorld(options) {
     let world = _createWorld(options);
     return () => world;
+}
+
+const getRandomCard = require('./get-random-card');
+function addRandomCard() {
+    let card = getRandomCard();
+    return R.evolve({
+        cards: R.append(card)
+    });
 }

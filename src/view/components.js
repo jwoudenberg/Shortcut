@@ -1,6 +1,7 @@
 const React = require('react');
 const R = require('ramda');
 const Path = require('./path');
+const uiEventStream = require('./ui-event-stream');
 
 class Field extends React.Component {
     render() {
@@ -38,10 +39,10 @@ class Card extends React.Component {
 class Board extends React.Component {
     render() {
         let fields = this.props.fields;
-        //TODO: make this size depend on the available screen area.
+        let fieldSize = this.props.fieldSize;
         let style = {
-            width: '100px',
-            height: '100px'
+            width: fieldSize,
+            height: fieldSize
         };
         return (
             <div className="board" style={style}>
@@ -52,6 +53,25 @@ class Board extends React.Component {
                 })}
             </div>
         );
+    }
+}
+
+class Deck extends React.Component {
+    handleDeckClick() {
+        let gameEvent = {
+            action: 'take_card'
+        };
+        uiEventStream.emit(gameEvent);
+    }
+    render() {
+        let fieldSize = this.props.fieldSize;
+        let style = {
+            width: fieldSize,
+            height: fieldSize
+        };
+        return <div className="deck" style={style} onClick={this.handleDeckClick.bind(this)} >
+            {this.props.children}
+        </div>;
     }
 }
 
@@ -66,9 +86,25 @@ class Game extends React.Component {
         }
         return fieldsWithCards;
     }
+    getDeckCard() {
+        let cards = this.props.world.cards;
+        let card = R.find(card => R.isNil(card.field), cards);
+        return card;
+    }
     render() {
+        //TODO: make this size depend on the available screen area.
+        let fieldSize = '100px';
         let fieldsWithCards = this.getFieldsWithCards();
-        return <Board fields={fieldsWithCards} />;
+        let deckCard = this.getDeckCard();
+        let deckCardJSX = deckCard ? <Card paths={deckCard.paths} rotation={deckCard.rotation} /> : '';
+        return <div className="row">
+            <div className="col-md-1">
+                <Deck fieldSize={fieldSize} >{deckCardJSX}</Deck>
+            </div>
+            <div className="col-md-11">
+                <Board fields={fieldsWithCards} fieldSize={fieldSize} />
+            </div>
+        </div>;
     }
 }
 

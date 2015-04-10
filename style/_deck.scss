@@ -1,0 +1,5 @@
+.deck {
+    @include component();
+    position: relative;
+    border: 1px solid #ddd;
+}
