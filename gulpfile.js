@@ -8,9 +8,10 @@ var buffer = require('vinyl-buffer');
 var watchify = require('watchify');
 var browserify = require('browserify');
 var babelify = require('babelify');
+var uglify = require('gulp-uglify');
 
 gulp.task('js', function watchJs() {
-    var bundler = watchify(browserify(watchify.args));
+    var bundler = watchify(browserify({ cache: {}, packageCache: {}, debug: true }));
     bundler.add('./src/index.js');
     bundler.transform(babelify);
     bundler.on('update', bundle);
@@ -22,7 +23,8 @@ gulp.task('js', function watchJs() {
             .on('error', gutil.log.bind(gutil, 'Browserify Error'))
             .pipe(source('bundle.js'))
             .pipe(buffer())
-            .pipe(sourcemaps.init({loadMaps: true}))
+            .pipe(sourcemaps.init({ loadMaps: true }))
+            .pipe(uglify())
             .pipe(sourcemaps.write('./'))
             .pipe(gulp.dest('./dist'));
     }
