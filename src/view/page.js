@@ -13,6 +13,7 @@ class GameCreator extends React.Component {
         };
         //Pass starting status.
         this.onStateUpdate();
+        super(props);
     }
     handleBoardSizeChange(event) {
         let { min, max } = this.props.boardSize;

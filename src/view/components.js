@@ -18,22 +18,28 @@ class Field extends React.Component {
     }
 }
 
+let topZIndex = 1;
 class Card extends React.Component {
     static defaultProps() {
         return { paths: [], rotation: 0 };
     }
     handleClick(event) {
+        event.stopPropagation();
         let gameEvent = {
             action: 'rotate_card',
             cardId: this.props.id
         };
         uiEventStream.emit(gameEvent);
-        event.stopPropagation();
+        //Ensure that in a possible rendering and transition as a result of this event, this is the topmost element.
+        if (this.zIndex !== topZIndex) {
+            this.zIndex = ++topZIndex;
+        }
     }
     render() {
         let { paths, rotation } = this.props;
         let style = {
-            transform: `rotate(${rotation}deg)`
+            transform: `rotate(${rotation}deg)`,
+            zIndex: this.zIndex || 0
         };
         return <div className="card" style={style} onClick={this.handleClick.bind(this)} >
             {paths.map(function drawPath(path) {
