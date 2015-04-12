@@ -18,7 +18,7 @@ class Field extends React.Component {
     }
 }
 
-let topZIndex = 1;
+let topZIndex = 2;
 class Card extends React.Component {
     static defaultProps() {
         return { paths: [], rotation: 0 };
@@ -39,7 +39,7 @@ class Card extends React.Component {
         let { paths, rotation } = this.props;
         let style = {
             transform: `rotate(${rotation}deg)`,
-            zIndex: this.zIndex || 0
+            zIndex: this.zIndex || 1
         };
         return <div className="card" style={style} onClick={this.handleClick.bind(this)} >
             {paths.map(function drawPath(path) {
