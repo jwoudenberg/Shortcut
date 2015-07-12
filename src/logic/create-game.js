@@ -32,6 +32,9 @@ function addRandomCard() {
 
 function rotateCard(options) {
     let { cardId } = options;
+    if (!cardId) {
+        throw new Error('rotateCard: no cardId provided.');
+    }
     return R.evolve({
         cards: R.map(R.ifElse(
             R.propEq('id', cardId),

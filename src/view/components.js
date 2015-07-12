@@ -92,6 +92,7 @@ class Game extends React.Component {
                 {fields.map(function printField(field) {
                     return <Field
                         key={field.id}
+                        id={field.id}
                         col={field.col}
                         row={field.row}
                         fieldSize={fieldSize}
@@ -103,6 +104,7 @@ class Game extends React.Component {
                     let field = fieldsById[card.field];
                     return <Card
                         key={card.id}
+                        id={card.id}
                         field={field}
                         paths={card.paths}
                         rotation={card.rotation}
