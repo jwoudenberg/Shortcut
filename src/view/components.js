@@ -4,12 +4,12 @@ const uiEventStream = require('./ui-event-stream');
 
 function makeStyle(row, col, fieldSize) {
     let style = {
-        left: fieldSize * col + 'px',
-        top: fieldSize * row + 'px',
+        left: fieldSize * col,
+        top: fieldSize * row,
         marginLeft: -col,
         marginTop: -row,
-        width: fieldSize + 'px',
-        height: fieldSize + 'px'
+        width: fieldSize,
+        height: fieldSize
     };
     return style;
 }
