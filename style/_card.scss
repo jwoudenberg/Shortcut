@@ -3,6 +3,10 @@
     border:     1px solid #aaa;
     background: #eee;
     z-index:    1;
-    transition: background 300ms, border-radius 300ms, transform 300ms;
+    transition: background 300ms, border-radius 300ms, transform 300ms, top 300ms, left 300ms;
     overflow:   hidden;
+}
+
+.card.selected {
+    border-color: blue;
 }

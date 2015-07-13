@@ -1,5 +1,7 @@
 const React = require('react');
 const Path = require('./path');
+const flyd = require('flyd');
+const classNames = require('classnames');
 const uiEvents = require('./ui-event-stream');
 
 function makeStyle(row, col, fieldSize) {
@@ -29,23 +31,30 @@ class Card extends React.Component {
     }
     handleClick(event) {
         event.stopPropagation();
-        let gameEvent = {
-            action: 'rotate_card',
-            cardId: this.props.id
-        };
-        uiEvents(gameEvent);
+        let id = this.props.id;
+        if (this.props.selected) {
+            uiEvents({
+                action: 'rotate_card',
+                cardId: id
+            });
+        } else {
+            uiEvents({
+                action: 'select_card',
+                cardId: id
+            });
+        }
         //Ensure that in a possible rendering and transition as a result of this event, this is the topmost element.
         if (this.zIndex !== topZIndex) {
             this.zIndex = ++topZIndex;
         }
     }
     render() {
-        let { paths, rotation, field, fieldSize } = this.props;
+        let { paths, rotation, field, fieldSize, selected } = this.props;
         let { row, col } = field;
         let style = makeStyle(row, col, fieldSize);
         style.transform = `rotate(${rotation}deg)`;
         style.zIndex = this.zIndex || 1;
-        return <div className="card" style={style} onClick={this.handleClick.bind(this)} >
+        return <div className={classNames('card', { selected })} style={style} onClick={this.handleClick.bind(this)} >
             {paths.map(function drawPath(path) {
                 let key = path.ports.join('-');
                 return <Path key={key} {...path} />;
@@ -74,6 +83,18 @@ class Deck extends React.Component {
 }
 
 class Game extends React.Component {
+    constructor(props) {
+        flyd.on(this.handleUIEvent.bind(this), uiEvents);
+        this.state = {};
+        super(props);
+    }
+    handleUIEvent(event) {
+        if (event.action === 'select_card') {
+            this.setState({
+                selectedCardId: event.cardId
+            });
+        }
+    }
     getFieldsById() {
         let board = this.props.world.board || {};
         let fields = board.fields || [];
@@ -88,6 +109,7 @@ class Game extends React.Component {
         let { board={}, cards=[] } = this.props.world;
         let fields = board.fields || [];
         let fieldsById = this.getFieldsById();
+        let selectedCardId = this.state.selectedCardId;
         return <div className="game">
             <div className="fieldLayer">
                 {fields.map(function printField(field) {
@@ -103,12 +125,14 @@ class Game extends React.Component {
             <div className="cardLayer">
                 {cards.map(function printField(card) {
                     let field = fieldsById[card.field];
+                    let selected = (selectedCardId === card.id);
                     return <Card
                         key={card.id}
                         id={card.id}
                         field={field}
                         paths={card.paths}
                         rotation={card.rotation}
+                        selected={selected}
                         fieldSize={fieldSize}
                     />;
                 })}
