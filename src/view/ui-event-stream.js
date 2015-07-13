@@ -1,5 +1,2 @@
-var Kefir = require('kefir');
-
-let uiEventStream = Kefir.emitter();
-
+let uiEventStream = require('flyd').stream();
 module.exports = uiEventStream;

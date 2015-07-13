@@ -6,11 +6,11 @@ Players have to bases between which they must create a route, by drawing, placin
 This is a project I originally started to learn Javascript (old version sits in the master branch).
 Recently, I've picked it up again as a way to spend some time with some newer frontend libraries.
 
-I'm using [React.js](https://pozadi.github.io/kefir/#) as my view layer.
-[Kefir](https://pozadi.github.io/kefir/#) will serve as my FRP library for building the rule logic.
+I'm using [React.js](https://facebook.github.io/react/) as my view layer.
+[Flyd](https://github.com/paldepind/flyd) will serve as my FRP library for building the rule logic.
 I'm inspired by the Haskell library [Gloss](https://hackage.haskell.org/package/gloss), where you basically create a
 game by specifying some data structure to represent it's state, an event handler and a render function. React.js is the
-render function, Kefir will be my event handler.
+render function, Flyd will be my event handler.
 
 I have some vague ideas for a server component, so I'm using browserify in preparation for the moment I'd like to run
 the rule logic server-side too.

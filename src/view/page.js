@@ -1,6 +1,6 @@
 const React = require('react');
 const R = require('ramda');
-const uiEventStream = require('./ui-event-stream');
+const uiEvents = require('./ui-event-stream');
 const { Input, OverlayTrigger, Tooltip } = require('react-bootstrap');
 
 class GameCreator extends React.Component {
@@ -39,7 +39,7 @@ class GameCreator extends React.Component {
         let gameEvent = R.merge(this.state, {
             action: 'create_game'
         });
-        uiEventStream.emit(gameEvent);
+        uiEvents(gameEvent);
     }
     render() {
         let { numberOfPlayers, boardSize, numberOfPlayersError, boardSizeError } = this.state;

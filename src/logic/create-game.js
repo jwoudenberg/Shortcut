@@ -1,45 +1,45 @@
 module.exports = createGame;
 
 const R = require('ramda');
-const Kefir = require('kefir');
-
-const isAction = R.curry((action, event) => action === event.action);
-function createGame(events) {
-    const actions = [
-        events.filter(isAction('create_game')).map(createWorld),
-        events.filter(isAction('take_card')).map(addRandomCard),
-        events.filter(isAction('rotate_card')).map(rotateCard)
-    ];
-    let stateChanges = Kefir.merge(actions);
-    let state = stateChanges.scan((previous, modifier) => modifier(previous), {}).changes();
-    return state;
-}
-
-/* Create world action */
-const _createWorld = require('./create-world');
-function createWorld(options) {
-    let world = _createWorld(options);
-    return () => world;
-}
-
+const flyd = require('flyd');
+const createWorld = require('./create-world');
 const getRandomCard = require('./get-random-card');
-function addRandomCard() {
-    let card = getRandomCard();
-    return R.evolve({
-        cards: R.append(card)
-    });
-}
 
-function rotateCard(options) {
-    let { cardId } = options;
-    if (!cardId) {
-        throw new Error('rotateCard: no cardId provided.');
+/* actions */
+const gameEventHandlers = {
+    'create_game': function _createWorld(event) {
+        let world = createWorld(event);
+        return () => world;
+    },
+    'take_card': function addRandomCard() {
+        let card = getRandomCard();
+        return R.evolve({
+            cards: R.append(card)
+        });
+    },
+    'rotate_card': function rotateCard(event) {
+        let { cardId } = event;
+        if (!cardId) {
+            throw new Error('rotateCard: no cardId provided.');
+        }
+        return R.evolve({
+            cards: R.map(R.ifElse(
+                R.propEq('id', cardId),
+                R.evolve({ rotation: R.add(90) }),
+                R.identity
+            ))
+        });
     }
-    return R.evolve({
-        cards: R.map(R.ifElse(
-            R.propEq('id', cardId),
-            R.evolve({ rotation: R.add(90) }),
-            R.identity
-        ))
+};
+
+function createGame(events) {
+    let stateChanges = flyd.stream([events], function applyHandler(changes) {
+        let event = events();
+        let handler = gameEventHandlers[event.action];
+        if (handler) {
+            changes(handler(event));
+        }
     });
+    let state = flyd.scan((previous, modifier) => modifier(previous), {}, stateChanges);
+    return state;
 }

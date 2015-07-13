@@ -1,6 +1,6 @@
 const React = require('react');
 const Path = require('./path');
-const uiEventStream = require('./ui-event-stream');
+const uiEvents = require('./ui-event-stream');
 
 function makeStyle(row, col, fieldSize) {
     let style = {
@@ -33,7 +33,7 @@ class Card extends React.Component {
             action: 'rotate_card',
             cardId: this.props.id
         };
-        uiEventStream.emit(gameEvent);
+        uiEvents(gameEvent);
         //Ensure that in a possible rendering and transition as a result of this event, this is the topmost element.
         if (this.zIndex !== topZIndex) {
             this.zIndex = ++topZIndex;
@@ -59,7 +59,7 @@ class Deck extends React.Component {
         let gameEvent = {
             action: 'take_card'
         };
-        uiEventStream.emit(gameEvent);
+        uiEvents(gameEvent);
     }
     render() {
         let fieldSize = this.props.fieldSize;
@@ -75,7 +75,8 @@ class Deck extends React.Component {
 
 class Game extends React.Component {
     getFieldsById() {
-        let fields = this.props.world.board.fields;
+        let board = this.props.world.board || {};
+        let fields = board.fields || [];
         return fields.reduce(function addFieldById(fields, field) {
             fields[field.id] = field;
             return fields;
@@ -84,8 +85,8 @@ class Game extends React.Component {
     render() {
         //TODO: make this size depend on the available screen area.
         let fieldSize = 100;
-        let { board, cards } = this.props.world;
-        let fields = board.fields;
+        let { board={}, cards=[] } = this.props.world;
+        let fields = board.fields || [];
         let fieldsById = this.getFieldsById();
         return <div className="game">
             <div className="fieldLayer">
