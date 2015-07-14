@@ -6,10 +6,8 @@ const uiEvents = require('./ui-event-stream');
 
 function makeStyle(row, col, fieldSize) {
     let style = {
-        left: fieldSize * col,
-        top: fieldSize * row,
-        marginLeft: -col,
-        marginTop: -row,
+        left: (fieldSize - 1) * col,
+        top: (fieldSize - 1) * row,
         width: fieldSize,
         height: fieldSize
     };
