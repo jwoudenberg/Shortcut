@@ -109,32 +109,28 @@ class Game extends React.Component {
         let fieldsById = this.getFieldsById();
         let selectedCardId = this.state.selectedCardId;
         return <div className="game">
-            <div className="fieldLayer">
-                {fields.map(function printField(field) {
-                    return <Field
-                        key={field.id}
-                        id={field.id}
-                        col={field.col}
-                        row={field.row}
-                        fieldSize={fieldSize}
-                    />;
-                })}
-            </div>
-            <div className="cardLayer">
-                {cards.map(function printField(card) {
-                    let field = fieldsById[card.field];
-                    let selected = (selectedCardId === card.id);
-                    return <Card
-                        key={card.id}
-                        id={card.id}
-                        field={field}
-                        paths={card.paths}
-                        rotation={card.rotation}
-                        selected={selected}
-                        fieldSize={fieldSize}
-                    />;
-                })}
-            </div>
+            {fields.map(function printField(field) {
+                return <Field
+                    key={field.id}
+                    id={field.id}
+                    col={field.col}
+                    row={field.row}
+                    fieldSize={fieldSize}
+                />;
+            })}
+            {cards.map(function printField(card) {
+                let field = fieldsById[card.field];
+                let selected = (selectedCardId === card.id);
+                return <Card
+                    key={card.id}
+                    id={card.id}
+                    field={field}
+                    paths={card.paths}
+                    rotation={card.rotation}
+                    selected={selected}
+                    fieldSize={fieldSize}
+                />;
+            })}
         </div>;
     }
 }
