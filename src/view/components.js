@@ -15,10 +15,23 @@ function makeStyle(row, col, fieldSize) {
 }
 
 class Field extends React.Component {
+    handleClick(event) {
+        event.stopPropagation();
+        let { id, selectedCardId } = this.props;
+        if (selectedCardId) {
+            uiEvents({
+                action: 'move_card',
+                cardId: selectedCardId,
+                fieldId: id
+            });
+        }
+    }
     render() {
         let { row, col, fieldSize } = this.props;
         let style = makeStyle(row, col, fieldSize);
-        return <div className="field" style={style} />;
+        return <div className="field"
+                    style={style}
+                    onClick={this.handleClick.bind(this)} />;
     }
 }
 
@@ -52,7 +65,9 @@ class Card extends React.Component {
         let style = makeStyle(row, col, fieldSize);
         style.transform = `rotate(${rotation}deg)`;
         style.zIndex = this.zIndex || 1;
-        return <div className={classNames('card', { selected })} style={style} onClick={this.handleClick.bind(this)} >
+        return <div className={classNames('card', { selected })}
+                    style={style}
+                    onClick={this.handleClick.bind(this)} >
             {paths.map(function drawPath(path) {
                 let key = path.ports.join('-');
                 return <Path key={key} {...path} />;
@@ -74,7 +89,9 @@ class Deck extends React.Component {
             width: fieldSize,
             height: fieldSize
         };
-        return <div className="deck" style={style} onClick={this.handleClick} >
+        return <div className="deck"
+                    style={style}
+                    onClick={this.handleClick} >
             {this.props.children}
         </div>;
     }
@@ -110,26 +127,23 @@ class Game extends React.Component {
         let selectedCardId = this.state.selectedCardId;
         return <div className="game">
             {fields.map(function printField(field) {
-                return <Field
-                    key={field.id}
-                    id={field.id}
-                    col={field.col}
-                    row={field.row}
-                    fieldSize={fieldSize}
-                />;
+                return <Field key={field.id}
+                              id={field.id}
+                              col={field.col}
+                              row={field.row}
+                              fieldSize={fieldSize}
+                              selectedCardId={selectedCardId} />;
             })}
             {cards.map(function printField(card) {
                 let field = fieldsById[card.field];
                 let selected = (selectedCardId === card.id);
-                return <Card
-                    key={card.id}
-                    id={card.id}
-                    field={field}
-                    paths={card.paths}
-                    rotation={card.rotation}
-                    selected={selected}
-                    fieldSize={fieldSize}
-                />;
+                return <Card key={card.id}
+                             id={card.id}
+                             field={field}
+                             paths={card.paths}
+                             rotation={card.rotation}
+                             selected={selected}
+                             fieldSize={fieldSize} />;
             })}
         </div>;
     }

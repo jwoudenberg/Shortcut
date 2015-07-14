@@ -29,6 +29,22 @@ const gameEventHandlers = {
                 R.identity
             ))
         });
+    },
+    'move_card': function moveCard(event) {
+        let { cardId, fieldId } = event;
+        if (!cardId) {
+            throw new Error('moveCard: no cardId provided.');
+        }
+        if (!fieldId) {
+            throw new Error('moveCard: no fieldId provided.');
+        }
+        return R.evolve({
+            cards: R.map(R.ifElse(
+                R.propEq('id', cardId),
+                R.assoc('field', fieldId),
+                R.identity
+            ))
+        });
     }
 };
 
