@@ -24,7 +24,7 @@ const gameEventHandlers = {
         }
         return R.evolve({
             cards: R.map(R.ifElse(
-                R.propEq('id', cardId),
+                R.propEq(cardId, 'id'),
                 R.evolve({ rotation: R.add(90) }),
                 R.identity
             ))
@@ -40,7 +40,7 @@ const gameEventHandlers = {
         }
         return R.evolve({
             cards: R.map(R.ifElse(
-                R.propEq('id', cardId),
+                R.propEq(cardId, 'id'),
                 R.assoc('field', fieldId),
                 R.identity
             ))

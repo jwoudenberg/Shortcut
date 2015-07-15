@@ -54,11 +54,11 @@ class Path extends React.Component {
     }
     _getTransformString(transform) {
         let [type, amount] = R.toPairs(transform)[0];
-        let transformString = R.cond(
-            [R.eq('rotate'), (type, rotation) => `rotate(${rotation} 375 375)`],
-            [R.eq('mirror'), () => 'scale(-1 1) translate(-750, 0)'],
+        let transformString = R.cond([
+            [R.identical('rotate'), (type, rotation) => `rotate(${rotation} 375 375)`],
+            [R.identical('mirror'), () => 'scale(-1 1) translate(-750, 0)'],
             [R.T, (type) => { throw new Error('Unknown transform type ' + type); }]
-        )(type, amount);
+        ])(type, amount);
         return transformString;
     }
     render() {

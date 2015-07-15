@@ -18,7 +18,7 @@ function getNeighbour(direction, field, world) {
     let fields = board.fields || [];
     let coordinates = R.pick(['row', 'col'], field);
     let neighbourCoordinates = positionModifier(coordinates);
-    let neighbour = R.find(R.where(neighbourCoordinates), fields);
+    let neighbour = R.find(R.whereEq(neighbourCoordinates), fields);
     return neighbour;
 }
 
