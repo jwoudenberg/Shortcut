@@ -1,4 +1,4 @@
-const createGame = require('./logic/create-game');
+const {createGame} = require('../engine');
 const flyd = require('flyd');
 
 module.exports = function gameWorker(self) {

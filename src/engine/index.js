@@ -1,14 +1,13 @@
-module.exports = createGame;
+module.exports = { createGame };
 
 const R = require('ramda');
 const flyd = require('flyd');
 const createWorld = require('./create-world');
 const getRandomCard = require('./get-random-card');
 
-/* actions */
-const gameEventHandlers = {
-    'create_game': function _createWorld(event) {
-        let world = createWorld(event);
+const actionHandlers = {
+    'create_game': function _createWorld(action) {
+        let world = createWorld(action);
         return () => world;
     },
     'take_card': function addRandomCard() {
@@ -17,8 +16,8 @@ const gameEventHandlers = {
             cards: R.append(card)
         });
     },
-    'rotate_card': function rotateCard(event) {
-        let { cardId } = event;
+    'rotate_card': function rotateCard(action) {
+        let { cardId } = action;
         if (!cardId) {
             throw new Error('rotateCard: no cardId provided.');
         }
@@ -30,8 +29,8 @@ const gameEventHandlers = {
             ))
         });
     },
-    'move_card': function moveCard(event) {
-        let { cardId, fieldId } = event;
+    'move_card': function moveCard(action) {
+        let { cardId, fieldId } = action;
         if (!cardId) {
             throw new Error('moveCard: no cardId provided.');
         }
@@ -48,14 +47,14 @@ const gameEventHandlers = {
     }
 };
 
-function createGame(events) {
-    let stateChanges = flyd.stream([events], function applyHandler(changes) {
-        let event = events();
-        let handler = gameEventHandlers[event.action];
+function createGame(actions) {
+    let worldState = flyd.stream([actions], function applyHandler(self) {
+        let action = actions();
+        let handler = actionHandlers[action.action];
         if (handler) {
-            changes(handler(event));
+            self(handler(action));
         }
     });
-    let state = flyd.scan((previous, modifier) => modifier(previous), {}, stateChanges);
-    return state;
+    let world = flyd.scan((previous, modifier) => modifier(previous), {}, worldState);
+    return world;
 }

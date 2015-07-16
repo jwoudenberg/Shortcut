@@ -3,7 +3,7 @@ const Path = require('./path');
 const flyd = require('flyd');
 const R = require('ramda');
 const classNames = require('classnames');
-const uiEvents = require('./ui-event-stream');
+const uiEvents = require('./').uiEvents;
 
 function makeStyle(row, col, fieldSize) {
     let style = {
@@ -96,8 +96,12 @@ class Deck extends Field {
 class Game extends React.Component {
     constructor(props) {
         flyd.on(this.handleUIEvent.bind(this), uiEvents);
-        this.state = {};
+        this.state = props.world();
         super(props);
+    }
+    componentDidMount() {
+        let world = this.props.world;
+        flyd.on(worldState => this.setState({ worldState }), world);
     }
     handleUIEvent(event) {
         if (event.action === 'select_card') {
@@ -115,11 +119,11 @@ class Game extends React.Component {
     render() {
         //TODO: make this size depend on the available screen area.
         let fieldSize = 100;
-        let { board={}, cards=[] } = this.props.world;
+        let { worldState={}, selectedCardId } = this.state;
+        let { board={}, cards=[] } = worldState;
         //Move all fields two to the right, to make space for the deck.
         let fields = (board.fields || []).map(R.evolve({ col: R.add(2) }));
         let fieldsById = this.getFieldsById(fields);
-        let selectedCardId = this.state.selectedCardId;
         let deck = {
             id: 'deck',
             col: 0,

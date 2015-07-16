@@ -1,6 +1,6 @@
 const React = require('react');
 const R = require('ramda');
-const uiEvents = require('./ui-event-stream');
+const uiEvents = require('./').uiEvents;
 const { Input, OverlayTrigger, Tooltip } = require('react-bootstrap');
 
 class GameCreator extends React.Component {
