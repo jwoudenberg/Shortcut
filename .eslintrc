@@ -4,12 +4,8 @@
         "react"
     ],
     "env": {
-        "browser": true,
         "node": true,
         "es6": true
-    },
-    "ecmaFeatures": {
-        "jsx": true
     },
     "rules": {
         "brace-style": [2, "1tbs", { "allowSingleLine": true }],
