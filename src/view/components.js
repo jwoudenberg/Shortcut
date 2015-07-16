@@ -78,7 +78,7 @@ class Card extends React.Component {
 }
 
 class Deck extends Field {
-    handleClick() {
+    handleClick(event) {
         event.stopPropagation();
         uiEvents({
             action: 'take_card'
