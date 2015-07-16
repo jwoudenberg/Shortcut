@@ -10,11 +10,17 @@ var browserify = require('browserify');
 var babelify = require('babelify');
 var uglify = require('gulp-uglify');
 
+var argv = require('minimist')(process.argv.slice(2));
+var WATCH = argv.watch;
+
 gulp.task('js', function watchJs() {
-    var bundler = watchify(browserify({ cache: {}, packageCache: {}, debug: true }));
+    var bundler = browserify({ cache: {}, packageCache: {}, debug: true });
+    if (WATCH) {
+        bundler = watchify(bundler);
+        bundler.on('update', bundle);
+    }
     bundler.add('./src/index.js');
     bundler.transform(babelify);
-    bundler.on('update', bundle);
     bundler.on('log', gutil.log);
     return bundle();
 
@@ -32,7 +38,10 @@ gulp.task('js', function watchJs() {
 
 gulp.task('sass', function watchSass() {
     var STYLE_PATH = './style/**/*.scss';
-    watch(STYLE_PATH, bundle);
+
+    if (WATCH) {
+        watch(STYLE_PATH, bundle);
+    }
 
     return bundle();
 
@@ -51,7 +60,10 @@ gulp.task('sass', function watchSass() {
 
 gulp.task('html', function watchHtml() {
     var HTML_PATH = './index.html';
-    watch(HTML_PATH, bundle);
+
+    if (WATCH) {
+        watch(HTML_PATH, bundle);
+    }
 
     return bundle();
 
