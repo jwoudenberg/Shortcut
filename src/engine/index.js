@@ -2,6 +2,7 @@ module.exports = { createGame };
 
 const R = require('ramda');
 const flyd = require('flyd');
+const filter = require('flyd-filter');
 const createWorld = require('./create-world');
 const getRandomCard = require('./get-random-card');
 
@@ -46,15 +47,12 @@ const actionHandlers = {
         });
     }
 };
+const actionTypes = Object.keys(actionHandlers);
+const isAction = action => R.contains(action.action, actionTypes);
 
-function createGame(actions) {
-    let worldState = flyd.stream([actions], function applyHandler(self) {
-        let action = actions();
-        let handler = actionHandlers[action.action];
-        if (handler) {
-            self(handler(action));
-        }
-    });
+function createGame(uiEvents) {
+    let actions = filter(isAction, uiEvents);
+    let worldState = actions.map(action => actionHandlers[action.action](action));
     let world = flyd.scan((previous, modifier) => modifier(previous), {}, worldState);
-    return world;
+    return { actions, world };
 }

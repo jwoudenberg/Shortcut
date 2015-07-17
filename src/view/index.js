@@ -5,10 +5,10 @@ const React = require('react');
 const Game = require('./components').Game;
 const GameCreator = require('./page').GameCreator;
 
-function createGameView(world, parameters) {
+function createGameView(world, actions, parameters) {
     /* Render the game itself. */
     React.render(
-        <div className="container-fluid"><Game world={world} /></div>,
+        <div className="container-fluid"><Game actions={actions} world={world} /></div>,
         document.getElementById('app-content')
     );
 

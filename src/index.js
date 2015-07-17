@@ -1,6 +1,6 @@
 const parameters = require('./parameters');
-const { createGame } = require('./engine');
+const { createGame } = require('./engine-worker');
 const { createGameView, uiEvents } = require('./view');
 
-const world = createGame(uiEvents);
-createGameView(world, parameters);
+const { actions, world } = createGame(uiEvents);
+createGameView(world, actions, parameters);

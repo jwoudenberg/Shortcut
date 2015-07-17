@@ -6,9 +6,17 @@ const work = require('webworkify');
 const engineWorker = work(require('./engine-wrapper'));
 
 function createGame(uiEvents) {
-    const world = flyd.stream({});
-    //Run the engine in a webworker.
+    //Send ui events.
     flyd.on(event => engineWorker.postMessage(event), uiEvents);
-    engineWorker.addEventListener('message', event => world(event.data));
-    return world;
+
+    //Receive game events.
+    let world = flyd.stream({});
+    let actions = flyd.stream();
+    let gameStreams = { world, actions };
+    engineWorker.addEventListener('message', function pushToRightStream(event) {
+        let { type, value } = event.data;
+        gameStreams[type](value);
+    });
+
+    return gameStreams;
 }
