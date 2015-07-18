@@ -21,7 +21,7 @@ class Field extends React.Component {
         let { id, selectedCardId } = this.props;
         if (selectedCardId) {
             uiEvents({
-                action: 'move_card',
+                type: 'move_card',
                 cardId: selectedCardId,
                 fieldId: id
             });
@@ -46,12 +46,12 @@ class Card extends React.Component {
         let id = this.props.id;
         if (this.props.selected) {
             uiEvents({
-                action: 'rotate_card',
+                type: 'rotate_card',
                 cardId: id
             });
         } else {
             uiEvents({
-                action: 'select_card',
+                type: 'select_card',
                 cardId: id
             });
         }
@@ -81,7 +81,7 @@ class Deck extends Field {
     handleClick(event) {
         event.stopPropagation();
         uiEvents({
-            action: 'take_card'
+            type: 'take_card'
         });
     }
     render() {
@@ -104,7 +104,7 @@ class Game extends React.Component {
         flyd.on(worldState => this.setState({ worldState }), world);
     }
     handleUIEvent(event) {
-        if (event.action === 'select_card') {
+        if (event.type === 'select_card') {
             this.setState({
                 selectedCardId: event.cardId
             });

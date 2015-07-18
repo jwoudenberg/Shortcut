@@ -37,7 +37,7 @@ class GameCreator extends React.Component {
     }
     onStateUpdate() {
         let gameEvent = R.merge(this.state, {
-            action: 'create_game'
+            type: 'create_game'
         });
         uiEvents(gameEvent);
     }

@@ -48,11 +48,11 @@ const actionHandlers = {
     }
 };
 const actionTypes = Object.keys(actionHandlers);
-const isAction = action => R.contains(action.action, actionTypes);
+const isAction = action => R.contains(action.type, actionTypes);
 
 function createGame(uiEvents) {
     let actions = filter(isAction, uiEvents);
-    let worldState = actions.map(action => actionHandlers[action.action](action));
+    let worldState = actions.map(action => actionHandlers[action.type](action));
     let world = flyd.scan((previous, modifier) => modifier(previous), {}, worldState);
     return { actions, world };
 }
