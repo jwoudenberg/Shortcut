@@ -96,19 +96,28 @@ class Deck extends Field {
 class Game extends React.Component {
     constructor(props) {
         flyd.on(this.handleUIEvent.bind(this), uiEvents);
-        this.state = props.world();
+        this.state = props.world() || {};
         super(props);
     }
     componentDidMount() {
-        let world = this.props.world;
+        let { world, actions } = this.props;
         flyd.on(worldState => this.setState({ worldState }), world);
+        flyd.on(this.handleAction.bind(this), actions);
+    }
+    handleAction(action) {
+        if (action.type === 'add_card') {
+            this.selectCard(action.card.id);
+        }
     }
     handleUIEvent(event) {
         if (event.type === 'select_card') {
-            this.setState({
-                selectedCardId: event.cardId
-            });
+            this.selectCard(event.cardId);
         }
+    }
+    selectCard(cardId) {
+        this.setState({
+            selectedCardId: cardId
+        });
     }
     getFieldsById(fields) {
         return fields.reduce(function addFieldById(fields, field) {

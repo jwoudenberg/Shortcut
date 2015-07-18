@@ -2,17 +2,74 @@ module.exports = { createGame };
 
 const R = require('ramda');
 const flyd = require('flyd');
+const flatmap = require('flyd-flatmap');
 const filter = require('flyd-filter');
-const createWorld = require('./create-world');
+
+function createGame(uiEvents) {
+    let players = flyd.stream();
+    let moves = flatmap((player) => player.moves, players);
+    let { actions, world } = createWorld(moves);
+    players(createPlayer(uiEvents));
+    players(createGameMaster(actions));
+    return { actions, world };
+}
+
+function createPlayer(uiEvents) {
+    let moves = flyd.stream([uiEvents], function createMove() {
+        let uiEvent = uiEvents();
+        //TODO: add validation here.
+        return () => uiEvent;
+    });
+    return {
+        type: 'human',
+        name: 'player A',
+        moves
+    };
+}
+
+function createGameMaster(actions) {
+    let gameActions = [
+        getAddCardMoves(actions),
+        getReplaceWorldMoves(actions)
+    ].reduce(flyd.merge, flyd.stream());
+
+    return {
+        type: 'game-master',
+        moves: gameActions
+    };
+}
+
 const getRandomCard = require('./get-random-card');
+function getAddCardMoves(actions) {
+    let takeCardActions = filter((action) => action.type === 'take_card', actions);
+    return takeCardActions.map(() => () => ({
+        type: 'add_card',
+        card: getRandomCard()
+    }));
+}
+
+const createStartWorldState = require('./create-world');
+function getReplaceWorldMoves(actions) {
+    let createGameActions = filter((action) => action.type === 'create_game', actions);
+    return createGameActions.map((action) => () => ({
+        type: 'replace_world',
+        world: createStartWorldState(action)
+    }));
+}
 
 const actionHandlers = {
-    'create_game': function _createWorld(action) {
-        let world = createWorld(action);
+    'replace_world': function replaceWorld(action) {
+        let world = action.world;
+        if (!world) {
+            throw new Error('replaceWorld: no world specified.');
+        }
         return () => world;
     },
-    'take_card': function addRandomCard() {
-        let card = getRandomCard();
+    'add_card': function addCard(action) {
+        let card = action.card;
+        if (!card) {
+            throw new Error('addCard: no card specified.');
+        }
         return R.evolve({
             cards: R.append(card)
         });
@@ -47,12 +104,20 @@ const actionHandlers = {
         });
     }
 };
-const actionTypes = Object.keys(actionHandlers);
-const isAction = action => R.contains(action.type, actionTypes);
 
-function createGame(uiEvents) {
-    let actions = filter(isAction, uiEvents);
-    let worldState = actions.map(action => actionHandlers[action.type](action));
-    let world = flyd.scan((previous, modifier) => modifier(previous), {}, worldState);
+function createWorld(moves) {
+    let game = flyd.scan(updateWorld, {}, moves);
+    let world = flyd.stream([game], () => game().worldState);
+    let actions = flyd.stream([game], () => game().lastAction);
     return { actions, world };
+}
+
+function updateWorld(gameState, move) {
+    let { worldState={} } = gameState;
+    let action = move(worldState);
+    let actionHandler = actionHandlers[action.type];
+    return {
+        lastAction: action,
+        worldState: actionHandler ? actionHandler(action)(worldState) : worldState
+    };
 }
