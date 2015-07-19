@@ -107,14 +107,17 @@ class Deck extends Field {
 
 class Game extends React.Component {
     constructor(props) {
-        flyd.on(this.handleUIEvent.bind(this), uiEvents);
         this.state = props.world() || {};
+        //TODO: make this size depend on the available screen area.
+        this.state.fieldSize = 100;
         super(props);
     }
     componentDidMount() {
+        //TODO: account for change in this.props and unmounting.
         let { world, actions } = this.props;
         flyd.on(worldState => this.setState({ worldState }), world);
         flyd.on(this.handleAction.bind(this), actions);
+        flyd.on(this.handleUIEvent.bind(this), uiEvents);
     }
     handleAction(action) {
         if (action.type === 'add_card') {
@@ -131,44 +134,52 @@ class Game extends React.Component {
             selectedCardId: cardId
         });
     }
-    getFieldsById(fields) {
-        return fields.reduce(function addFieldById(fields, field) {
-            fields[field.id] = field;
-            return fields;
-        }, {});
+    shiftFields(shift, fields) {
+        let evolver = R.mapObj((shiftAmount) => R.add(shiftAmount), shift);
+        return fields.map(R.evolve(evolver));
     }
     render() {
-        //TODO: make this size depend on the available screen area.
-        let fieldSize = 100;
-        let { worldState={}, selectedCardId } = this.state;
+        let { worldState={} } = this.state;
         let { board={}, cards=[] } = worldState;
-        //Move all fields two to the right, to make space for the deck.
-        let fields = (board.fields || []).map(R.evolve({ col: R.add(2) }));
-        let fieldsById = this.getFieldsById(fields);
-        let deck = {
-            id: 'deck',
-            col: 0,
-            row: 0
-        };
+        let { fields=[] } = board;
+        let deck = { col: 0, row: 0 };
+        let shiftedFields = this.shiftFields({ col: 2 }, fields);
+        let fieldsById = R.fromPairs(shiftedFields.map((field) => [field.id, field]));
+        let getFieldById = (fieldId) => fieldsById[fieldId] || deck;
         return <div className="game">
-            <Deck {...deck}
-                  fieldSize={fieldSize} />
-            {fields.map(function printField(field) {
-                return <Field {...field}
-                              key={field.id}
-                              fieldSize={fieldSize}
-                              selectedCardId={selectedCardId} />;
-            })}
+            {this.renderDeck(deck)}
+            {shiftedFields.map(function printField(field) {
+                return this.renderField(field);
+            }, this)}
             {cards.map(function printField(card) {
-                let extendedCard = R.merge(card, {
-                    key: card.id,
-                    field: fieldsById[card.field] || deck,
-                    selected: (selectedCardId === card.id),
-                    fieldSize
-                });
-                return <Card {...extendedCard} />;
-            })}
+                return this.renderCard(card, getFieldById);
+            }, this)}
         </div>;
+    }
+    renderDeck(deck) {
+        return <Deck
+            {...deck}
+            fieldSize={this.state.fieldSize}
+        />;
+    }
+    renderField(field) {
+        let { selectedCardId, fieldSize } = this.state;
+        return <Field
+            {...field}
+            key={field.id}
+            fieldSize={fieldSize}
+            selectedCardId={selectedCardId}
+        />;
+    }
+    renderCard(card, getFieldById) {
+        let { selectedCardId, fieldSize } = this.state;
+        let extendedCard = R.merge(card, {
+            key: card.id,
+            field: getFieldById(card.field),
+            selected: (selectedCardId === card.id),
+            fieldSize
+        });
+        return <Card {...extendedCard} />;
     }
 }
 
