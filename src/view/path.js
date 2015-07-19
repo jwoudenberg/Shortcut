@@ -1,5 +1,7 @@
 const React = require('react');
 const R = require('ramda');
+const flyd = require('flyd');
+const uiEvents = require('./').uiEvents;
 const PATH_SVG_DATA = require('./pathSVGData');
 const PATH_DISTANCE_TO_SHAPE_MAP = {
     '-4': { type: 's_turn' },
@@ -12,8 +14,33 @@ const PATH_DISTANCE_TO_SHAPE_MAP = {
     '3': { type: 'wide_turn' },
     '4': { type: 's_turn' }
 };
+const LONG_HOVER_TIME_MS = 500;
+
+const mouseEnterEvents = flyd.stream();
+const mouseLeaveEvents = flyd.stream();
+const mousedOverPath = flyd.immediate(flyd.stream([mouseEnterEvents, mouseLeaveEvents], (self, changed) => {
+    let mouseLeaveUpdated = R.contains(mouseLeaveEvents, changed);
+    let leftCurrentPath = mouseLeaveUpdated && R.equals(self(), mouseLeaveEvents());
+    self(leftCurrentPath ? null : mouseEnterEvents());
+}));
+const longHoverOverPath = (function createLongHoverStream() {
+    let timer = null;
+    return flyd.stream([mousedOverPath], (self) => {
+        clearTimeout(timer);
+        timer = setTimeout(
+            () => mousedOverPath() && self( mousedOverPath()),
+            LONG_HOVER_TIME_MS
+        );
+    });
+}());
+//TODO: replace uiEvents with a stream of streams, so we don't need to take the side effect route here.
+flyd.on((pathId) => uiEvents({ pathId, type: 'show_route' }), longHoverOverPath);
 
 class Path extends React.Component {
+    handleMouseOver(event) {
+        let eventStream = (event.type === 'mouseenter') ? mouseEnterEvents : mouseLeaveEvents;
+        eventStream(this.props.id);
+    }
     _getEvenPathShape(start, distance) {
         let addDefaults = R.merge({
             type: null,
@@ -62,14 +89,25 @@ class Path extends React.Component {
         return transformString;
     }
     render() {
-        let { type, transforms } = this._getPathShape(...this.props.ports);
+        let { ports, color } = this.props;
+        let { type, transforms } = this._getPathShape(...ports);
         let svgPaths = PATH_SVG_DATA[type];
         let transformAttr = transforms.reverse().map(this._getTransformString).join(' ');
-        return <div className="path">
+        let style = {
+            stroke: color,
+            fill: color
+        };
+        return <div className="path" style={{ pointerEvents: 'none' }}>
             <svg version="1.1" viewBox="0 0 750 750">
-                <g className="pathContainer" transform={transformAttr}>
+                <g
+                    className="pathContainer"
+                    transform={transformAttr}
+                    onMouseEnter={this.handleMouseOver.bind(this)}
+                    onMouseLeave={this.handleMouseOver.bind(this)}
+                    style={{ pointerEvents: 'all' }}
+                >
                     {svgPaths.map(function drawSVGPath(svgPath) {
-                        return <path key={svgPath.d} {...svgPath} />;
+                        return <path key={svgPath.d} style={style} {...svgPath} />;
                     })}
                 </g>
             </svg>

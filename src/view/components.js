@@ -4,6 +4,8 @@ const flyd = require('flyd');
 const R = require('ramda');
 const classNames = require('classnames');
 const uiEvents = require('./').uiEvents;
+//DEBUG: temporarily linking directly to engine file. This should be replaced by sending an event through uiEvents.
+const findRoute = require('../engine/find-route');
 
 function makeStyle(row, col, fieldSize) {
     let style = {
@@ -73,7 +75,7 @@ class Card extends React.Component {
         }
     }
     render() {
-        let { paths, rotation, field, fieldSize, selected } = this.props;
+        let { paths, rotation, field, fieldSize, selected, id } = this.props;
         let { row, col } = field;
         let style = makeStyle(row, col, fieldSize);
         style.transform = `rotate(${rotation}deg)`;
@@ -81,9 +83,12 @@ class Card extends React.Component {
         return <div className={classNames('card', { selected })}
                     style={style}
                     onClick={this.handleClick.bind(this)} >
-            {paths.map(function drawPath(path) {
-                let key = path.ports.join('-');
-                return <Path key={key} {...path} />;
+            {paths.map(function drawPath(path, index) {
+                return <Path
+                    {...path}
+                    id={{ cardId: id, pathIndex: index }}
+                    key={[id, index].join()}
+                />;
             })}
         </div>;
     }
@@ -125,8 +130,14 @@ class Game extends React.Component {
         }
     }
     handleUIEvent(event) {
+        //TODO: create an event-type enum.
         if (event.type === 'select_card') {
             this.selectCard(event.cardId);
+        }
+        if (event.type === 'show_route') {
+            let route = findRoute(event.pathId, this.state.worldState || {});
+            console.log('FOOOOOOOOOOOO');
+            console.log(route);
         }
     }
     selectCard(cardId) {
@@ -144,15 +155,19 @@ class Game extends React.Component {
         let { fields=[] } = board;
         let deck = { col: 0, row: 0 };
         let shiftedFields = this.shiftFields({ col: 2 }, fields);
+        //Create an optimized way to lookup fields by id.
         let fieldsById = R.fromPairs(shiftedFields.map((field) => [field.id, field]));
         let getFieldById = (fieldId) => fieldsById[fieldId] || deck;
+        //Create an optimized way to lookup path color based on the path a route (might) be in.
+        //DEBUG: testing path colouring.
+        let getColorByPathId = () => null;
         return <div className="game">
             {this.renderDeck(deck)}
             {shiftedFields.map(function printField(field) {
                 return this.renderField(field);
             }, this)}
             {cards.map(function printField(card) {
-                return this.renderCard(card, getFieldById);
+                return this.renderCard(getFieldById, getColorByPathId, card);
             }, this)}
         </div>;
     }
@@ -171,10 +186,16 @@ class Game extends React.Component {
             selectedCardId={selectedCardId}
         />;
     }
-    renderCard(card, getFieldById) {
+    renderCard(getFieldById, getColorByPathId, card) {
         let { selectedCardId, fieldSize } = this.state;
+        let { cardId } = card;
+        let colouredPaths = (card.paths || []).map((path, index) => {
+            let color = getColorByPathId({ cardId, pathIndex: index });
+            return R.assoc('color', color, path);
+        });
         let extendedCard = R.merge(card, {
             key: card.id,
+            paths: colouredPaths,
             field: getFieldById(card.field),
             selected: (selectedCardId === card.id),
             fieldSize
