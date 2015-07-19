@@ -55,8 +55,20 @@ class Card extends React.Component {
                 cardId: id
             });
         }
-        //Ensure that in a possible rendering and transition as a result of this event, this is the topmost element.
-        if (this.zIndex !== topZIndex) {
+    }
+    componentWillReceiveProps(nextProps) {
+        let { rotation, field, selected } = this.props;
+        let didRotationChange = (rotation !== nextProps.rotation);
+        let didFieldChange = (field.id !== nextProps.field.id);
+        let isNewlySelected = (selected === false && nextProps.selected === true);
+        if (didRotationChange || didFieldChange || isNewlySelected) {
+            this.putOnTop();
+        }
+    }
+    //Ensure that in a possible rendering and transition as a result of this event, this is the topmost element.
+    putOnTop() {
+        let isOnTop = (this.zIndex === topZIndex);
+        if (!isOnTop) {
             this.zIndex = ++topZIndex;
         }
     }
