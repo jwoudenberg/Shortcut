@@ -133,11 +133,9 @@ class Game extends React.Component {
         //TODO: create an event-type enum.
         if (event.type === 'select_card') {
             this.selectCard(event.cardId);
-        }
-        if (event.type === 'show_route') {
+        } else if (event.type === 'show_route') {
             let route = findRoute(event.pathId, this.state.worldState || {});
-            console.log('FOOOOOOOOOOOO');
-            console.log(route);
+            this.setState({ routes: [route] });
         }
     }
     selectCard(cardId) {
@@ -150,7 +148,7 @@ class Game extends React.Component {
         return fields.map(R.evolve(evolver));
     }
     render() {
-        let { worldState={} } = this.state;
+        let { worldState={}, routes=[] } = this.state;
         let { board={}, cards=[] } = worldState;
         let { fields=[] } = board;
         let deck = { col: 0, row: 0 };
@@ -158,9 +156,22 @@ class Game extends React.Component {
         //Create an optimized way to lookup fields by id.
         let fieldsById = R.fromPairs(shiftedFields.map((field) => [field.id, field]));
         let getFieldById = (fieldId) => fieldsById[fieldId] || deck;
+
         //Create an optimized way to lookup path color based on the path a route (might) be in.
-        //DEBUG: testing path colouring.
-        let getColorByPathId = () => null;
+        //DEBUG: quick and dirty color map. Replace with randomized nicer colors
+        const colors = {
+            '-1': null,
+            '0': 'red',
+            '1': 'blue',
+            '2': 'green'
+        };
+        //DEBUG: quick test implementation, not very performant.
+        console.log(routes);
+        let getColorByPathId = R.pipe(
+            (pathId) => R.findIndex(R.containsWith(R.whereEq, pathId), routes),
+            R.nth(R.__, colors)
+        );
+
         return <div className="game">
             {this.renderDeck(deck)}
             {shiftedFields.map(function printField(field) {
