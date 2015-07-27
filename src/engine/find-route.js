@@ -37,10 +37,10 @@ function getNeighbourPaths(pathId, paths) {
 }
 
 function getNeighbourCoords(coords) {
-    let direction = Math.floor(coords.port / 4);
+    let direction = Math.floor(coords.port / 2);
     let isEven = (number) => (number % 2) === 0;
     return R.evolve({
-        row: [R.dec, R.identity, R.inc, R.identity][direction],
+        row: [R.inc, R.identity, R.dec, R.identity][direction],
         col: [R.identity, R.inc, R.identity, R.dec][direction],
         port: R.pipe(
             R.ifElse(
@@ -53,29 +53,49 @@ function getNeighbourCoords(coords) {
     }, coords);
 }
 
-function getQueryablePaths(worldState) {
-    let { cards=[] } = worldState || {};
+function getQueryablePaths(worldState={}) {
+    let { cards=[], board={} } = worldState;
+    let { fields=[] } = board;
     let getCoordsById = (pathId) => {
         let { cardId, pathIndex } = pathId;
         let card = R.find(R.propEq(cardId, 'id'), cards);
         if (!card) {
             return [];
         }
-        let { row, col, paths=[] } = card;
+        let field = R.find(R.propEq(card.field, 'id'), fields);
+        if (!field) {
+            return [];
+        }
+        let { row, col } = field;
+        let { paths=[] } = getEquivalentNonRotatedCard(card);
         let { ports=[] } = paths[pathIndex];
         return ports.map((port) => ({ port, col, row }));
     };
     let getPathIdByCoords = (coords) => {
         let { row, col, port } = coords;
-        let card = R.find(R.whereEq({ row, col }), cards);
+        let field = R.find(R.whereEq({ row, col }), fields);
+        if (!field) {
+            return null;
+        }
+        let card = R.find(R.propEq(field.id, 'field'), cards);
         if (!card) {
             return null;
         }
-        let { paths=[] } = card;
+        let { paths=[] } = getEquivalentNonRotatedCard(card);
         let pathIndex = R.findIndex((path) => R.contains(port, path.ports || []), paths);
         return { cardId: card.id, pathIndex };
     };
     return { getCoordsById, getPathIdByCoords };
+}
+
+function getEquivalentNonRotatedCard(card) {
+    let { rotation } = card;
+    return R.evolve({
+        paths: R.map(R.over(R.lensProp('ports'), R.map(
+            (port) => R.mathMod(port - rotation / 45, 8)
+        ))),
+        rotation: R.always(0)
+    })(card);
 }
 
 

@@ -166,7 +166,6 @@ class Game extends React.Component {
             '2': 'green'
         };
         //DEBUG: quick test implementation, not very performant.
-        console.log(routes);
         let getColorByPathId = R.pipe(
             (pathId) => R.findIndex(R.containsWith(R.whereEq, pathId), routes),
             R.nth(R.__, colors)
@@ -199,7 +198,7 @@ class Game extends React.Component {
     }
     renderCard(getFieldById, getColorByPathId, card) {
         let { selectedCardId, fieldSize } = this.state;
-        let { cardId } = card;
+        let cardId = card.id;
         let colouredPaths = (card.paths || []).map((path, index) => {
             let color = getColorByPathId({ cardId, pathIndex: index });
             return R.assoc('color', color, path);
