@@ -6,6 +6,9 @@
         "node": true,
         "es6": true
     },
+    "ecmaFeatures": {
+        "modules": true
+    },
     "rules": {
         "brace-style": [2, "1tbs", { "allowSingleLine": true }],
         "camelcase": 2,

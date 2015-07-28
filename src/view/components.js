@@ -5,7 +5,7 @@ const R = require('ramda');
 const classNames = require('classnames');
 const uiEvents = require('./').uiEvents;
 //DEBUG: temporarily linking directly to engine file. This should be replaced by sending an event through uiEvents.
-const findRoute = require('../engine/find-route');
+import findRoute from '../engine/find-route';
 
 function makeStyle(row, col, fieldSize) {
     let style = {

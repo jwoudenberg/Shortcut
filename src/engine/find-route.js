@@ -1,13 +1,11 @@
-module.exports = findRoute;
+import * as R from 'ramda';
 
-const R = require('ramda');
-
-function findRoute(pathId, worldState) {
+export default function findRoute(pathId, worldState) {
     let paths = getQueryablePaths(worldState);
     let _getNeighbourPaths = R.flip(getNeighbourPaths)(paths);
     function findRouteRecusive(pathId, seenPathIds=[]) {
         //Check if we've already seen this path.
-        if (R.contains(pathId, seenPathIds)) {
+        if (R.containsWith(R.whereEq, pathId, seenPathIds)) {
             return [];
         }
         let newSeenPathIds = R.append(pathId, seenPathIds);
@@ -56,35 +54,26 @@ function getNeighbourCoords(coords) {
 function getQueryablePaths(worldState={}) {
     let { cards=[], board={} } = worldState;
     let { fields=[] } = board;
-    let getCoordsById = (pathId) => {
-        let { cardId, pathIndex } = pathId;
-        let card = R.find(R.propEq(cardId, 'id'), cards);
-        if (!card) {
-            return [];
-        }
-        let field = R.find(R.propEq(card.field, 'id'), fields);
+    let nonRotatedCards = cards.map(getEquivalentNonRotatedCard);
+    let fieldsByIdMap = R.fromPairs(fields.map((field) => [field.id, field]));
+    let cardsByIdMap = R.fromPairs(nonRotatedCards.map((card) => [card.id, card]));
+    let getCoordsById = ({ cardId, pathIndex }) => {
+        let { paths=[], field } = cardsByIdMap[cardId];
         if (!field) {
             return [];
         }
-        let { row, col } = field;
-        let { paths=[] } = getEquivalentNonRotatedCard(card);
-        let { ports=[] } = paths[pathIndex];
-        return ports.map((port) => ({ port, col, row }));
+        let { ports=[] } = paths[pathIndex] || {};
+        let { row, col } = fieldsByIdMap[field];
+        return ports.map((port) => ({ port, row, col }));
     };
-    let getPathIdByCoords = (coords) => {
-        let { row, col, port } = coords;
-        let field = R.find(R.whereEq({ row, col }), fields);
-        if (!field) {
-            return null;
-        }
-        let card = R.find(R.propEq(field.id, 'field'), cards);
-        if (!card) {
-            return null;
-        }
-        let { paths=[] } = getEquivalentNonRotatedCard(card);
-        let pathIndex = R.findIndex((path) => R.contains(port, path.ports || []), paths);
-        return { cardId: card.id, pathIndex };
-    };
+    let pathIdByCoordsMap = R.fromPairs([
+        for (card of nonRotatedCards)
+            for (pathSet of R.toPairs(card.paths) || [])
+                for (port of pathSet[1].ports || [])
+                    if (fieldsByIdMap[card.field])
+                        [ [fieldsByIdMap[card.field].row, fieldsByIdMap[card.field].col, port].join(','), { pathIndex: parseInt(pathSet[0]), cardId: card.id } ]
+    ]);
+    let getPathIdByCoords = ({row, col, port}) => pathIdByCoordsMap[[row, col, port].join(',')];
     return { getCoordsById, getPathIdByCoords };
 }
 
