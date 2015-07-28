@@ -1,3 +1,4 @@
+require('babelify/polyfill');
 const parameters = require('./parameters');
 const { createGame } = require('./engine');
 const { createGameView, uiEvents } = require('./view');

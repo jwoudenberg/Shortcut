@@ -20,7 +20,9 @@ gulp.task('js', function watchJs() {
         bundler.on('update', bundle);
     }
     bundler.add('./src/index.js');
-    bundler.transform(babelify);
+    bundler.transform(babelify.configure({
+        stage: 0
+    }));
     bundler.on('log', gutil.log);
     return bundle();
 

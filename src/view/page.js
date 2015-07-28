@@ -5,6 +5,7 @@ const { Input, OverlayTrigger, Tooltip } = require('react-bootstrap');
 
 class GameCreator extends React.Component {
     constructor(props) {
+        super(props);
         this.state = {
             numberOfPlayers: props.numberOfPlayers.default,
             boardSize: props.boardSize.default,
@@ -13,7 +14,6 @@ class GameCreator extends React.Component {
         };
         //Pass starting status.
         this.onStateUpdate();
-        super(props);
     }
     handleBoardSizeChange(event) {
         let { min, max } = this.props.boardSize;

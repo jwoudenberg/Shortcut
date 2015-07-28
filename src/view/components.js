@@ -112,10 +112,10 @@ class Deck extends Field {
 
 class Game extends React.Component {
     constructor(props) {
+        super(props);
         this.state = props.world() || {};
         //TODO: make this size depend on the available screen area.
         this.state.fieldSize = 100;
-        super(props);
     }
     componentDidMount() {
         //TODO: account for change in this.props and unmounting.
