@@ -1,9 +1,16 @@
 import * as R from 'ramda';
 import { fromJS, Map, Set, List } from 'immutable';
 
-export default function findRoute(mutablePathId, worldState) {
+let lastWorldState, paths;
+export default function findRoute(mutablePathId, mutableWorldState) {
+    let worldState = fromJS(mutableWorldState);
+    //DEBUG: store the last world state, so the paths calculation for subsequent calls on the same world only happens
+    //once.
+    if (!worldState.equals(lastWorldState)) {
+        paths = getQueryablePaths(worldState);
+        lastWorldState = worldState;
+    }
     let pathId = Map(mutablePathId);
-    let paths = getQueryablePaths(worldState);
     let _getNeighbourPaths = R.flip(getNeighbourPaths)(paths);
     function findRouteRecusive(pathId, seenPathIds=Set()) {
         //Check if we've already seen this path.
@@ -20,10 +27,10 @@ export default function findRoute(mutablePathId, worldState) {
 }
 
 function getNeighbourPaths(pathId, paths) {
-    return paths.getCoordsByPathId(pathId)
+    return paths.getCoordsById(pathId)
         .map(R.pipe(
             getNeighbourCoords,
-            paths.getPathIdByCoords
+            paths.getIdByCoords
         ))
         .filterNot(R.isNil);
 }
@@ -44,13 +51,14 @@ function getNeighbourCoords(coords) {
         ));
 }
 
-function getQueryablePaths({ board: { fields = [] } = {}, cards = [] } = {}) {
+function getQueryablePaths(worldState) {
+    let fields = worldState.getIn(['board', 'fields'], List());
     let coordsByFieldId = new Map(
-        fields.map(({ id, row, col }) => [id, { row, col }])
+        fields.map(field => [field.get('id'), { row: field.get('row'), col: field.get('col') }])
     );
-    let _cards = fromJS(cards).map(getEquivalentNonRotatedCard);
+    let cards = worldState.get('cards', List()).map(getEquivalentNonRotatedCard);
     let coordsByPathId = Map(
-        _cards.flatMap(
+        cards.flatMap(
             card =>  card.get('paths', List()).map(
                 (path, pathIndex) =>  {
                     let ports = path.get('ports', List());
@@ -70,8 +78,8 @@ function getQueryablePaths({ board: { fields = [] } = {}, cards = [] } = {}) {
         )
     );
     return {
-        getCoordsByPathId: ::coordsByPathId.get,
-        getPathIdByCoords: ::pathIdByCoords.get
+        getCoordsById: ::coordsByPathId.get,
+        getIdByCoords: ::pathIdByCoords.get
     };
 }
 
