@@ -1,124 +1,87 @@
 import * as R from 'ramda';
+import { fromJS, Map, Set, List } from 'immutable';
 
-export default function findRoute(pathId, worldState) {
+export default function findRoute(mutablePathId, worldState) {
+    let pathId = Map(mutablePathId);
     let paths = getQueryablePaths(worldState);
     let _getNeighbourPaths = R.flip(getNeighbourPaths)(paths);
-    function findRouteRecusive(pathId, seenPathIds=[]) {
+    function findRouteRecusive(pathId, seenPathIds=Set()) {
         //Check if we've already seen this path.
-        if (R.containsWith(R.whereEq, pathId, seenPathIds)) {
-            return [];
+        if (seenPathIds.has(pathId)) {
+            return Set();
         }
-        let newSeenPathIds = R.append(pathId, seenPathIds);
-        let newPathIds = _getNeighbourPaths(pathId);
         //Expand the new path ids one by one, keeping an up-to-date list of seen paths to ensure we don't go in loops.
-        return R.reduce(
-            (seen, _new) => R.concat(
-                seen,
-                findRouteRecusive(_new, seen)
-            ),
-            newSeenPathIds,
-            newPathIds
+        return _getNeighbourPaths(pathId).reduce(
+            (seen, _new) => seen.concat(findRouteRecusive(_new, seen)),
+            seenPathIds.add(pathId)
         );
     }
-    return findRouteRecusive(pathId);
+    return findRouteRecusive(pathId).toJS();
 }
 
 function getNeighbourPaths(pathId, paths) {
-    let coordsSet = paths.getCoordsById(pathId);
-    return R.pipe(
-        R.map(R.pipe(
+    return paths.getCoordsByPathId(pathId)
+        .map(R.pipe(
             getNeighbourCoords,
             paths.getPathIdByCoords
-        )),
-        R.reject(R.isNil)
-    )(coordsSet);
+        ))
+        .filterNot(R.isNil);
 }
 
 function getNeighbourCoords(coords) {
-    let direction = Math.floor(coords.port / 2);
+    let direction = Math.floor(coords.get('port') / 2);
     let isEven = (number) => (number % 2) === 0;
-    return R.evolve({
-        row: [R.inc, R.identity, R.dec, R.identity][direction],
-        col: [R.identity, R.inc, R.identity, R.dec][direction],
-        port: R.pipe(
+    return coords
+        .update('row', [R.inc, R.identity, R.dec, R.identity][direction])
+        .update('col', [R.identity, R.inc, R.identity, R.dec][direction])
+        .update('port', R.pipe(
             R.ifElse(
                 isEven,
                 R.add(5),
                 R.add(3)
             ),
             R.mathMod(R.__, 8)
-        )
-    }, coords);
+        ));
 }
 
-function getQueryablePaths(worldState={}) {
-    let { cards=[], board={} } = worldState;
-    let { fields=[] } = board;
-    let nonRotatedCards = cards.map(getEquivalentNonRotatedCard);
-    let fieldsByIdMap = R.fromPairs(fields.map((field) => [field.id, field]));
-    let cardsByIdMap = R.fromPairs(nonRotatedCards.map((card) => [card.id, card]));
-    let getCoordsById = ({ cardId, pathIndex }) => {
-        let { paths=[], field } = cardsByIdMap[cardId];
-        if (!field) {
-            return [];
-        }
-        let { ports=[] } = paths[pathIndex] || {};
-        let { row, col } = fieldsByIdMap[field];
-        return ports.map((port) => ({ port, row, col }));
+function getQueryablePaths({ board: { fields = [] } = {}, cards = [] } = {}) {
+    let coordsByFieldId = new Map(
+        fields.map(({ id, row, col }) => [id, { row, col }])
+    );
+    let _cards = fromJS(cards).map(getEquivalentNonRotatedCard);
+    let coordsByPathId = Map(
+        _cards.flatMap(
+            card =>  card.get('paths', List()).map(
+                (path, pathIndex) =>  {
+                    let ports = path.get('ports', List());
+                    let cardId = card.get('id');
+                    let { row, col } = coordsByFieldId.get(card.get('field'));
+                    return [
+                        Map({ pathIndex, cardId }),
+                        ports.map(port => Map({ port, row, col }))
+                    ];
+                }
+            )
+        )
+    );
+    let pathIdByCoords = coordsByPathId.flatMap(
+        (coords, pathId) => Map(
+            coords.map(coord => [coord, pathId])
+        )
+    );
+    return {
+        getCoordsByPathId: ::coordsByPathId.get,
+        getPathIdByCoords: ::pathIdByCoords.get
     };
-    let pathIdByCoordsMap = R.fromPairs([
-        for (card of nonRotatedCards)
-            for (pathSet of R.toPairs(card.paths) || [])
-                for (port of pathSet[1].ports || [])
-                    if (fieldsByIdMap[card.field])
-                        [ [fieldsByIdMap[card.field].row, fieldsByIdMap[card.field].col, port].join(','), { pathIndex: parseInt(pathSet[0]), cardId: card.id } ]
-    ]);
-    let getPathIdByCoords = ({row, col, port}) => pathIdByCoordsMap[[row, col, port].join(',')];
-    return { getCoordsById, getPathIdByCoords };
 }
 
 function getEquivalentNonRotatedCard(card) {
-    let { rotation } = card;
-    return R.evolve({
-        paths: R.map(R.over(R.lensProp('ports'), R.map(
-            (port) => R.mathMod(port - rotation / 45, 8)
-        ))),
-        rotation: R.always(0)
-    })(card);
-}
-
-
-//Create a performant queryable interface for cards based on a world state.
-function _getQueryablePaths(worldState) {
-    let { cards, fields } = worldState;
-    let fieldsById = R.fromPairs(fields.map((field) => [field.id, field]));
-    let rotatePaths = (rotation) => R.map(
-        R.over(R.lensProp('ports'), R.compose(
-            R.mathMod(R.__, 8),
-            R.add(rotation / 90))
-        )
-    );
-    let addIndexedPaths = (card) => R.assoc(
-        'indexedPorts',
-        card.ports.reduce(
-            (indexedPorts, port, index) => R.assoc(port, index, indexedPorts),
-            {}
-        ),
-        card
-    );
-    let queryableCards = cards.map((card) => R.pipe(
-        //Add row and col properties from containing field.
-        R.merge(R.__, R.pick(['row', 'col'], fieldsById[card.id])),
-        //Account for card rotation in paths' port numbers.
-        R.over(R.lensProp('path'), R.pipe(
-            rotatePaths(card.rotation),
-            addIndexedPaths
-        ))
-    )(card));
-    let queryableCardsById = R.fromPairs(queryableCards.map((card) => [card.id, card]));
-    let queryableCardsByCoords = R.fromPairs(queryableCards.map((card) => [getCoordsKey(card), card]));
-    return {
-        getById: (cardId) => queryableCardsById[cardId],
-        getByCoords: (coords) => queryableCardsByCoords[getCoordsKey(coords)]
-    };
+    let rotation = card.get('rotation');
+    return card
+        .set('rotation', 0)
+        .update('paths', List(), (paths) => paths.map(
+            (path) => path.update('ports', List(), (ports) => ports.map(
+                (port) => R.mathMod(port - rotation / 45, 8)
+            ))
+        ));
 }
