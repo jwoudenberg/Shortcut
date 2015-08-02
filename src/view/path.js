@@ -1,7 +1,6 @@
 const React = require('react');
 const R = require('ramda');
 const flyd = require('flyd');
-const uiEvents = require('./').uiEvents;
 const PATH_SVG_DATA = require('./pathSVGData');
 const PATH_DISTANCE_TO_SHAPE_MAP = {
     '-4': { type: 's_turn' },
@@ -14,7 +13,8 @@ const PATH_DISTANCE_TO_SHAPE_MAP = {
     '3': { type: 'wide_turn' },
     '4': { type: 's_turn' }
 };
-const LONG_HOVER_TIME_MS = 500;
+const LONG_HOVER_TIME_MS = 100;
+import { uiEvents } from './base';
 
 const mouseEnterEvents = flyd.stream();
 const mouseLeaveEvents = flyd.stream();

@@ -1,16 +1,10 @@
 import * as R from 'ramda';
-import { fromJS, Map, Set, List } from 'immutable';
+import { Map, Set, List } from 'immutable';
 
-let lastWorldState, paths;
-export default function findRoute(mutablePathId, mutableWorldState) {
-    const worldState = fromJS(mutableWorldState);
-    //DEBUG: store the last world state, so the paths calculation for subsequent calls on the same world only happens
-    //once.
-    if (!worldState.equals(lastWorldState)) {
-        paths = getQueryablePaths(worldState);
-        lastWorldState = worldState;
-    }
+/* All the following functions take and return immutable.js data structures. */
+export function findRoute(mutablePathId, worldState) {
     const pathId = Map(mutablePathId);
+    const paths = getQueryablePaths(worldState);
     const _getNeighbourPaths = R.flip(getNeighbourPaths)(paths);
     function findRouteRecusive(pathId, seenPathIds=Set()) {
         //Check if we've already seen this path.
@@ -23,7 +17,20 @@ export default function findRoute(mutablePathId, mutableWorldState) {
             seenPathIds.add(pathId)
         );
     }
-    return findRouteRecusive(pathId).toJS();
+    return findRouteRecusive(pathId);
+}
+
+export function findAllRoutes(worldState) {
+    const pathSet = getQueryablePaths(worldState).get();
+    function findRoutesLeft(pathsLeft) {
+        if (pathsLeft.isEmpty()) {
+            return Set();
+        }
+        const firstRoute = findRoute(pathsLeft.first(), worldState);
+        const otherRoutes = findRoutesLeft(pathsLeft.subtract(firstRoute));
+        return otherRoutes.add(firstRoute);
+    }
+    return findRoutesLeft(pathSet);
 }
 
 function getNeighbourPaths(pathId, paths) {
@@ -51,6 +58,7 @@ function getNeighbourCoords(coords) {
         ));
 }
 
+//TODO: 'Memoize once', that is: cache the result for the last worldState this function was called with.
 function getQueryablePaths(worldState) {
     const fields = worldState.getIn(['board', 'fields'], List());
     const coordsByFieldId = new Map(
@@ -79,7 +87,8 @@ function getQueryablePaths(worldState) {
     );
     return {
         getCoordsById: ::coordsByPathId.get,
-        getIdByCoords: ::pathIdByCoords.get
+        getIdByCoords: ::pathIdByCoords.get,
+        get: () => pathIdByCoords.toSet()
     };
 }
 

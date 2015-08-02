@@ -1,9 +1,9 @@
-const React = require('react');
-const R = require('ramda');
-const uiEvents = require('./').uiEvents;
-const { Input, OverlayTrigger, Tooltip } = require('react-bootstrap');
+import React from 'react';
+import R from 'ramda';
+import { Input, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { uiEvents } from './base';
 
-class GameCreator extends React.Component {
+export class GameCreator extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -16,9 +16,9 @@ class GameCreator extends React.Component {
         this.onStateUpdate();
     }
     handleBoardSizeChange(event) {
-        let { min, max } = this.props.boardSize;
-        let boardSize = parseInt(event.target.value);
-        let boardSizeError = (Number.isNaN(boardSize) || boardSize < min || boardSize > max);
+        const { min, max } = this.props.boardSize;
+        const boardSize = parseInt(event.target.value);
+        const boardSizeError = (Number.isNaN(boardSize) || boardSize < min || boardSize > max);
         this.setState({ boardSizeError });
         if (boardSizeError) {
             return;
@@ -26,9 +26,9 @@ class GameCreator extends React.Component {
         this.setState({ boardSize }, this.onStateUpdate.bind(this));
     }
     handleNumberOfPlayersChange(event) {
-        let { min } = this.props.numberOfPlayers;
-        let numberOfPlayers = parseInt(event.target.value);
-        let numberOfPlayersError = (Number.isNaN(numberOfPlayers) || numberOfPlayers < min);
+        const { min } = this.props.numberOfPlayers;
+        const numberOfPlayers = parseInt(event.target.value);
+        const numberOfPlayersError = (Number.isNaN(numberOfPlayers) || numberOfPlayers < min);
         this.setState({ numberOfPlayersError });
         if (numberOfPlayersError) {
             return;
@@ -36,15 +36,15 @@ class GameCreator extends React.Component {
         this.setState({ numberOfPlayers }, this.onStateUpdate.bind(this));
     }
     onStateUpdate() {
-        let gameEvent = R.merge(this.state, {
+        const gameEvent = R.merge(this.state, {
             type: 'create_game'
         });
         uiEvents(gameEvent);
     }
     render() {
-        let { numberOfPlayers, boardSize, numberOfPlayersError, boardSizeError } = this.state;
-        let boardSizeTooltip = <Tooltip>Must be at least 2 and no larger than 10</Tooltip>;
-        let numberOfPlayersTooltip = <Tooltip>Must be at least 2</Tooltip>;
+        const { numberOfPlayers, boardSize, numberOfPlayersError, boardSizeError } = this.state;
+        const boardSizeTooltip = <Tooltip>Must be at least 2 and no larger than 10</Tooltip>;
+        const numberOfPlayersTooltip = <Tooltip>Must be at least 2</Tooltip>;
         return <form className="game-creator navbar-form navbar-left" role="create-game">
             <OverlayTrigger placement="bottom" overlay={numberOfPlayersTooltip}>
                 <Input
@@ -79,5 +79,3 @@ class GameCreator extends React.Component {
         </form>;
     }
 }
-
-module.exports = { GameCreator };

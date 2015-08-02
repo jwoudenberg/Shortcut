@@ -1,20 +1,25 @@
-exports.createGameView = createGameView;
-exports.uiEvents = require('flyd').stream();
+import React from 'react';
+import flyd from 'flyd';
+import { createGame } from './game';
+import { GameCreator } from './page';
 
-const React = require('react');
-const Game = require('./components').Game;
-const GameCreator = require('./page').GameCreator;
+export * from './base';
 
-function createGameView(world, actions, parameters) {
+export function renderPage(world, actions, parameters) {
     /* Render the game itself. */
-    React.render(
-        <div className="container-fluid"><Game actions={actions} world={world} /></div>,
-        document.getElementById('app-content')
-    );
+    const gameStream = createGame(actions, world);
+    flyd.on(renderGame, gameStream);
 
     /* Render surrounding UI. */
     React.render(
         <GameCreator {...parameters.gameCreation} />,
         document.getElementById('app-navbar')
+    );
+}
+
+function renderGame(game) {
+    return React.render(
+        <div className="container-fluid">{game}</div>,
+            document.getElementById('app-content')
     );
 }

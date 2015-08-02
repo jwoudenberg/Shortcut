@@ -1,22 +1,21 @@
-module.exports = { createGame };
+import R from 'ramda';
+import flyd from 'flyd';
+import flatmap from 'flyd-flatmap';
+import filter from 'flyd-filter';
+import { fromJS } from 'immutable';
 
-const R = require('ramda');
-const flyd = require('flyd');
-const flatmap = require('flyd-flatmap');
-const filter = require('flyd-filter');
-
-function createGame(uiEvents) {
-    let players = flyd.stream();
-    let moves = flatmap((player) => player.moves, players);
-    let { actions, world } = createWorld(moves);
+export function createGame(uiEvents) {
+    const players = flyd.stream();
+    const moves = flatmap((player) => player.moves, players);
+    const { actions, world } = createWorld(moves);
     players(createPlayer(uiEvents));
     players(createGameMaster(actions));
     return { actions, world };
 }
 
 function createPlayer(uiEvents) {
-    let moves = flyd.stream([uiEvents], function createMove() {
-        let uiEvent = uiEvents();
+    const moves = flyd.stream([uiEvents], function createMove() {
+        const uiEvent = uiEvents();
         //TODO: add validation here.
         return () => uiEvent;
     });
@@ -28,9 +27,10 @@ function createPlayer(uiEvents) {
 }
 
 function createGameMaster(actions) {
-    let gameActions = [
+    const gameActions = [
         getAddCardMoves(actions),
-        getReplaceWorldMoves(actions)
+        getReplaceWorldMoves(actions),
+        getFindRoutesMoves(actions)
     ].reduce(flyd.merge, flyd.stream());
 
     return {
@@ -39,34 +39,43 @@ function createGameMaster(actions) {
     };
 }
 
-const getRandomCard = require('./get-random-card');
+import getRandomCard from './get-random-card';
 function getAddCardMoves(actions) {
-    let takeCardActions = filter((action) => action.type === 'take_card', actions);
+    const takeCardActions = filter((action) => action.type === 'take_card', actions);
     return takeCardActions.map(() => () => ({
         type: 'add_card',
         card: getRandomCard()
     }));
 }
 
-const createStartWorldState = require('./create-world');
+import createStartWorldState from './create-world';
 function getReplaceWorldMoves(actions) {
-    let createGameActions = filter((action) => action.type === 'create_game', actions);
+    const createGameActions = filter((action) => action.type === 'create_game', actions);
     return createGameActions.map((action) => () => ({
         type: 'replace_world',
         world: createStartWorldState(action)
     }));
 }
 
+import { findAllRoutes } from './find-route';
+function getFindRoutesMoves(actions) {
+    const findRouteMoves = filter((action) => action.type === 'find_routes', actions);
+    return findRouteMoves.map(() => (worldState) => ({
+        type: 'found_routes',
+        routes: findAllRoutes(fromJS(worldState)).toJS()
+    }));
+}
+
 const actionHandlers = {
     'replace_world': function replaceWorld(action) {
-        let world = action.world;
+        const world = action.world;
         if (!world) {
             throw new Error('replaceWorld: no world specified.');
         }
         return () => world;
     },
     'add_card': function addCard(action) {
-        let card = action.card;
+        const card = action.card;
         if (!card) {
             throw new Error('addCard: no card specified.');
         }
@@ -75,7 +84,7 @@ const actionHandlers = {
         });
     },
     'rotate_card': function rotateCard(action) {
-        let { cardId } = action;
+        const { cardId } = action;
         if (!cardId) {
             throw new Error('rotateCard: no cardId provided.');
         }
@@ -88,7 +97,7 @@ const actionHandlers = {
         });
     },
     'move_card': function moveCard(action) {
-        let { cardId, fieldId } = action;
+        const { cardId, fieldId } = action;
         if (!cardId) {
             throw new Error('moveCard: no cardId provided.');
         }
@@ -106,16 +115,24 @@ const actionHandlers = {
 };
 
 function createWorld(moves) {
-    let game = flyd.scan(updateWorld, {}, moves);
-    let world = flyd.stream([game], () => game().worldState);
-    let actions = flyd.stream([game], () => game().lastAction);
+    const game = flyd.scan(updateWorld, {}, moves);
+    const world = flyd.stream([game], (self) => {
+        //Convert old and new states to immutable.js for easy deep comparison.
+        //TODO: Remove this once all engine scripts use immutable.js datastructures.
+        const oldWorldState = fromJS(self() || {});
+        const newWorldState = fromJS(game().worldState || {});
+        if (!newWorldState.equals(oldWorldState)) {
+            self(game().worldState);
+        }
+    });
+    const actions = flyd.stream([game], () => game().lastAction);
     return { actions, world };
 }
 
 function updateWorld(gameState, move) {
-    let { worldState={} } = gameState;
-    let action = move(worldState);
-    let actionHandler = actionHandlers[action.type];
+    const { worldState={} } = gameState;
+    const action = move(worldState);
+    const actionHandler = actionHandlers[action.type];
     return {
         lastAction: action,
         worldState: actionHandler ? actionHandler(action)(worldState) : worldState
