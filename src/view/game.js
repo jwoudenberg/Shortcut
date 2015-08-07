@@ -12,7 +12,6 @@ export function createGame(actions, world) {
     const routes = getRoutes(world, actions, uiEvents);
     //React components stay solely responsible for rendering state. All other logic stays outside.
     return flyd.immediate(flyd.stream([world, selectedCardId, routes], () => {
-        //TODO: stop passing streams once all logic depending on them have been extracted from the component.
         return <Game worldState={world()} selectedCardId={selectedCardId()} routes={routes()} />;
     }));
 }
