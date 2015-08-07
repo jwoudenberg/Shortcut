@@ -1,10 +1,12 @@
 import * as R from 'ramda';
 import { Map, Set, List } from 'immutable';
 
+let getQueryablePathsMemoized = memoizeLast(getQueryablePaths);
+
 /* All the following functions take and return immutable.js data structures. */
 export function findRoute(mutablePathId, worldState) {
     const pathId = Map(mutablePathId);
-    const paths = getQueryablePaths(worldState);
+    const paths = getQueryablePathsMemoized(worldState);
     const _getNeighbourPaths = R.flip(getNeighbourPaths)(paths);
     function findRouteRecusive(pathId, seenPathIds=Set()) {
         //Check if we've already seen this path.
@@ -21,7 +23,7 @@ export function findRoute(mutablePathId, worldState) {
 }
 
 export function findAllRoutes(worldState) {
-    const pathSet = getQueryablePaths(worldState).get();
+    const pathSet = getQueryablePathsMemoized(worldState).get();
     function findRoutesLeft(pathsLeft) {
         if (pathsLeft.isEmpty()) {
             return Set();
@@ -58,7 +60,6 @@ function getNeighbourCoords(coords) {
         ));
 }
 
-//TODO: 'Memoize once', that is: cache the result for the last worldState this function was called with.
 function getQueryablePaths(worldState) {
     const fields = worldState.getIn(['board', 'fields'], List());
     const coordsByFieldId = new Map(
@@ -101,4 +102,17 @@ function getEquivalentNonRotatedCard(card) {
                 (port) => R.mathMod(port - rotation / 45, 8)
             ))
         ));
+}
+
+function memoizeLast(fn) {
+    let lastArgs = null;
+    let lastResult = null;
+    return (..._args) => {
+        const args = List(_args);
+        if (!args.equals(lastArgs)) {
+            lastArgs = args;
+            lastResult = fn(...args.toArray());
+        }
+        return lastResult;
+    }
 }
