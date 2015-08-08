@@ -1,5 +1,6 @@
 import React from 'react';
 import flyd from 'flyd';
+import './style.css';
 
 export const uiEvents = flyd.stream();
 

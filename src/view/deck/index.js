@@ -1,6 +1,6 @@
 import React from 'react';
-import Field from './field';
-import { uiEvents } from './base';
+import Field from '../field';
+import { uiEvents } from '../base';
 
 export default class Deck extends Field {
     handleClick(event) {
@@ -13,7 +13,7 @@ export default class Deck extends Field {
         const element = super.render();
         return React.cloneElement(
             element,
-            { className: [element.props.className, 'deck'].join(' ') }
+            { className: [element.props.className, 'shortcut-deck'].join(' ') }
         );
     }
 }

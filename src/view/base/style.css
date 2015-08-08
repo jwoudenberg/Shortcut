@@ -1,8 +1,8 @@
-@mixin component() {
+.shortcut-box {
     position: absolute;
     width: inherit;
     height: inherit;
     box-sizing: border-box;
-    //Move the component over the border of the containing component.
+    /* Move the component over the border of the containing component. */
     margin: -1px 0 0 -1px;
 }

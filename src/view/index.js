@@ -1,25 +1,33 @@
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/css/bootstrap-theme.min.css';
 import React from 'react';
 import flyd from 'flyd';
+import { Navbar, Nav, Grid } from 'react-bootstrap';
 import { createGame } from './game';
 import { GameCreator } from './page';
+import parameters from '../parameters';
 
 export * from './base';
 
-export function renderPage(world, actions, parameters) {
+export function renderPage(world, actions) {
     /* Render the game itself. */
     const gameStream = createGame(actions, world);
     flyd.on(renderGame, gameStream);
-
-    /* Render surrounding UI. */
-    React.render(
-        <GameCreator {...parameters.gameCreation} />,
-        document.getElementById('app-navbar')
-    );
 }
 
 function renderGame(game) {
-    return React.render(
-        <div className="container-fluid">{game}</div>,
-            document.getElementById('app-content')
+    //TODO: make the Navbar content depending on game context.
+    React.render(
+        <div>
+            <Navbar brand="Shortcut" >
+                <Nav>
+                    <GameCreator {...parameters.gameCreation} />
+                </Nav>
+            </Navbar>
+            <Grid fluid={true}>
+                {game}
+            </Grid>,
+        </div>,
+        document.body
     );
 }

@@ -1,5 +1,4 @@
-.card {
-    @include component();
+.shortcut-card {
     border:     1px solid #aaa;
     background: #eee;
     z-index:    1;
@@ -7,6 +6,6 @@
     overflow:   hidden;
 }
 
-.card.selected {
+.shortcut-card.selected {
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 }

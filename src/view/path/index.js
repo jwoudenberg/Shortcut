@@ -14,7 +14,8 @@ const PATH_DISTANCE_TO_SHAPE_MAP = {
     '4': { type: 's_turn' }
 };
 const LONG_HOVER_TIME_MS = 100;
-import { uiEvents } from './base';
+import { uiEvents } from '../base';
+import './style.css';
 
 const mouseEnterEvents = flyd.stream();
 const mouseLeaveEvents = flyd.stream();
@@ -91,16 +92,17 @@ class Path extends React.Component {
     render() {
         let { ports, color } = this.props;
         let { type, transforms } = this._getPathShape(...ports);
+        //TODO: Replace json data for path type with component per path type.
         let svgPaths = PATH_SVG_DATA[type];
         let transformAttr = transforms.reverse().map(this._getTransformString).join(' ');
         let style = {
             stroke: color,
             fill: color
         };
-        return <div className="path" style={{ pointerEvents: 'none' }}>
+        return <div className="shortcut-path shortcut-box" style={{ pointerEvents: 'none' }}>
             <svg version="1.1" viewBox="0 0 750 750">
                 <g
-                    className="pathContainer"
+                    className="shortcut-path-container"
                     transform={transformAttr}
                     onMouseEnter={this.handleMouseOver.bind(this)}
                     onMouseLeave={this.handleMouseOver.bind(this)}

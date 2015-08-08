@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, uiEvents } from './base';
+import './style.css';
+import { Box, uiEvents } from '../base';
 
 export default class Field extends Box {
     handleClick(event) {
@@ -14,7 +15,7 @@ export default class Field extends Box {
         }
     }
     render() {
-        return <div className="field"
+        return <div className="shortcut-field shortcut-box"
                     style={this.getStyle()}
                     onClick={this.handleClick.bind(this)} />;
     }

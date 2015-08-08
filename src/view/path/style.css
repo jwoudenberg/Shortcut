@@ -1,8 +1,4 @@
-.path {
-    @include component();
-}
-
-.pathContainer {
+.shortcut-path-container {
     opacity:        0.6;
     stroke:         #444444;
     stroke-width:   14;
@@ -10,12 +6,12 @@
     transition:     opacity 1s, fill 1s, stroke 1s;
 }
 
-.pathFill {
+.shortcut-path-fill {
     stroke:         none !important;
     opacity:        0.2;
     transition:     opacity 1s;
 }
 
-.pathBorder {
+.shortcut-path-border {
     fill:           none !important;
 }

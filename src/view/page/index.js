@@ -1,7 +1,7 @@
 import React from 'react';
 import R from 'ramda';
 import { Input, OverlayTrigger, Tooltip } from 'react-bootstrap';
-import { uiEvents } from './base';
+import { uiEvents } from '../base';
 
 export class GameCreator extends React.Component {
     constructor(props) {

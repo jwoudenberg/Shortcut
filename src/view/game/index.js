@@ -2,10 +2,11 @@ import React from 'react';
 import flyd from 'flyd';
 import filter from 'flyd-filter';
 import R from 'ramda';
-import { uiEvents } from './';
-import Card from './card';
-import Field from './field';
-import Deck from './deck';
+import './style.css';
+import { uiEvents } from '../';
+import Card from '../card';
+import Field from '../field';
+import Deck from '../deck';
 
 export function createGame(actions, world) {
     const selectedCardId = getSelectedCardId(actions, uiEvents);
@@ -50,7 +51,7 @@ class Game extends React.Component {
             R.nth(R.__, colors)
         );
 
-        return <div className="game">
+        return <div className="shortcut-game">
             {this.renderDeck(deck)}
             {shiftedFields.map(function printField(field) {
                 return this.renderField(field);

@@ -1,6 +1,6 @@
 #!/bin/sh
 set -ex
-gulp
+./node_modules/.bin/webpack
 cd dist
 rm -rf .git
 git init

@@ -1,8 +1,9 @@
 import React from 'react';
 import classNames from 'classnames';
-import { uiEvents } from './';
-import { Box } from './base';
-import Path from './path';
+import './style.css';
+import { uiEvents } from '../';
+import { Box } from '../base';
+import Path from '../path';
 
 let topZIndex = 2;
 export default class Card extends Box {
@@ -45,7 +46,7 @@ export default class Card extends Box {
         const style = this.getStyle();
         style.transform = `rotate(${rotation}deg)`;
         style.zIndex = this.zIndex || 1;
-        return <div className={classNames('card', { selected })}
+        return <div className={classNames('shortcut-card', 'shortcut-box', { selected })}
                     style={style}
                     onClick={this.handleClick.bind(this)} >
             {paths.map(function drawPath(path, index) {
