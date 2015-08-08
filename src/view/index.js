@@ -19,7 +19,7 @@ function renderGame(game) {
     //TODO: make the Navbar content depending on game context.
     React.render(
         <div>
-            <Navbar brand="Shortcut" >
+            <Navbar brand="Shortcut" fluid={true}>
                 <Nav>
                     <GameCreator {...parameters.gameCreation} />
                 </Nav>
