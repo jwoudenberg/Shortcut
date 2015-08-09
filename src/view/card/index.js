@@ -46,16 +46,23 @@ export default class Card extends Box {
         const style = this.getStyle();
         style.transform = `rotate(${rotation}deg)`;
         style.zIndex = this.zIndex || 1;
-        return <div className={classNames('shortcut-card', 'shortcut-box', { selected })}
-                    style={style}
-                    onClick={this.handleClick.bind(this)} >
-            {paths.map(function drawPath(path, index) {
-                return <Path
-                    {...path}
-                    id={{ cardId: id, pathIndex: index }}
-                    key={[id, index].join()}
-                />;
-            })}
+        return <div className='shortcut-card-wrapper shortcut-box'
+                    style={style} >
+            <div className={classNames('shortcut-card', 'shortcut-box', { selected })}
+                onClick={this.handleClick.bind(this)} >
+                <div className='shortcut-card-front shortcut-box'>
+                    {paths.map(function drawPath(path, index) {
+                        return <Path
+                            {...path}
+                            id={{ cardId: id, pathIndex: index }}
+                            key={[id, index].join()}
+                        />;
+                    })}
+                </div>
+                <div className='shortcut-card-back shortcut-box'>
+                    Awesome Background!
+                </div>
+            </div>
         </div>;
     }
 }

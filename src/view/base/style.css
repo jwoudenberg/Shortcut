@@ -4,5 +4,6 @@
     height: inherit;
     box-sizing: border-box;
     /* Move the component over the border of the containing component. */
+    border: 1px solid transparent;
     margin: -1px 0 0 -1px;
 }

@@ -26,7 +26,7 @@ module.exports = {
             loader: 'json-loader'
         }, {
             test: /\.css$/,
-            loader: 'style!css'
+            loader: 'style!css!autoprefixer-loader?browsers=last 2 versions'
         }, {
             test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
             loader: 'url-loader?limit=10000&minetype=application/font-woff'

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { addons } from 'react/addons';
 import flyd from 'flyd';
 import filter from 'flyd-filter';
 import R from 'ramda';
@@ -7,6 +7,8 @@ import { uiEvents } from '../';
 import Card from '../card';
 import Field from '../field';
 import Deck from '../deck';
+
+const { CSSTransitionGroup } = addons;
 
 export function createGame(actions, world) {
     const selectedCardId = getSelectedCardId(actions, uiEvents);
@@ -56,9 +58,9 @@ class Game extends React.Component {
             {shiftedFields.map(function printField(field) {
                 return this.renderField(field);
             }, this)}
-            {cards.map(function printField(card) {
-                return this.renderCard(getFieldById, getColorByPathId, card);
-            }, this)}
+            <CSSTransitionGroup transitionName="unflip-card" transitionLeave={false} >
+                {cards.map((card) => this.renderCard(getFieldById, getColorByPathId, card))}
+            </CSSTransitionGroup>
         </div>;
     }
     renderDeck(deck) {

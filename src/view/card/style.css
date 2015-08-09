@@ -1,11 +1,33 @@
-.shortcut-card {
-    border:     1px solid #aaa;
-    background: #eee;
+.shortcut-card-wrapper {
     z-index:    1;
     transition: transform ease-in-out 300ms, top ease-in-out 300ms, left ease-in-out 300ms, box-shadow 100ms;
-    overflow:   hidden;
+    perspective: 300;
 }
 
+.shortcut-card {
+    transform-style: preserve-3d;
+    transition: transform ease-in-out 300ms;
+}
 .shortcut-card.selected {
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+.unflip-card-enter .shortcut-card {
+    transform: rotateY(180deg);
+}
+.unflip-card-enter-active {
+    transform: rotateY(0deg) !important;
+}
+
+.shortcut-card-front, .shortcut-card-back {
+    background: #eee;
+    border-color: #aaa !important;
+    backface-visibility: hidden;
+}
+
+.shortcut-card-front {
+    z-index: 1;
+}
+
+.shortcut-card-back {
+    transform: rotateY(180deg);
 }
