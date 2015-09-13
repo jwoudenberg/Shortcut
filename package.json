@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack",
-    "deploy": "webpack && surge --project ./dist --domain shortcut.surge.sh"
+    "deploy": "webpack && surge --project ./dist --domain shortcut.jasperwoudenberg.com"
   },
   "author": "Jasper Woudenberg",
   "license": "ISC",
