@@ -1,31 +1,31 @@
 import React from 'react';
 import classNames from 'classnames';
 import './style.css';
-import { uiEvents } from '../';
 import { Box } from '../base';
 import Path from '../path';
 
 let topZIndex = 2;
 export default class Card extends Box {
-    static defaultProps() {
+    static defaultProps () {
         return { paths: [], rotation: 0 };
     }
-    handleClick(event) {
+    handleClick (event) {
         event.stopPropagation();
         const id = this.props.id;
+        const { events } = this.context;
         if (this.props.selected) {
-            uiEvents({
+            events({
                 type: 'rotate_card',
                 cardId: id
             });
         } else {
-            uiEvents({
+            events({
                 type: 'select_card',
                 cardId: id
             });
         }
     }
-    componentWillReceiveProps(nextProps) {
+    componentWillReceiveProps (nextProps) {
         const { rotation, field, selected } = this.props;
         const didRotationChange = (rotation !== nextProps.rotation);
         const didFieldChange = (field !== nextProps.field);
@@ -35,13 +35,13 @@ export default class Card extends Box {
         }
     }
     //Ensure that in a possible rendering and transition as a result of this event, this is the topmost element.
-    putOnTop() {
+    putOnTop () {
         const isOnTop = (this.zIndex === topZIndex);
         if (!isOnTop) {
             this.zIndex = ++topZIndex;
         }
     }
-    render() {
+    render () {
         const { paths, rotation, selected, id } = this.props;
         const style = this.getStyle();
         style.transform = `rotate(${rotation}deg)`;
@@ -49,7 +49,7 @@ export default class Card extends Box {
         return <div className={classNames('shortcut-card', 'shortcut-box', { selected })}
                     style={style}
                     onClick={this.handleClick.bind(this)} >
-            {paths.map(function drawPath(path, index) {
+            {paths.map(function drawPath (path, index) {
                 return <Path
                     {...path}
                     id={{ cardId: id, pathIndex: index }}
@@ -59,3 +59,7 @@ export default class Card extends Box {
         </div>;
     }
 }
+
+Card.contextTypes = {
+    events: React.PropTypes.func.isRequired
+};

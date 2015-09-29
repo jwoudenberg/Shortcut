@@ -1,10 +1,9 @@
 import React from 'react';
 import R from 'ramda';
 import { Input, OverlayTrigger, Tooltip } from 'react-bootstrap';
-import { uiEvents } from '../base';
 
 export class GameCreator extends React.Component {
-    constructor(props) {
+    constructor (props) {
         super(props);
         this.state = {
             numberOfPlayers: props.numberOfPlayers.default,
@@ -15,7 +14,7 @@ export class GameCreator extends React.Component {
         //Pass starting status.
         this.onStateUpdate();
     }
-    handleBoardSizeChange(event) {
+    handleBoardSizeChange (event) {
         const { min, max } = this.props.boardSize;
         const boardSize = parseInt(event.target.value);
         const boardSizeError = (Number.isNaN(boardSize) || boardSize < min || boardSize > max);
@@ -25,7 +24,7 @@ export class GameCreator extends React.Component {
         }
         this.setState({ boardSize }, this.onStateUpdate.bind(this));
     }
-    handleNumberOfPlayersChange(event) {
+    handleNumberOfPlayersChange (event) {
         const { min } = this.props.numberOfPlayers;
         const numberOfPlayers = parseInt(event.target.value);
         const numberOfPlayersError = (Number.isNaN(numberOfPlayers) || numberOfPlayers < min);
@@ -35,13 +34,13 @@ export class GameCreator extends React.Component {
         }
         this.setState({ numberOfPlayers }, this.onStateUpdate.bind(this));
     }
-    onStateUpdate() {
+    onStateUpdate () {
         const gameEvent = R.merge(this.state, {
             type: 'create_game'
         });
-        uiEvents(gameEvent);
+        this.props.events(gameEvent);
     }
-    render() {
+    render () {
         const { numberOfPlayers, boardSize, numberOfPlayersError, boardSizeError } = this.state;
         const boardSizeTooltip = <Tooltip>Must be at least 2 and no larger than 10</Tooltip>;
         const numberOfPlayersTooltip = <Tooltip>Must be at least 2</Tooltip>;

@@ -1,12 +1,8 @@
 const { createGame } = require('./engine');
-const { renderPage, uiEvents } = require('./view');
-const { on } = require('flyd');
+const { createView } = require('./view');
+const { on, stream } = require('flyd');
 
-const { actions, world } = createGame(uiEvents);
-renderPage(world, actions);
-
-//TODO: put this behind a production flag.
-//Logging:
-on(action => console.log('Action: ', action), actions);
-on(event => console.log('uiEvent: ', event), uiEvents);
-on(worldState => console.log('worldState: ', worldState), world);
+const moves = stream();
+const { moves: acceptedMoves, world } = createGame(moves);
+const userMoves = createView(world, acceptedMoves);
+on(moves, userMoves);

@@ -5,7 +5,7 @@ const PROBABILITY_EXPONENT = 1.2;
 const CARDS = require('./cards').map(R.evolve({ prob: p => Math.pow(p, PROBABILITY_EXPONENT) }));
 const PROBABILITY_SUM = CARDS.reduce((sum, card) => sum + card.prob, 0);
 
-function getRandomCard() {
+function getRandomCard () {
     //Using tower sampling to find a card among a list of cards with weighted probabilities.
     const RAND = Math.random() * PROBABILITY_SUM;
     const CARD = findCard(RAND, CARDS);
@@ -16,8 +16,8 @@ function getRandomCard() {
     };
 }
 
-function findCard(DISTANCE, CARDS) {
-    const CARD = R.head(CARDS);
+function findCard (DISTANCE, _CARDS) {
+    const CARD = R.head(_CARDS);
     if (CARDS.length === 1) {
         return CARD;
     }
@@ -25,7 +25,7 @@ function findCard(DISTANCE, CARDS) {
     if (NEW_DISTANCE <= 0) {
         return CARD;
     } else {
-        return findCard(NEW_DISTANCE, R.tail(CARDS));
+        return findCard(NEW_DISTANCE, R.tail(_CARDS));
     }
 }
 

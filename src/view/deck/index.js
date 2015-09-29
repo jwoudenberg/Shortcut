@@ -1,15 +1,14 @@
 import React from 'react';
 import Field from '../field';
-import { uiEvents } from '../base';
 
 export default class Deck extends Field {
-    handleClick(event) {
+    handleClick (event) {
         event.stopPropagation();
-        uiEvents({
+        this.context.events({
             type: 'take_card'
         });
     }
-    render() {
+    render () {
         const element = super.render();
         return React.cloneElement(
             element,
@@ -17,3 +16,7 @@ export default class Deck extends Field {
         );
     }
 }
+
+Deck.contextTypes = {
+    events: React.PropTypes.func.isRequired
+};

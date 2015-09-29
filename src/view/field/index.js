@@ -1,22 +1,26 @@
 import React from 'react';
 import './style.css';
-import { Box, uiEvents } from '../base';
+import { Box } from '../base';
 
 export default class Field extends Box {
-    handleClick(event) {
+    handleClick (event) {
         event.stopPropagation();
         const { id, selectedCardId } = this.props;
         if (selectedCardId) {
-            uiEvents({
+            this.context.events({
                 type: 'move_card',
                 cardId: selectedCardId,
                 fieldId: id
             });
         }
     }
-    render() {
+    render () {
         return <div className="shortcut-field shortcut-box"
                     style={this.getStyle()}
                     onClick={this.handleClick.bind(this)} />;
     }
 }
+
+Field.contextTypes = {
+    events: React.PropTypes.func.isRequired
+};

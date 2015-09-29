@@ -1,7 +1,8 @@
-const React = require('react');
-const R = require('ramda');
-const flyd = require('flyd');
-const PATH_SVG_DATA = require('./pathSVGData');
+import React from 'react';
+import R from 'ramda';
+import PATH_SVG_DATA from './pathSVGData';
+import './style.css';
+
 const PATH_DISTANCE_TO_SHAPE_MAP = {
     '-4': { type: 's_turn' },
     '-3': { type: 'straight' },
@@ -13,36 +14,9 @@ const PATH_DISTANCE_TO_SHAPE_MAP = {
     '3': { type: 'wide_turn' },
     '4': { type: 's_turn' }
 };
-const LONG_HOVER_TIME_MS = 100;
-import { uiEvents } from '../base';
-import './style.css';
 
-const mouseEnterEvents = flyd.stream();
-const mouseLeaveEvents = flyd.stream();
-const mousedOverPath = flyd.immediate(flyd.stream([mouseEnterEvents, mouseLeaveEvents], (self, changed) => {
-    let mouseLeaveUpdated = R.contains(mouseLeaveEvents, changed);
-    let leftCurrentPath = mouseLeaveUpdated && R.equals(self(), mouseLeaveEvents());
-    self(leftCurrentPath ? null : mouseEnterEvents());
-}));
-const longHoverOverPath = (function createLongHoverStream() {
-    let timer = null;
-    return flyd.stream([mousedOverPath], (self) => {
-        clearTimeout(timer);
-        timer = setTimeout(
-            () => mousedOverPath() && self( mousedOverPath()),
-            LONG_HOVER_TIME_MS
-        );
-    });
-}());
-//TODO: replace uiEvents with a stream of streams, so we don't need to take the side effect route here.
-flyd.on((pathId) => uiEvents({ pathId, type: 'show_route' }), longHoverOverPath);
-
-class Path extends React.Component {
-    handleMouseOver(event) {
-        let eventStream = (event.type === 'mouseenter') ? mouseEnterEvents : mouseLeaveEvents;
-        eventStream(this.props.id);
-    }
-    _getEvenPathShape(start, distance) {
+export default class Path extends React.Component {
+    _getEvenPathShape (start, distance) {
         let addDefaults = R.merge({
             type: null,
             rotation: 0,
@@ -51,7 +25,7 @@ class Path extends React.Component {
         let shape = addDefaults(PATH_DISTANCE_TO_SHAPE_MAP[distance]);
         return shape;
     }
-    _getOddPathShape(start, distance) {
+    _getOddPathShape (start, distance) {
         //Odd ports (1,3,5,7) will use mirror images of even ports (0,2,4,6)
         distance = -distance;
         let shape = R.pipe(
@@ -60,7 +34,7 @@ class Path extends React.Component {
         )(start, distance);
         return shape;
     }
-    _getPathShape(port1, port2) {
+    _getPathShape (port1, port2) {
         //If only one port is given, set the second one to equal the first.
         port2 = R.defaultTo(port1, port2);
 
@@ -80,16 +54,16 @@ class Path extends React.Component {
         let shape = R.pipe(getShape, rotate)(start, distance);
         return shape;
     }
-    _getTransformString(transform) {
+    _getTransformString (transform) {
         let [type, amount] = R.toPairs(transform)[0];
         let transformString = R.cond([
-            [R.identical('rotate'), (type, rotation) => `rotate(${rotation} 375 375)`],
+            [R.identical('rotate'), (_type, rotation) => `rotate(${rotation} 375 375)`],
             [R.identical('mirror'), () => 'scale(-1 1) translate(-750, 0)'],
-            [R.T, (type) => { throw new Error('Unknown transform type ' + type); }]
+            [R.T, (_type) => { throw new Error(`Unknown transform type ${_type}`); }]
         ])(type, amount);
         return transformString;
     }
-    render() {
+    render () {
         let { ports, color } = this.props;
         let { type, transforms } = this._getPathShape(...ports);
         //TODO: Replace json data for path type with component per path type.
@@ -104,11 +78,9 @@ class Path extends React.Component {
                 <g
                     className="shortcut-path-container"
                     transform={transformAttr}
-                    onMouseEnter={this.handleMouseOver.bind(this)}
-                    onMouseLeave={this.handleMouseOver.bind(this)}
                     style={{ pointerEvents: 'all' }}
                 >
-                    {svgPaths.map(function drawSVGPath(svgPath) {
+                    {svgPaths.map(function drawSVGPath (svgPath) {
                         return <path key={svgPath.d} style={style} {...svgPath} />;
                     })}
                 </g>
@@ -116,5 +88,3 @@ class Path extends React.Component {
         </div>;
     }
 }
-
-module.exports = Path;

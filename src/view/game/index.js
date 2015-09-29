@@ -1,35 +1,43 @@
 import React from 'react';
 import flyd from 'flyd';
-import filter from 'flyd-filter';
+import filter from 'flyd/module/filter';
 import R from 'ramda';
 import './style.css';
-import { uiEvents } from '../';
 import Card from '../card';
 import Field from '../field';
 import Deck from '../deck';
 
-export function createGame(actions, world) {
-    const selectedCardId = getSelectedCardId(actions, uiEvents);
-    const routes = getRoutes(world, actions, uiEvents);
+export function createGame (actions, world, events) {
+    const selectedCardId = getSelectedCardId(actions, events);
+    const routes = getRoutes(world, actions, events);
     //React components stay solely responsible for rendering state. All other logic stays outside.
     return flyd.immediate(flyd.stream([world, selectedCardId, routes], () => {
-        return <Game worldState={world()} selectedCardId={selectedCardId()} routes={routes()} />;
+        return <Game
+            worldState={world()}
+            selectedCardId={selectedCardId()}
+            routes={routes()}
+            events={events}
+        />;
     }));
 }
 
 class Game extends React.Component {
-    constructor(props) {
+    constructor (props) {
         super(props);
         //TODO: make this size depend on the available screen area.
         this.state = {
             fieldSize: 100
         };
     }
-    shiftFields(shift, fields) {
+    getChildContext () {
+        const { events } = this.props;
+        return { events };
+    }
+    shiftFields (shift, fields) {
         const evolver = R.mapObj((shiftAmount) => R.add(shiftAmount), shift);
         return fields.map(R.evolve(evolver));
     }
-    render() {
+    render () {
         const { worldState: { board: { fields = [] } = {}, cards = [] } = {}, routes = [] } = this.props;
         const deck = { col: 0, row: 0 };
         const shiftedFields = this.shiftFields({ col: 2 }, fields);
@@ -53,21 +61,21 @@ class Game extends React.Component {
 
         return <div className="shortcut-game">
             {this.renderDeck(deck)}
-            {shiftedFields.map(function printField(field) {
+            {shiftedFields.map(function printField (field) {
                 return this.renderField(field);
             }, this)}
-            {cards.map(function printField(card) {
+            {cards.map(function printField (card) {
                 return this.renderCard(getFieldById, getColorByPathId, card);
             }, this)}
         </div>;
     }
-    renderDeck(deck) {
+    renderDeck (deck) {
         return <Deck
             {...deck}
             fieldSize={this.state.fieldSize}
         />;
     }
-    renderField(field) {
+    renderField (field) {
         const { selectedCardId } = this.props;
         const { fieldSize } = this.state;
         return <Field
@@ -77,7 +85,7 @@ class Game extends React.Component {
             selectedCardId={selectedCardId}
         />;
     }
-    renderCard(getFieldById, getColorByPathId, card) {
+    renderCard (getFieldById, getColorByPathId, card) {
         const { selectedCardId } = this.props;
         const { fieldSize } = this.state;
         const cardId = card.id;
@@ -98,9 +106,13 @@ class Game extends React.Component {
     }
 }
 
+Game.childContextTypes = {
+    events: React.PropTypes.func.isRequired
+};
+
 const isEventOfType = typeToCheck => ({ type }) => type === typeToCheck;
-function getSelectedCardId(actions, uiEvents) {
-    const userSelectedCardId = filter(isEventOfType('select_card'), uiEvents)
+function getSelectedCardId (actions, events) {
+    const userSelectedCardId = filter(isEventOfType('select_card'), events)
         .map(R.prop('cardId'));
     const newCardId = filter(isEventOfType('add_card'), actions)
         .map(R.path(['card', 'id']));
@@ -108,19 +120,18 @@ function getSelectedCardId(actions, uiEvents) {
     return selectedCardId;
 }
 
-function getRoutes(world, actions, uiEvents) {
+function getRoutes (world, actions, events) {
     const latestRoutes = filter(isEventOfType('found_routes'), actions)
         .map(R.prop('routes'));
     const routes = flyd.immediate(flyd.stream([latestRoutes, world], (self, changed) => {
         if (changed[0] === world) {
             //The world changed, so our old routes are no longer valid.
-            //TODO: remove uiEvent as a side effect here once uiEvent mechanism takes streams.
-            uiEvents({ type: 'find_routes' });
+            events({ type: 'find_routes' });
             return [];
         }
         return latestRoutes();
     }));
-    const pickedPathId = filter(isEventOfType('show_route'), uiEvents)
+    const pickedPathId = filter(isEventOfType('show_route'), events)
         .map(R.prop('pathId'));
     const pickedRoutes = flyd.stream([routes, pickedPathId], () => {
         const pickedRoute = R.find(

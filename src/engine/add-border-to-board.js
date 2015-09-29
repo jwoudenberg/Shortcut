@@ -3,7 +3,7 @@ const uuid = require('node-uuid').v4;
 const getNeighbours = require('./field-neighbours').getAll;
 
 //Beware: this action removes any existing cards in the world.
-function addBorder(world) {
+function addBorder (world) {
     let cards = createBorderCards(world);
     return R.assoc('cards', cards, world);
 }
@@ -11,7 +11,7 @@ function addBorder(world) {
 const isBorderField = R.pipe(R.prop('neighbours'), R.values, R.any(R.isNil));
 const keepBorderFields = R.filter(isBorderField);
 const addBorderCards = R.map(createBorderCard);
-function createBorderCards(world) {
+function createBorderCards (world) {
     const addNeighbours = R.map(R.partial(addNeighboursToField, world));
 
     let board = world.board;
@@ -23,7 +23,7 @@ function createBorderCards(world) {
     return cards;
 }
 
-function addNeighboursToField(world, field) {
+function addNeighboursToField (world, field) {
     let neighbours = getNeighbours(field, world);
     return R.assoc('neighbours', neighbours, field);
 }
@@ -34,7 +34,7 @@ const DIRECTION_PORT_MAP = {
     top: [4, 5],
     left: [6, 7]
 };
-function createBorderCard(field) {
+function createBorderCard (field) {
     let neighbours = field.neighbours;
     let ports = R.pipe(
         R.keys,
@@ -44,7 +44,7 @@ function createBorderCard(field) {
     )(neighbours);
     let paths = R.pipe(
         getCornerPaths,
-        R.map(ports => ({ports}))
+        R.map(ports => ({ ports }))
     )(ports);
     return {
         id: uuid(),
@@ -56,7 +56,7 @@ function createBorderCard(field) {
 
 const CORNER_PATHS = [ [1, 2], [3, 4], [5, 6], [7, 0] ];
 const containsList = R.curry((sublist, superlist) => R.all(R.contains(R.__, superlist), sublist));
-function getCornerPaths(ports) {
+function getCornerPaths (ports) {
     return CORNER_PATHS.filter(
         R.flip(containsList)(ports)
     );

@@ -4,11 +4,11 @@ import { Map, Set, List } from 'immutable';
 let getQueryablePathsMemoized = memoizeLast(getQueryablePaths);
 
 /* All the following functions take and return immutable.js data structures. */
-export function findRoute(mutablePathId, worldState) {
+export function findRoute (mutablePathId, worldState) {
     const pathId = Map(mutablePathId);
     const paths = getQueryablePathsMemoized(worldState);
     const _getNeighbourPaths = R.flip(getNeighbourPaths)(paths);
-    function findRouteRecusive(pathId, seenPathIds=Set()) {
+    function findRouteRecusive (pathId, seenPathIds=Set()) {
         //Check if we've already seen this path.
         if (seenPathIds.has(pathId)) {
             return Set();
@@ -22,7 +22,7 @@ export function findRoute(mutablePathId, worldState) {
     return findRouteRecusive(pathId);
 }
 
-export function findAllRoutes(worldState) {
+export function findAllRoutes (worldState) {
     const pathSet = getQueryablePathsMemoized(worldState).get();
     function findRoutesLeft(pathsLeft) {
         if (pathsLeft.isEmpty()) {
@@ -35,7 +35,7 @@ export function findAllRoutes(worldState) {
     return findRoutesLeft(pathSet);
 }
 
-function getNeighbourPaths(pathId, paths) {
+function getNeighbourPaths (pathId, paths) {
     return paths.getCoordsById(pathId)
         .map(R.pipe(
             getNeighbourCoords,
@@ -44,7 +44,7 @@ function getNeighbourPaths(pathId, paths) {
         .filterNot(R.isNil);
 }
 
-function getNeighbourCoords(coords) {
+function getNeighbourCoords (coords) {
     const direction = Math.floor(coords.get('port') / 2);
     const isEven = (number) => (number % 2) === 0;
     return coords
@@ -60,7 +60,7 @@ function getNeighbourCoords(coords) {
         ));
 }
 
-function getQueryablePaths(worldState) {
+function getQueryablePaths (worldState) {
     const fields = worldState.getIn(['board', 'fields'], List());
     const coordsByFieldId = new Map(
         fields.map(field => [field.get('id'), { row: field.get('row'), col: field.get('col') }])

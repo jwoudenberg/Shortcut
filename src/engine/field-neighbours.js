@@ -6,7 +6,7 @@ const POSITION_MODIFIERS = {
     'up': R.evolve({ row: R.dec }),
     'down': R.evolve({ row: R.inc })
 };
-function getNeighbour(direction, field, world) {
+function getNeighbour (direction, field, world) {
     let positionModifier = POSITION_MODIFIERS[direction];
     if (!positionModifier) {
         throw new Error(`Unknown direction ${direction}`);
