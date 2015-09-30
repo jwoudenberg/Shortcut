@@ -6,13 +6,18 @@ export default function createMoveStore () {
     const nextMoveHashStore = createKeyValueStore('nextMoveHashes');
     const moveEvents = new EventEmitter();
 
-    function add (move) {
+    async function add (move) {
         const moveHash = move.hashCode();
         const previousMoveHash = move.get('previousMoveHash');
-        moveStore.set(moveHash, move);
+        const isFirstMove = !previousMoveHash;
+        const previousMove = await moveStore.get(previousMoveHash);
+        if (!isFirstMove && !previousMove) {
+            throw new Error('Storing move failed because previous move does not exist. Hash: ' + previousMoveHash);
+        }
+        await moveStore.set(moveHash, move);
         if (previousMoveHash) {
             try {
-                nextMoveHashStore.set(previousMoveHash, moveHash, { overwrite: false });
+                await nextMoveHashStore.set(previousMoveHash, moveHash, { overwrite: false });
             } catch({ message }) {
                 return { error: message };
             }

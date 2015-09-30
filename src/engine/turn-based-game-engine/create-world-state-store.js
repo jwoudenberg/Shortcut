@@ -4,28 +4,28 @@ export default function createWorldStateStore (getMove, applyRules) {
 
     const worldStateStore = createKeyValueStore('worldState');
 
-    function store (moveHash, worldState) {
-        worldStateStore.set(moveHash, worldState);
+    async function store (moveHash, worldState) {
+        await worldStateStore.set(moveHash, worldState);
         console.log('World state stored:', { moveHash, worldState });
     }
 
-    function updateWorldState (move) {
-        const previousWorldState = get(move.get('previousMoveHash'));
+    async function updateWorldState (move) {
+        const previousWorldState = await get(move.get('previousMoveHash'));
         const { errors, worldState } = applyRules(previousWorldState, move);
         if (errors.length) {
             throw new Error('Attempting to update world with invalid move.');
         }
-        store(move.hashCode(), worldState);
+        await store(move.hashCode(), worldState);
         return worldState;
     }
 
-    function get (moveHash) {
-        const move = getMove(moveHash);
+    async function get (moveHash) {
+        const move = await getMove(moveHash);
         if (!move) {
             return null;
         }
-        const worldState = worldStateStore.get(moveHash);
-        return worldState ? worldState : updateWorldState(move);
+        const worldState = await worldStateStore.get(moveHash);
+        return worldState ? worldState : await updateWorldState(move);
     }
 
     return { get };

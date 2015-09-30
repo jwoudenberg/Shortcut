@@ -26,8 +26,8 @@ function getAcceptedMoves (onMove) {
 }
 
 function applyMoves (makeMove, moves) {
-    const errors = flyd.stream([moves], _errors => {
-        const { error } = makeMove(moves());
+    const errors = flyd.stream([moves], async _errors => {
+        const { error } = await makeMove(moves());
         if (error) {
             _errors(error);
         }
@@ -37,13 +37,15 @@ function applyMoves (makeMove, moves) {
 
 function getWorld (getWorldState, moves) {
     let previousWorldState = null;
-    const world = flyd.stream([moves], _world => {
-        const worldState = getWorldState(moves().hashCode());
-        const immutableWorldState = fromJS(worldState);
-        if (immutableWorldState && !immutableWorldState.equals(previousWorldState)) {
-            previousWorldState = immutableWorldState;
-            _world(worldState);
-        }
+    const world = flyd.stream([moves], world => {
+        //TODO: get rid of the promise notation here.
+        getWorldState(moves().hashCode()).then(worldState => {
+            const immutableWorldState = fromJS(worldState);
+            if (immutableWorldState && !immutableWorldState.equals(previousWorldState)) {
+                previousWorldState = immutableWorldState;
+                world(worldState);
+            }
+        });
     });
     return world;
 }

@@ -2,7 +2,7 @@ export default function createInMemoryStore (name) {
     const store = {};
 
     function get (key) {
-        return store[key];
+        return Promise.resolve(store[key]);
     }
 
     function set (key, value, options = {}) {
@@ -11,6 +11,7 @@ export default function createInMemoryStore (name) {
             throw new Error(`[${name} store] Now allowed to overwrite key: ${key}`);
         }
         store[key] = value;
+        return Promise.resolve(null);
     }
 
     return { set, get };
