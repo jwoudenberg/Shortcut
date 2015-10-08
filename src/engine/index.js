@@ -1,17 +1,18 @@
-import flyd from 'flyd';
-import { values } from 'ramda';
-import { fromJS } from 'immutable';
+import { is } from 'immutable';
+import { complement, isNil } from 'ramda';
+import { stream, on } from 'flyd';
+import { dropRepeatsWith } from 'flyd/module/droprepeats';
+import filter from 'flyd/module/filter';
 import { create as createTurnBasedGame } from './turn-based-game-engine';
 import { create as createGameMaster } from './game-master';
-import * as rules from './rules';
+import rules from './rules';
 
 export function createGame (moves) {
-    const immutableMoves = moves.map(fromJS);
-    const { makeMove, getWorldState, onMove } = createTurnBasedGame(values(rules));
-    const errors = applyMoves(makeMove, immutableMoves);
+    const { makeMove, getWorldState, onMove } = createTurnBasedGame(rules);
+    const errors = applyMoves(makeMove, moves);
     const acceptedMoves = getAcceptedMoves(onMove);
     const world = getWorld(getWorldState, acceptedMoves);
-    flyd.on(immutableMoves, createGameMaster(acceptedMoves));
+    on(moves, createGameMaster(acceptedMoves));
     return {
         errors,
         world,
@@ -20,13 +21,13 @@ export function createGame (moves) {
 }
 
 function getAcceptedMoves (onMove) {
-    const acceptedMoves = flyd.stream();
+    const acceptedMoves = stream();
     onMove(acceptedMoves);
     return acceptedMoves;
 }
 
 function applyMoves (makeMove, moves) {
-    const errors = flyd.stream([moves], async _errors => {
+    const errors = stream([moves], async _errors => {
         const { error } = await makeMove(moves());
         if (error) {
             _errors(error);
@@ -36,16 +37,14 @@ function applyMoves (makeMove, moves) {
 }
 
 function getWorld (getWorldState, moves) {
-    let previousWorldState = null;
-    const world = flyd.stream([moves], world => {
-        //TODO: get rid of the promise notation here.
-        getWorldState(moves().hashCode()).then(worldState => {
-            const immutableWorldState = fromJS(worldState);
-            if (immutableWorldState && !immutableWorldState.equals(previousWorldState)) {
-                previousWorldState = immutableWorldState;
-                world(worldState);
-            }
-        });
+    const world = stream([moves], () => {
+        return getWorldState(moves().hashCode())
+            .catch(function handleError (error) {
+                //TODO: clean this up.
+                console.error(error);
+            });
     });
-    return world;
+    const nonEmptyWorld = filter(complement(isNil), world);
+    const dedupedWorld = dropRepeatsWith(is, nonEmptyWorld);
+    return dedupedWorld;
 }

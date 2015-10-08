@@ -1,22 +1,21 @@
-const R = require('ramda');
-const uuid = require('node-uuid').v4;
+import { Map, Set } from 'immutable';
+import { range, xprod, apply } from 'ramda';
+import { v4 as uuid } from 'node-uuid';
 
-function addBoardToWorld (boardProperties) {
-    let {width, height} = boardProperties;
+export default function addBoardToWorld (boardProperties) {
+    const {width, height} = boardProperties;
     if (!width || !height) {
         throw new Error('Invalid board size: ' + [width, height].join(','));
     }
-    let rows = R.range(0, height);
-    let cols = R.range(0, width);
-    let coords = R.xprod(rows, cols);
-    let fields = coords.map(R.apply(makeField));
-    let board = { fields };
+    const rows = range(0, height);
+    const cols = range(0, width);
+    const coords = xprod(rows, cols);
+    const fields = Set(coords.map(apply(makeField)));
+    const board = Map({ fields });
     return board;
 }
 
 function makeField (row, col) {
-    let id = uuid();
-    return {id, row, col};
+    const id = uuid();
+    return Map({id, row, col});
 }
-
-module.exports = addBoardToWorld;

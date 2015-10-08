@@ -38,8 +38,12 @@ class Game extends React.Component {
         return fields.map(R.evolve(evolver));
     }
     render () {
-        const { worldState: { board: { fields = [] } = {}, cards = [] } = {}, routes = [] } = this.props;
+        const { worldState, routes = [] } = this.props;
+        const { board = {}, cards = [] } = worldState || {};
+        const { fields = [] } = board;
         const deck = { col: 0, row: 0 };
+        //Ensure we always render cards in the same order.
+        const sortedCards = R.sortBy(({ id }) => id, cards);
         const shiftedFields = this.shiftFields({ col: 2 }, fields);
         //Create an optimized way to lookup fields by id.
         const fieldsById = R.fromPairs(shiftedFields.map((field) => [field.id, field]));
@@ -64,7 +68,7 @@ class Game extends React.Component {
             {shiftedFields.map(function printField (field) {
                 return this.renderField(field);
             }, this)}
-            {cards.map(function printField (card) {
+            {sortedCards.map(function printField (card) {
                 return this.renderCard(getFieldById, getColorByPathId, card);
             }, this)}
         </div>;

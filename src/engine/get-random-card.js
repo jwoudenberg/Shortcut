@@ -1,32 +1,33 @@
-const R = require('ramda');
-const uuid = require('node-uuid').v4;
+import { Map, Set } from 'immutable';
+import { evolve, head, tail } from 'ramda';
+import { v4 as uuid } from 'node-uuid';
+import protoCards from './cards.json';
+
 //This probability exponent was found by experimentation.
-const PROBABILITY_EXPONENT = 1.2;
-const CARDS = require('./cards').map(R.evolve({ prob: p => Math.pow(p, PROBABILITY_EXPONENT) }));
-const PROBABILITY_SUM = CARDS.reduce((sum, card) => sum + card.prob, 0);
+const probabilityExponent = 1.2;
+const cards = protoCards.map(evolve({ probability: p => Math.pow(p, probabilityExponent) }));
+const probabilitySum = cards.reduce((sum, { probability }) => sum + probability, 0);
 
-function getRandomCard () {
+export default function getRandomCard () {
     //Using tower sampling to find a card among a list of cards with weighted probabilities.
-    const RAND = Math.random() * PROBABILITY_SUM;
-    const CARD = findCard(RAND, CARDS);
-    return {
+    const randomNumber = Math.random() * probabilitySum;
+    const { paths: protoPaths } = findCard(randomNumber, cards);
+    const paths = Set(protoPaths).map(
+        ports => Map({ ports: Set(ports) })
+    );
+    return Map({
         id: uuid(),
-        paths: CARD.paths.map(ports => ({ ports: ports })),
+        paths,
         rotation: Math.floor(Math.random() * 4) * 90
-    };
+    });
 }
 
-function findCard (DISTANCE, _CARDS) {
-    const CARD = R.head(_CARDS);
-    if (CARDS.length === 1) {
-        return CARD;
-    }
-    const NEW_DISTANCE = DISTANCE - CARD.prob;
-    if (NEW_DISTANCE <= 0) {
-        return CARD;
+function findCard (distance, _cards) {
+    const card = head(_cards);
+    const newDistance = distance - card.probability;
+    if (newDistance <= 0) {
+        return card;
     } else {
-        return findCard(NEW_DISTANCE, R.tail(_CARDS));
+        return findCard(newDistance, tail(_cards));
     }
 }
-
-module.exports = getRandomCard;

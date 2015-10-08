@@ -62,7 +62,6 @@
         "guard-for-in": 2,
         "key-spacing": [2, { "beforeColon": false, "afterColon": true }],
         "max-len": [2, 120],
-        "new-cap": 2,
         "new-parens": 2,
         "quotes": [2, "single"],
         "semi": [2, "always"],

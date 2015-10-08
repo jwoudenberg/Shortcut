@@ -1,39 +1,41 @@
-const R = require('ramda');
+import { Set, Map } from 'immutable';
+import { evolve, inc, dec, partial, converge } from 'ramda';
 
 const POSITION_MODIFIERS = {
-    'left': R.evolve({ col: R.dec }),
-    'right': R.evolve({ col: R.inc }),
-    'up': R.evolve({ row: R.dec }),
-    'down': R.evolve({ row: R.inc })
+    'left': evolve({ col: dec }),
+    'right': evolve({ col: inc }),
+    'up': evolve({ row: dec }),
+    'down': evolve({ row: inc })
 };
-function getNeighbour (direction, field, world) {
-    let positionModifier = POSITION_MODIFIERS[direction];
+function getNeighbour (direction, field, worldState) {
+    const positionModifier = POSITION_MODIFIERS[direction];
     if (!positionModifier) {
         throw new Error(`Unknown direction ${direction}`);
     }
-    let board = world.board;
+    const board = worldState.get('board');
     if (!board) {
         throw new Error('World contains no board');
     }
-    let fields = board.fields || [];
-    let coordinates = R.pick(['row', 'col'], field);
-    let neighbourCoordinates = positionModifier(coordinates);
-    let neighbour = R.find(R.whereEq(neighbourCoordinates), fields);
-    return neighbour;
+    const fields = board.get('fields', Set());
+    const fieldCoords = {
+        row: field.get('row'),
+        col: field.get('col')
+    };
+    const neighbourCoords = positionModifier(fieldCoords);
+    const { row, col } = neighbourCoords;
+    const isNeighbourField = field => (field.get('row') === row) && (field.get('col') === col);
+    const neighbourField = fields.find(isNeighbourField);
+    return neighbourField;
 }
 
-let getNeighbourCurried = R.curry(getNeighbour);
-
-let getLeft = getNeighbourCurried('left');
-let getRight = getNeighbourCurried('right');
-let getTop = getNeighbourCurried('up');
-let getBottom = getNeighbourCurried('down');
-let getAll = R.converge(
-    (left, right, top, bottom) => ({left, right, top, bottom}),
+export const getLeft = partial(getNeighbour, 'left');
+export const getRight = partial(getNeighbour, 'right');
+export const getTop = partial(getNeighbour, 'up');
+export const getBottom = partial(getNeighbour, 'down');
+export const getAll = converge(
+    (left, right, top, bottom) => Map({left, right, top, bottom}),
     getLeft,
     getRight,
     getTop,
     getBottom
 );
-
-module.exports = {getLeft, getRight, getTop, getBottom, getAll};

@@ -1,13 +1,12 @@
-const createBoard = require('./create-board');
-const addBorder = require('./add-border-to-board');
+import { Set, Map } from 'immutable';
+import createBoard from './create-board';
+import addBorder from './add-border-to-board';
 
-function createWorld (options) {
-    let { boardSize } = options;
-    let boardSizeWithBorders = boardSize + 2;
-    let board = createBoard({ width: boardSizeWithBorders, height: boardSizeWithBorders });
-    let cards = [];
-    let world = addBorder({ board, cards });
-    return world;
+export default function createWorld (options) {
+    const { boardSize } = options;
+    const boardSizeWithBorders = boardSize + 2;
+    const board = createBoard({ width: boardSizeWithBorders, height: boardSizeWithBorders });
+    const cards = Set();
+    const world = Map({ board, cards });
+    return world.update(addBorder);
 }
-
-module.exports = createWorld;

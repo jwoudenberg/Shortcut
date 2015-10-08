@@ -42,8 +42,8 @@ export class GameCreator extends React.Component {
     }
     render () {
         const { numberOfPlayers, boardSize, numberOfPlayersError, boardSizeError } = this.state;
-        const boardSizeTooltip = <Tooltip>Must be at least 2 and no larger than 10</Tooltip>;
-        const numberOfPlayersTooltip = <Tooltip>Must be at least 2</Tooltip>;
+        const boardSizeTooltip = <Tooltip id="board-size-tooltip">Must be at least 2 and no larger than 10</Tooltip>;
+        const numberOfPlayersTooltip = <Tooltip id="no-of-players-tooltip">Must be at least 2</Tooltip>;
         return <form className="game-creator navbar-form navbar-left" role="create-game">
             <OverlayTrigger placement="bottom" overlay={numberOfPlayersTooltip}>
                 <Input
