@@ -11,7 +11,7 @@ import { createGame } from './game';
 import { GameCreator } from './page';
 import parameters from '../parameters';
 
-const MOVE_TYPES = ['create_game', 'take_card', 'rotate_card', 'move_card'];
+const MOVE_TYPES = ['create_game', 'take_card', 'rotate_card', 'move_card', 'add_player'];
 
 export function createView (world, moves) {
     const events = stream();

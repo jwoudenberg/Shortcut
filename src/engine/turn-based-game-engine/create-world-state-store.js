@@ -6,7 +6,7 @@ export default function createWorldStateStore (getMove, applyRules) {
 
     async function store (moveHash, worldState) {
         await worldStateStore.set(moveHash, worldState);
-        console.log('World state stored:', { moveHash, worldState });
+        console.log('World state stored:', { moveHash, worldState: worldState && worldState.toJS() });
     }
 
     async function updateWorldState (move) {

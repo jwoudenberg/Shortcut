@@ -1,7 +1,10 @@
-export default function createWorld (move) {
+import { Map } from 'immutable';
+
+export default function createWorld (move, worldState) {
     if (move.get('type') !== 'create_world') {
         return null;
     }
-    const worldState = move.get('worldState');
-    return { worldState };
+    const createdWorldState = move.get('worldState');
+    const newWorldState = (worldState || Map()).merge(createdWorldState);
+    return { worldState: newWorldState };
 }

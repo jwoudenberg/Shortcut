@@ -6,7 +6,7 @@ import rotateCard from './rotate-card';
 
 export default [
     createWorld,
-    // players,
+    players,
     addCard,
     moveCard,
     rotateCard

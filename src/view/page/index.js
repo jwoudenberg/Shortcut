@@ -1,15 +1,14 @@
 import React from 'react';
 import R from 'ramda';
-import { Input, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { Button, ButtonInput, Input, OverlayTrigger, Tooltip } from 'react-bootstrap';
 
 export class GameCreator extends React.Component {
     constructor (props) {
         super(props);
         this.state = {
-            numberOfPlayers: props.numberOfPlayers.default,
             boardSize: props.boardSize.default,
-            boardSizeError: false,
-            numberOfPlayersError: false
+            playerName: '',
+            boardSizeError: false
         };
         //Pass starting status.
         this.onStateUpdate();
@@ -24,15 +23,17 @@ export class GameCreator extends React.Component {
         }
         this.setState({ boardSize }, this.onStateUpdate.bind(this));
     }
-    handleNumberOfPlayersChange (event) {
-        const { min } = this.props.numberOfPlayers;
-        const numberOfPlayers = parseInt(event.target.value);
-        const numberOfPlayersError = (Number.isNaN(numberOfPlayers) || numberOfPlayers < min);
-        this.setState({ numberOfPlayersError });
-        if (numberOfPlayersError) {
-            return;
-        }
-        this.setState({ numberOfPlayers }, this.onStateUpdate.bind(this));
+    handlePlayerNameChange (event) {
+        const playerName = event.target.value;
+        this.setState({ playerName });
+    }
+    handleAddPlayer () {
+        const { playerName } = this.state;
+        this.props.events({
+            type: 'add_player',
+            name: playerName
+        });
+        this.setState({ playerName: '' });
     }
     onStateUpdate () {
         const gameEvent = R.merge(this.state, {
@@ -41,23 +42,11 @@ export class GameCreator extends React.Component {
         this.props.events(gameEvent);
     }
     render () {
-        const { numberOfPlayers, boardSize, numberOfPlayersError, boardSizeError } = this.state;
-        const boardSizeTooltip = <Tooltip id="board-size-tooltip">Must be at least 2 and no larger than 10</Tooltip>;
-        const numberOfPlayersTooltip = <Tooltip id="no-of-players-tooltip">Must be at least 2</Tooltip>;
-        return <form className="game-creator navbar-form navbar-left" role="create-game">
-            <OverlayTrigger placement="bottom" overlay={numberOfPlayersTooltip}>
-                <Input
-                    type='number'
-                    defaultValue={numberOfPlayers}
-                    label='The number of players in the new game.'
-                    bsStyle={numberOfPlayersError ? 'error' : undefined}
-                    groupClassName='col-xs-4'
-                    labelClassName='sr-only'
-                    addonBefore='Players:'
-                    onChange={this.handleNumberOfPlayersChange.bind(this)}
-                />
-            </OverlayTrigger>
-            <OverlayTrigger placement="bottom" overlay={boardSizeTooltip}>
+        const { boardSize, boardSizeError, playerName } = this.state;
+        const boardSizeTooltip = <Tooltip id='board-size-tooltip'>Must be at least 2 and no larger than 10</Tooltip>;
+        const addPlayerTooltip = <Tooltip id='add-player-tooltip'>Add a new player to the game.</Tooltip>;
+        return <form className='game-creator navbar-form navbar-left' role='create-game'>
+            <OverlayTrigger placement='bottom' overlay={boardSizeTooltip}>
                 <Input
                     type='number'
                     defaultValue={boardSize}
@@ -66,13 +55,25 @@ export class GameCreator extends React.Component {
                     groupClassName='col-xs-4'
                     labelClassName='sr-only'
                     addonBefore='Board Size:'
-                    onChange={this.handleBoardSizeChange.bind(this)}
+                    onChange={::this.handleBoardSizeChange}
                 />
             </OverlayTrigger>
-            <Input
+            <OverlayTrigger placement='bottom' overlay={addPlayerTooltip}>
+                <Input
+                    type='text'
+                    value={playerName}
+                    label='Adds a player to the game.'
+                    placeholder='Player name'
+                    groupClassName='col-xs-4'
+                    labelClassName='sr-only'
+                    buttonAfter={<Button onClick={::this.handleAddPlayer}>Add player</Button>}
+                    onChange={::this.handlePlayerNameChange}
+                />
+            </OverlayTrigger>
+            <ButtonInput
                 type='button'
                 standAlone
-                className='btn btn-primary'
+                bsStyle='primary'
                 value='Start Game'
             />
         </form>;

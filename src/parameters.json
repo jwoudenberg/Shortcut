@@ -4,10 +4,6 @@
             "default": 4,
             "min": 2,
             "max": 10
-        },
-        "numberOfPlayers": {
-            "default": 2,
-            "min": 2
         }
     }
 }
