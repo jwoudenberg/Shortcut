@@ -56,7 +56,7 @@ function addBasesForPlayer (worldState, player) {
         firstBaseIndex + baseCandidates.size / 2
     ];
     const playerBaseCoords = baseIndexes.map(::baseCandidates.get);
-    const addBases = worldState => playerBaseCoords.reduce(partial(addBase, player), worldState);
+    const addBases = worldState => playerBaseCoords.reduce(partial(addBaseToWorldState, player), worldState);
     const removeUsedBaseCandidates = worldState => baseIndexes.reduce(removeBaseCandidate, worldState);
     const newWorldState = worldState
         .update(addBases)
@@ -69,7 +69,7 @@ function removeBaseCandidate (worldState, baseIndex) {
     return worldState.setIn(baseCandidatePath, null);
 }
 
-function addBase (player, worldState, coords, index) {
+function addBaseToWorldState (player, worldState, coords, index) {
     const playerName = player.get('name');
     const playerBaseId = `player-base-${playerName}-${index}`;
     const path = Map({

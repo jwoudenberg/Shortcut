@@ -1,5 +1,6 @@
 import React from 'react';
 import R from 'ramda';
+import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import PATH_SVG_DATA from './pathSVGData';
 import './style.css';
 
@@ -73,12 +74,13 @@ export default class Path extends React.Component {
             stroke: color,
             fill: color
         };
-        return <div className="shortcut-path shortcut-box" style={{ pointerEvents: 'none' }}>
+        const baseIndicator = this.renderBaseIndicator();
+        return <div className="shortcut-path shortcut-box">
+            {baseIndicator}
             <svg version="1.1" viewBox="0 0 750 750">
                 <g
                     className="shortcut-path-container"
                     transform={transformAttr}
-                    style={{ pointerEvents: 'all' }}
                 >
                     {svgPaths.map(function drawSVGPath (svgPath) {
                         return <path key={svgPath.d} style={style} {...svgPath} />;
@@ -86,5 +88,44 @@ export default class Path extends React.Component {
                 </g>
             </svg>
         </div>;
+    }
+    renderBaseIndicator () {
+        const { ports, baseFor } = this.props;
+        if (!baseFor) {
+            return null;
+        }
+        const port = ports[0];
+        const position = {
+            0: { top: 0, left: 0 },
+            1: { top: 0, right: 0 },
+            2: { bottom: 0, left: 0 },
+            3: { top: 0, left: 0 },
+            4: { bottom: 0, right: 0 },
+            5: { bottom: 0, left: 0 },
+            6: { top: 0, right: 0 },
+            7: { bottom: 0, right: 0 }
+        }[port];
+        const firstLetter = baseFor.charAt(0).toUpperCase();
+        const margin = 10;
+        const badgeStyle = R.merge({
+            position: 'absolute',
+            width: `calc(50% - ${margin * 2}px)`,
+            height: `calc(50% - ${margin * 2}px)`,
+            border: '1px solid',
+            margin: margin,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderRadius: 5,
+            opacity: 0.8
+        }, position);
+        const fullPlayerNameTooltip = <Tooltip id='full-player-name'>{baseFor}</Tooltip>;
+        return (
+            <OverlayTrigger placement='bottom' overlay={fullPlayerNameTooltip} delay={300}>
+                <div style={badgeStyle}>
+                    <span>{firstLetter}</span>
+                </div>
+            </OverlayTrigger>
+        );
     }
 }

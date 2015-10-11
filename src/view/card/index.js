@@ -49,11 +49,11 @@ export default class Card extends Box {
         return <div className={classNames('shortcut-card', 'shortcut-box', { selected })}
                     style={style}
                     onClick={this.handleClick.bind(this)} >
-            {paths.map(function drawPath (path, index) {
+            {paths.map(function drawPath (path) {
+                const { id } = path;
                 return <Path
                     {...path}
-                    id={{ cardId: id, pathIndex: index }}
-                    key={[id, index].join()}
+                    key={id}
                 />;
             })}
         </div>;

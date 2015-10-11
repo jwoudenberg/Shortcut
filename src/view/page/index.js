@@ -29,6 +29,9 @@ export class GameCreator extends React.Component {
     }
     handleAddPlayer () {
         const { playerName } = this.state;
+        if (!playerName) {
+            return null;
+        }
         this.props.events({
             type: 'add_player',
             name: playerName
@@ -46,7 +49,7 @@ export class GameCreator extends React.Component {
         const boardSizeTooltip = <Tooltip id='board-size-tooltip'>Must be at least 2 and no larger than 10</Tooltip>;
         const addPlayerTooltip = <Tooltip id='add-player-tooltip'>Add a new player to the game.</Tooltip>;
         return <form className='game-creator navbar-form navbar-left' role='create-game'>
-            <OverlayTrigger placement='bottom' overlay={boardSizeTooltip}>
+            <OverlayTrigger placement='bottom' overlay={boardSizeTooltip} delay={300}>
                 <Input
                     type='number'
                     defaultValue={boardSize}
@@ -58,7 +61,7 @@ export class GameCreator extends React.Component {
                     onChange={::this.handleBoardSizeChange}
                 />
             </OverlayTrigger>
-            <OverlayTrigger placement='bottom' overlay={addPlayerTooltip}>
+            <OverlayTrigger placement='bottom' overlay={addPlayerTooltip} delay={300}>
                 <Input
                     type='text'
                     value={playerName}

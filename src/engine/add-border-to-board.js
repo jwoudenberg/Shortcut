@@ -38,7 +38,7 @@ function createBorderCard (field) {
     const portsWithNeighbours = neighbourDirections.flatMap(direction => DIRECTION_PORT_MAP[direction]);
     const paths = CORNER_PATHS
         .filter(cornerPorts => cornerPorts.isSubset(portsWithNeighbours))
-        .map(ports => Map({ ports }));
+        .map(ports => Map({ ports, id: uuid() }));
     return Map({
         id: uuid(),
         field: field.get('id'),

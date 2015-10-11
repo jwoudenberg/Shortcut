@@ -13,7 +13,7 @@ export default function getRandomCard () {
     const randomNumber = Math.random() * probabilitySum;
     const { paths: protoPaths } = findCard(randomNumber, cards);
     const paths = Set(protoPaths).map(
-        ports => Map({ ports: Set(ports) })
+        ports => Map({ ports: Set(ports), id: uuid() })
     );
     return Map({
         id: uuid(),

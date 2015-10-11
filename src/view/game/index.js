@@ -37,8 +37,14 @@ class Game extends React.Component {
         const evolver = R.mapObj((shiftAmount) => R.add(shiftAmount), shift);
         return fields.map(R.evolve(evolver));
     }
+    getSpecialPaths () {
+        const { worldState } = this.props;
+        const { players = [] } = worldState || {};
+        const specialPaths = players.reduce(addPlayerBases, {});
+        return specialPaths;
+    }
     render () {
-        const { worldState, routes = [] } = this.props;
+        const { worldState } = this.props;
         const { board = {}, cards = [] } = worldState || {};
         const { fields = [] } = board;
         const deck = { col: 0, row: 0 };
@@ -48,20 +54,7 @@ class Game extends React.Component {
         //Create an optimized way to lookup fields by id.
         const fieldsById = R.fromPairs(shiftedFields.map((field) => [field.id, field]));
         const getFieldById = (fieldId) => fieldsById[fieldId] || deck;
-
-        //Create an optimized way to lookup path color based on the path a route (might) be in.
-        //DEBUG: quick and dirty color map. Replace with randomized nicer colors
-        const colors = {
-            '-1': null,
-            '0': 'red',
-            '1': 'blue',
-            '2': 'green'
-        };
-        //DEBUG: quick test implementation, not very performant.
-        const getColorByPathId = R.pipe(
-            (pathId) => R.findIndex(R.containsWith(R.whereEq, pathId), routes),
-            R.nth(R.__, colors)
-        );
+        const specialPaths = this.getSpecialPaths();
 
         return <div className="shortcut-game">
             {this.renderDeck(deck)}
@@ -69,7 +62,7 @@ class Game extends React.Component {
                 return this.renderField(field);
             }, this)}
             {sortedCards.map(function printField (card) {
-                return this.renderCard(getFieldById, getColorByPathId, card);
+                return this.renderCard(getFieldById, specialPaths, card);
             }, this)}
         </div>;
     }
@@ -89,18 +82,18 @@ class Game extends React.Component {
             selectedCardId={selectedCardId}
         />;
     }
-    renderCard (getFieldById, getColorByPathId, card) {
+    renderCard (getFieldById, specialPaths, card) {
         const { selectedCardId } = this.props;
         const { fieldSize } = this.state;
-        const cardId = card.id;
-        const colouredPaths = (card.paths || []).map((path, index) => {
-            const color = getColorByPathId({ cardId, pathIndex: index });
-            return R.assoc('color', color, path);
+        const extendedPaths = (card.paths || []).map(path => {
+            const { id: pathId } = path;
+            const specialProps = specialPaths[pathId] || {};
+            return R.merge(path, specialProps);
         });
         const { row, col } = getFieldById(card.field);
         const extendedCard = R.merge(card, {
             key: card.id,
-            paths: colouredPaths,
+            paths: extendedPaths,
             selected: (selectedCardId === card.id),
             row,
             col,
@@ -148,4 +141,10 @@ function getRoutes (world, actions, events) {
         return pickedRoute ? [pickedRoute] : [];
     });
     return pickedRoutes;
+}
+
+function addPlayerBases (specialPaths, player) {
+    const { bases = [], name: playerName } = player;
+    const addPlayerBase = (_specialPaths, pathId) => R.assoc(pathId, { baseFor: playerName }, _specialPaths);
+    return bases.reduce(addPlayerBase, specialPaths);
 }
