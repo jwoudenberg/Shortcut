@@ -4,7 +4,7 @@ var HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = {
     entry: './src/index.js',
     output: {
-        path: path.join(__dirname, 'dist'),
+        path: path.join(__dirname, '_dist'),
         filename: 'bundle.js'
     },
     devtool: 'source-map',
@@ -33,6 +33,11 @@ module.exports = {
         }, {
             test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
             loader: 'file-loader'
+        }],
+        postLoaders: [{
+            test: /\.js$/,
+            include: path.join(__dirname, 'src/engine'),
+            loader: 'sweetjs?modules[]=' + path.join(__dirname, './mocha-remover.sjs')
         }]
     }
 };

@@ -1,3 +1,4 @@
+import 'babel-core/polyfill';
 import { is } from 'immutable';
 import { complement, isNil } from 'ramda';
 import { stream, on } from 'flyd';

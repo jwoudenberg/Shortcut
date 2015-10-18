@@ -1,0 +1,20 @@
+#!/bin/env node
+
+var path = require('path');
+require('shelljs/global');
+var webpack = require('webpack');
+var config = require('./webpack.config');
+config.target = 'node';
+config.entry = './src/engine/index.js';
+config.output = {
+    path: path.join(__dirname, '_test'),
+    filename: 'bundle.js'
+};
+delete config.module.postLoaders;
+
+webpack(config, function onCompilationFinished (err) {
+    if (err) {
+        return console.error('COMPILATION FAILED', err);
+    }
+    exec('./node_modules/.bin/mocha ./_test');
+});

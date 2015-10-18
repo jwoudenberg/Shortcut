@@ -21,8 +21,9 @@ lib-cov
 *.gz
 
 # Build files
-dist
-coverage
+_dist
+_test
+_coverage
 
 #node.js
 pids

@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "./test",
     "build": "webpack",
     "deploy": "webpack && surge --project ./dist --domain shortcut.jasperwoudenberg.com"
   },
@@ -30,7 +30,10 @@
     "css-loader": "^0.15.6",
     "html-webpack-plugin": "^1.6.1",
     "json-loader": "^0.5.2",
+    "mocha": "^2.3.3",
     "style-loader": "^0.12.3",
+    "sweet.js": "^0.7.4",
+    "sweetjs-loader": "^0.1.0",
     "webpack": "^1.11.0"
   }
 }
