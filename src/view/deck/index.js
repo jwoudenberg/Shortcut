@@ -18,5 +18,6 @@ export default class Deck extends Field {
 }
 
 Deck.contextTypes = {
+    ...Field.contextTypes,
     events: React.PropTypes.func.isRequired
 };

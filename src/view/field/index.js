@@ -5,12 +5,13 @@ import { Box } from '../base';
 export default class Field extends Box {
     handleClick (event) {
         event.stopPropagation();
-        const { id, selectedCardId } = this.props;
+        const { data } = this.props;
+        const { selectedCardId, events } = this.context;
         if (selectedCardId) {
-            this.context.events({
+            events({
                 type: 'move_card',
                 cardId: selectedCardId,
-                fieldId: id
+                fieldId: data.get('id')
             });
         }
     }
@@ -22,5 +23,7 @@ export default class Field extends Box {
 }
 
 Field.contextTypes = {
-    events: React.PropTypes.func.isRequired
+    ...Box.contextTypes,
+    events: React.PropTypes.func.isRequired,
+    selectedCardId: React.PropTypes.string
 };

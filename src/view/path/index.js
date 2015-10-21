@@ -65,8 +65,10 @@ export default class Path extends React.Component {
         return transformString;
     }
     render () {
-        let { ports, color } = this.props;
-        let { type, transforms } = this._getPathShape(...ports);
+        const { data } = this.props;
+        const ports = data.get('ports');
+        const color = data.get('color');
+        let { type, transforms } = this._getPathShape(...ports.toJS());
         //TODO: Replace json data for path type with component per path type.
         let svgPaths = PATH_SVG_DATA[type];
         let transformAttr = transforms.reverse().map(this._getTransformString).join(' ');
@@ -90,11 +92,13 @@ export default class Path extends React.Component {
         </div>;
     }
     renderBaseIndicator () {
-        const { ports, baseFor } = this.props;
+        const { data } = this.props;
+        const ports = data.get('ports');
+        const baseFor = data.get('baseFor');
         if (!baseFor) {
             return null;
         }
-        const port = ports[0];
+        const port = ports.first();
         const position = {
             0: { top: 0, left: 0 },
             1: { top: 0, right: 0 },

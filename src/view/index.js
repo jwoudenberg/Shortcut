@@ -15,8 +15,7 @@ const MOVE_TYPES = ['create_game', 'take_card', 'rotate_card', 'move_card', 'add
 
 export function createView (world, moves) {
     const events = stream();
-    const plainWorld = world.map(immutableWorldState => immutableWorldState.toJS());
-    const gameStream = createGame(moves, plainWorld, events);
+    const gameStream = createGame(moves, world, events);
     on(partial(renderGame, events), gameStream);
     const userMoves = stream([events], _userMoves => {
         const event = events();

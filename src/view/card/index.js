@@ -1,19 +1,19 @@
 import React from 'react';
 import classNames from 'classnames';
+import { Set } from 'immutable';
 import './style.css';
 import { Box } from '../base';
 import Path from '../path';
 
 let topZIndex = 2;
 export default class Card extends Box {
-    static defaultProps () {
-        return { paths: [], rotation: 0 };
-    }
     handleClick (event) {
         event.stopPropagation();
-        const id = this.props.id;
+        const { data } = this.props;
+        const id = data.get('id');
+        const selected = data.get('selected');
         const { events } = this.context;
-        if (this.props.selected) {
+        if (selected) {
             events({
                 type: 'rotate_card',
                 cardId: id
@@ -26,10 +26,11 @@ export default class Card extends Box {
         }
     }
     componentWillReceiveProps (nextProps) {
-        const { rotation, field, selected } = this.props;
-        const didRotationChange = (rotation !== nextProps.rotation);
-        const didFieldChange = (field !== nextProps.field);
-        const isNewlySelected = (selected === false && nextProps.selected === true);
+        const { data } = this.props;
+        const { data: nextData } = nextProps;
+        const didRotationChange = (data.get('rotation') !== nextData.get('rotation'));
+        const didFieldChange = (data.get('field') !== nextData.get('field'));
+        const isNewlySelected = (data.get('selected') === false && nextData.get('selected') === true);
         if (didRotationChange || didFieldChange || isNewlySelected) {
             this.putOnTop();
         }
@@ -42,18 +43,18 @@ export default class Card extends Box {
         }
     }
     render () {
-        const { paths, rotation, selected, id } = this.props;
+        const { data } = this.props;
         const style = this.getStyle();
-        style.transform = `rotate(${rotation}deg)`;
+        style.transform = `rotate(${data.get('rotation')}deg)`;
         style.zIndex = this.zIndex || 1;
-        return <div className={classNames('shortcut-card', 'shortcut-box', { selected })}
+        return <div className={classNames('shortcut-card', 'shortcut-box', { selected: data.get('selected') })}
                     style={style}
                     onClick={this.handleClick.bind(this)} >
-            {paths.map(function drawPath (path) {
-                const { id } = path;
+            {data.get('paths', Set()).map(function drawPath (path) {
+                const pathId = path.get('id');
                 return <Path
-                    {...path}
-                    key={id}
+                    data={path}
+                    key={pathId}
                 />;
             })}
         </div>;
@@ -61,5 +62,6 @@ export default class Card extends Box {
 }
 
 Card.contextTypes = {
+    ...Box.contextTypes,
     events: React.PropTypes.func.isRequired
 };
