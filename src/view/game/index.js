@@ -2,7 +2,7 @@ import React from 'react';
 import flyd from 'flyd';
 import filter from 'flyd/module/filter';
 import { Map, Set } from 'immutable';
-import { add, prop, path, containsWith, whereEq } from 'ramda';
+import { add, prop, containsWith, whereEq } from 'ramda';
 import './style.css';
 import Card from '../card';
 import Field from '../field';
@@ -108,9 +108,7 @@ const isEventOfType = typeToCheck => ({ type }) => type === typeToCheck;
 function getSelectedCardId (actions, events) {
     const userSelectedCardId = filter(isEventOfType('select_card'), events)
         .map(prop('cardId'));
-    const newCardId = filter(isEventOfType('add_card'), actions)
-        .map(path(['card', 'id']));
-    const selectedCardId = flyd.merge(userSelectedCardId, newCardId);
+    const selectedCardId = flyd.merge(userSelectedCardId);
     return selectedCardId;
 }
 

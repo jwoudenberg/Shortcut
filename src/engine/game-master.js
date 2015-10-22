@@ -1,31 +1,15 @@
-import flyd from 'flyd';
 import filter from 'flyd/module/filter';
+import { contains } from 'ramda';
 import { Map } from 'immutable';
-import getRandomCard from './get-random-card';
-import createStartWorldState from './create-world';
+
+const movesRequiringSeed = ['take_card', 'create_game'];
+const doesMoveRequireSeed = move => contains(move.get('type'), movesRequiringSeed);
 
 export function create (moves) {
-    const gameMasterMoves = [
-        getAddCardMoves(moves),
-        getReplaceWorldMoves(moves)
-    ].reduce(flyd.merge, flyd.stream());
-    return gameMasterMoves;
-}
-
-function getAddCardMoves (moves) {
-    const takeCardMoves = filter((move) => move.get('type') === 'take_card', moves);
-    return takeCardMoves.map(move => Map({
+    const movesToSeed = filter(doesMoveRequireSeed, moves);
+    return movesToSeed.map(move => Map({
         previousMoveHash: move.hashCode(),
-        type: 'add_card',
-        card: getRandomCard()
-    }));
-}
-
-function getReplaceWorldMoves (moves) {
-    const createGameMoves = filter((move) => move.get('type') === 'create_game', moves);
-    return createGameMoves.map(move => Map({
-        previousMoveHash: move.hashCode(),
-        type: 'create_world',
-        worldState: createStartWorldState(move.toJS())
+        type: `seed_${move.get('type')}`,
+        seed: Math.random()
     }));
 }

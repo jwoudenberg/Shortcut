@@ -13,6 +13,7 @@ export function createGame (moves) {
     const acceptedMoves = getAcceptedMoves(onMove);
     const world = getWorld(getWorldState, acceptedMoves);
     on(moves, createGameMaster(acceptedMoves));
+    on(error => error && console.log('Error:', error), errors);
     return {
         errors,
         world,

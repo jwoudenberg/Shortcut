@@ -1,4 +1,13 @@
 import { Set } from 'immutable';
+import Random from 'random-js';
+
+export function* getUuidGenerator (seed) {
+    const intSeed = Math.floor(seed * Math.pow(2, 32));
+    const randomEngine = Random.engines.mt19937().seed(intSeed);
+    while (true) {
+        yield Random.uuid4(randomEngine);
+    }
+}
 
 export function updateCardAtCoords (worldState, coords, updater) {
     const field = getFieldAtCoords(worldState, coords);

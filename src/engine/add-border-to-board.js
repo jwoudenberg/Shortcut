@@ -1,11 +1,10 @@
 import { Set, Map } from 'immutable';
 import { partial, isNil } from 'ramda';
-import { v4 as uuid } from 'node-uuid';
 import { getAll as getNeighbours } from './field-neighbours';
 
 const isBorderField = field => field.get('neighbours').some(isNil);
 
-export default function addBorder (worldState) {
+export default function addBorder (uuidGenerator, worldState) {
     const board = worldState.get('board');
     if (!board) {
         throw new Error('World contains no board');
@@ -14,7 +13,7 @@ export default function addBorder (worldState) {
     const borderCards = fields
         .map(partial(addNeighboursToField, worldState))
         .filter(isBorderField)
-        .map(createBorderCard);
+        .map(partial(createBorderCard, uuidGenerator));
     return worldState.update('cards', Set(), cards => cards.concat(borderCards));
 }
 
@@ -30,12 +29,13 @@ const DIRECTION_PORT_MAP = {
     left: [6, 7]
 };
 const CORNER_PATHS = Set([ Set([1, 2]), Set([3, 4]), Set([5, 6]), Set([7, 0]) ]);
-function createBorderCard (field) {
+function createBorderCard (uuidGenerator, field) {
     const neighbours = field.get('neighbours');
     const neighbourDirections = Set.fromKeys(
         neighbours.filterNot(isNil)
     );
     const portsWithNeighbours = neighbourDirections.flatMap(direction => DIRECTION_PORT_MAP[direction]);
+    const uuid = () => uuidGenerator.next().value;
     const paths = CORNER_PATHS
         .filter(cornerPorts => cornerPorts.isSubset(portsWithNeighbours))
         .map(ports => Map({ ports, id: uuid() }));
