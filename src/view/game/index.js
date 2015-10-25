@@ -1,20 +1,21 @@
 import React from 'react';
-import flyd from 'flyd';
+import { stream, immediate } from 'flyd';
 import filter from 'flyd/module/filter';
 import { Map, Set } from 'immutable';
 import { add, prop, containsWith, whereEq } from 'ramda';
+import getSelectedCardId from './get-selected-card-id';
 import './style.css';
 import Card from '../card';
 import Field from '../field';
 import Deck from '../deck';
 
 export function createGame (actions, world, events) {
-    const selectedCardId = getSelectedCardId(actions, events);
+    const selectedCardId = getSelectedCardId(world, events);
     const routes = getRoutes(world, actions, events);
     //TODO: make this size depend on the available screen area.
     const fieldSize = 100;
     //React components stay solely responsible for rendering state. All other logic stays outside.
-    return flyd.immediate(flyd.stream([world, selectedCardId, routes], () => {
+    return immediate(stream([world, selectedCardId, routes], () => {
         return <Game
             fieldSize={fieldSize}
             worldState={world()}
@@ -105,17 +106,11 @@ Game.childContextTypes = {
 };
 
 const isEventOfType = typeToCheck => ({ type }) => type === typeToCheck;
-function getSelectedCardId (actions, events) {
-    const userSelectedCardId = filter(isEventOfType('select_card'), events)
-        .map(prop('cardId'));
-    const selectedCardId = flyd.merge(userSelectedCardId);
-    return selectedCardId;
-}
 
 function getRoutes (world, actions, events) {
     const latestRoutes = filter(isEventOfType('found_routes'), actions)
         .map(prop('routes'));
-    const routes = flyd.immediate(flyd.stream([latestRoutes, world], (self, changed) => {
+    const routes = immediate(stream([latestRoutes, world], (self, changed) => {
         if (changed[0] === world) {
             //The world changed, so our old routes are no longer valid.
             events({ type: 'find_routes' });
@@ -125,7 +120,7 @@ function getRoutes (world, actions, events) {
     }));
     const pickedPathId = filter(isEventOfType('show_route'), events)
         .map(prop('pathId'));
-    const pickedRoutes = flyd.stream([routes, pickedPathId], () => {
+    const pickedRoutes = stream([routes, pickedPathId], () => {
         const pickedRoute = find(
             containsWith(
                 whereEq,
