@@ -1,22 +1,19 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/css/bootstrap-theme.min.css';
-import React from 'react';
 import { render } from 'react-dom';
 import 'react-dom';
 import { fromJS } from 'immutable';
 import { stream, on } from 'flyd';
 import { partial, contains, assoc } from 'ramda';
-import { Navbar, NavBrand, Nav, Grid } from 'react-bootstrap';
 import { createGame } from './game';
-import { GameCreator } from './page';
-import parameters from '../parameters';
+import Page from './page';
 
-const MOVE_TYPES = ['create_game', 'take_card', 'rotate_card', 'move_card', 'add_player'];
+const MOVE_TYPES = ['create_game', 'take_card', 'rotate_card', 'move_card', 'add_player', 'start_game', 'end_turn'];
 
-export function createView (world, moves) {
+export function createView (world, moves, errors) {
     const events = stream();
     const gameStream = createGame(moves, world, events);
-    on(partial(renderGame, events), gameStream);
+    on(partial(renderGame, events, world, errors), gameStream);
     const userMoves = stream([events], _userMoves => {
         const event = events();
         if (contains(event.type, MOVE_TYPES)) {
@@ -32,20 +29,9 @@ export function createView (world, moves) {
 const appDiv = document.createElement('div');
 document.body.appendChild(appDiv);
 
-function renderGame (events, game) {
-    //TODO: make the Navbar content depending on game context.
+function renderGame (events, world, errors, game) {
     render(
-        <div>
-            <Navbar fluid={true}>
-                <NavBrand><a href="#">Shortcut</a></NavBrand>
-                <Nav>
-                    <GameCreator events={events} {...parameters.gameCreation} />
-                </Nav>
-            </Navbar>
-            <Grid fluid={true}>
-                {game}
-            </Grid>
-        </div>,
+        Page({ events, game, world, errors }),
         appDiv
     );
 }

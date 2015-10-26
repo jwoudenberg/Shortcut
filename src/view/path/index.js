@@ -120,14 +120,14 @@ export default class Path extends React.Component {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            borderRadius: 5,
-            opacity: 0.8
+            borderRadius: 8,
+            opacity: 0.6
         }, position);
         const fullPlayerNameTooltip = <Tooltip id='full-player-name'>{baseFor}</Tooltip>;
         return (
             <OverlayTrigger placement='bottom' overlay={fullPlayerNameTooltip} delay={300}>
                 <div style={badgeStyle}>
-                    <span>{firstLetter}</span>
+                    <strong>{firstLetter}</strong>
                 </div>
             </OverlayTrigger>
         );

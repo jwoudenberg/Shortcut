@@ -13,7 +13,6 @@ export function createGame (moves) {
     const acceptedMoves = getAcceptedMoves(onMove);
     const world = getWorld(getWorldState, acceptedMoves);
     on(moves, createGameMaster(acceptedMoves));
-    on(error => error && console.log('Error:', error), errors);
     return {
         errors,
         world,
@@ -28,10 +27,10 @@ function getAcceptedMoves (onMove) {
 }
 
 function applyMoves (makeMove, moves) {
-    const errors = stream([moves], async _errors => {
+    const errors = stream([moves], async self => {
         const { error } = await makeMove(moves());
         if (error) {
-            _errors(error);
+            self(error);
         }
     });
     return errors;
