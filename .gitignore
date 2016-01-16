@@ -1,0 +1,15 @@
+# elm
+elm-stuff
+elm.js
+
+# build artefacts
+dist
+index.html
+
+# vim
+*.sw[a-z]
+*.un~
+Session.vim
+.netrwhist
+*~
+*.tern*
