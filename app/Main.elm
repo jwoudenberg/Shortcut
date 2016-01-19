@@ -1,9 +1,33 @@
-module Main (..) where
+module Shortcut (..) where
 
-import Text
-import Graphics.Element as Element
+import Path.Model exposing (Edge(..))
+import Card.Model exposing (..)
+import Card.View
+import Html exposing (Html)
 
 
+main : Html
 main =
-    Text.fromString "Hello World"
-        |> Element.centered
+    Card.View.cardElement testCardModel
+
+
+testCardModel : Card
+testCardModel =
+    { paths =
+        [ ( BottomLeft, TopRight )
+        , ( BottomRight, RightBottom )
+        , ( RightTop, LeftTop )
+        , ( LeftBottom, TopLeft )
+        ]
+    }
+
+
+
+---- UPDATE ----
+
+
+type Action
+    = Move
+    | Turn
+    | Draw
+    | EndTurn
