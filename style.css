@@ -1,43 +1,53 @@
+/* GAME */
+.shortcut-game {
+  position: relative
+}
+
 /* BOX */
 .shortcut-box {
-    position: absolute;
-    width: inherit;
-    height: inherit;
-    box-sizing: border-box;
-    /* Move the component over the border of the containing component. */
-    margin: -1px 0 0 -1px;
+  position: absolute;
+  width: inherit;
+  height: inherit;
+  box-sizing: border-box;
+  /* Move the component over the border of the containing component. */
+  margin: -1px 0 0 -1px;
 }
 
 /* PATH */
 .shortcut-path-container {
-    opacity:        0.6;
-    stroke:         #444444;
-    stroke-width:   14;
-    fill:           #444444;
-    transition:     opacity 1s, fill 1s, stroke 1s;
+  opacity:        0.6;
+  stroke:         #444444;
+  stroke-width:   14;
+  fill:           #444444;
+  transition:     opacity 1s, fill 1s, stroke 1s;
 }
 
 .shortcut-path-fill {
-    stroke:         none !important;
-    opacity:        0.2;
-    transition:     opacity 1s;
+  stroke:         none !important;
+  opacity:        0.2;
+  transition:     opacity 1s;
 }
 
 .shortcut-path-border {
-    fill:           none !important;
+  fill:           none !important;
 }
 
 /* CARD */
 .shortcut-card {
-    border:     1px solid #aaa;
-    background: #eee;
-    z-index:    1;
-    transition: transform ease-in-out 300ms, top ease-in-out 300ms, left ease-in-out 300ms, box-shadow 100ms;
-    overflow:   hidden;
-    width:      100px;
-    height:     100px
+  border:     1px solid #aaa;
+  background: #eee;
+  z-index:    1;
+  transition: transform ease-in-out 300ms, top ease-in-out 300ms, left ease-in-out 300ms, box-shadow 100ms;
+  overflow:   hidden;
+  width:      100px;
+  height:     100px
 }
 
 .shortcut-card.selected {
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+/* FIELD */
+.shortcut-field {
+  border: 1px solid #ddd;
 }

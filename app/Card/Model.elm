@@ -10,6 +10,7 @@ type alias Rotation =
 type alias Card =
     { paths : List Path
     , rotation : Rotation
+    , id : Int
     }
 
 
@@ -22,4 +23,5 @@ card =
         , ( LeftBottom, TopLeft )
         ]
     , rotation = 0
+    , id = 0
     }
