@@ -2,15 +2,27 @@ module Shortcut (..) where
 
 import Signal
 import Html exposing (Html)
-import Card
 import Board
 import Game
 
 
+fieldSize : Int
+fieldSize =
+    100
+
+
+boardSize : Int
+boardSize =
+    4
+
+
 init : Game.Game
 init =
-    { cards = [ Card.card ]
-    , board = Board.empty 4 100
+    { cards = []
+    , board = Board.empty boardSize fieldSize
+    , deck = { x = (boardSize + 1) * fieldSize, y = 0, size = fieldSize }
+    , nextId = 1
+    , selectedCardId = 0
     }
 
 

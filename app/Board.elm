@@ -1,10 +1,17 @@
-module Board (Board, empty, view) where
+module Board (Board, Action(..), empty, view) where
 
 import Dict exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Card
 import Field
+
+
+---- UPDATE ----
+
+
+type Action
+    = PlaceCard Field.Field
+
 
 
 ---- MODEL ----
@@ -61,9 +68,18 @@ xprod xs ys =
 ---- VIEW ----
 
 
-view : Signal.Address Card.Action -> Board -> Html
+view : Signal.Address Action -> Board -> Html
 view address board =
-    div
-        [ class "shortcut-board"
-        ]
-        (List.map (Field.view address) (Dict.values board))
+    let
+        fieldAddress : Field.Field -> Signal.Address ()
+        fieldAddress field =
+            Signal.forwardTo address (\_ -> PlaceCard field)
+
+        viewField : Field.Field -> Html
+        viewField field =
+            Field.view (fieldAddress field) field
+    in
+        div
+            [ class "shortcut-board"
+            ]
+            (List.map viewField (Dict.values board))

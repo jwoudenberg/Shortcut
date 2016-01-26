@@ -4,7 +4,6 @@ import Signal
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
-import Card
 
 
 ---- MODEL ----
@@ -21,11 +20,11 @@ type alias Field =
 ---- VIEW ----
 
 
-view : Signal.Address Card.Action -> Field -> Html
+view : Signal.Address () -> Field -> Html
 view address { x, y, size } =
     div
         [ class "shortcut-field shortcut-box"
-        , onClick address Card.Move
+        , onClick address ()
         , style
             [ ( "top", toString y ++ "px" )
             , ( "left", toString x ++ "px" )
