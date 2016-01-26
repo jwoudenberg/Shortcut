@@ -1,7 +1,13 @@
-module Board.Model (Board, empty) where
+module Board (Board, empty, view) where
 
 import Dict exposing (..)
-import Field.Model exposing (Field)
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Card
+import Field
+
+
+---- MODEL ----
 
 
 type alias Place =
@@ -9,7 +15,7 @@ type alias Place =
 
 
 type alias Board =
-    Dict Place Field
+    Dict Place Field.Field
 
 
 empty : Int -> Int -> Board
@@ -19,7 +25,7 @@ empty boardSize fieldSize =
         places boardSize =
             selfprod [0..(boardSize - 1)]
 
-        field : Place -> Field
+        field : Place -> Field.Field
         field ( row, col ) =
             { x = row * (fieldSize - 1)
             , y = col * (fieldSize - 1)
@@ -49,3 +55,15 @@ xprod xs ys =
 
         x :: xs' ->
             (List.map ((,) x) ys) ++ (xprod xs' ys)
+
+
+
+---- VIEW ----
+
+
+view : Signal.Address Card.Action -> Board -> Html
+view address board =
+    div
+        [ class "shortcut-board"
+        ]
+        (List.map (Field.view address) (Dict.values board))

@@ -1,18 +1,31 @@
-module Field.View (..) where
+module Field (Field, view) where
 
 import Signal
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
-import Field.Model exposing (..)
-import Card.Update
+import Card
 
 
-viewElement : Signal.Address Card.Update.Action -> Field -> Html
-viewElement address { x, y, size } =
+---- MODEL ----
+
+
+type alias Field =
+    { x : Int
+    , y : Int
+    , size : Int
+    }
+
+
+
+---- VIEW ----
+
+
+view : Signal.Address Card.Action -> Field -> Html
+view address { x, y, size } =
     div
         [ class "shortcut-field shortcut-box"
-        , onClick address Card.Update.Move
+        , onClick address Card.Move
         , style
             [ ( "top", toString y ++ "px" )
             , ( "left", toString x ++ "px" )

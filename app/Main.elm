@@ -2,17 +2,15 @@ module Shortcut (..) where
 
 import Signal
 import Html exposing (Html)
-import Card.Model
-import Board.Model
-import Game.Model
-import Game.View
-import Game.Update
+import Card
+import Board
+import Game
 
 
-init : Game.Model.Game
+init : Game.Game
 init =
-    { cards = [ Card.Model.card ]
-    , board = Board.Model.empty 4 100
+    { cards = [ Card.card ]
+    , board = Board.empty 4 100
     }
 
 
@@ -20,8 +18,8 @@ main : Signal Html
 main =
     start
         { init = init
-        , update = Game.Update.update
-        , view = Game.View.gameElement
+        , update = Game.update
+        , view = Game.view
         }
 
 

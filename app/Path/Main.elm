@@ -1,16 +1,38 @@
-module Path.View (pathElement) where
+module Path.Main (Edge(..), Path, view) where
 
-import Path.Model exposing (Path, Edge(..))
 import Path.Svg
 import Html exposing (Html)
+
+
+---- MODEL ----
+
+
+type Edge
+    = BottomLeft
+    | BottomRight
+    | RightBottom
+    | RightTop
+    | TopRight
+    | TopLeft
+    | LeftTop
+    | LeftBottom
+    | Unconnected
+
+
+type alias Path =
+    ( Edge, Edge )
+
+
+
+---- View ----
 
 
 type TransformedShape
     = TransformedShape Path.Svg.Shape Path.Svg.Mirrored Path.Svg.Rotation
 
 
-pathElement : Path -> Html
-pathElement path =
+view : Path -> Html
+view path =
     case (transformedShape path) of
         TransformedShape shape mirrored rotation ->
             Path.Svg.svgElement shape mirrored rotation
