@@ -2,8 +2,11 @@ module Shortcut (..) where
 
 import Signal
 import Html exposing (Html)
-import Board
-import Game
+import Board exposing (Board(..))
+import Game exposing (Game(..))
+import Deck exposing (Deck(..))
+import Field exposing (Field(..))
+import Base exposing (ID(..))
 
 
 fieldSize : Int
@@ -16,14 +19,15 @@ boardSize =
     4
 
 
-init : Game.Game
+init : Game
 init =
-    { cards = []
-    , board = Board.empty boardSize fieldSize
-    , deck = { x = (boardSize + 1) * fieldSize, y = 0, size = fieldSize }
-    , nextId = 1
-    , selectedCardId = 0
-    }
+    Game
+        { cards = []
+        , board = Board.empty boardSize fieldSize
+        , deck = Deck (Field { x = (boardSize + 1) * fieldSize, y = 0, size = fieldSize })
+        , nextId = ID 1
+        , selectedCardId = ID 0
+        }
 
 
 main : Signal Html

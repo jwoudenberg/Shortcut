@@ -1,12 +1,12 @@
-module Card (Card, Action(..), card, view, update) where
+module Card (Card, Action(..), card, id, view, update) where
 
 import Signal
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
-import Shared exposing (ID)
-import Field
-import Path.Main as Path exposing (Path, Edge(..))
+import Base exposing (..)
+import Field exposing (Field(..))
+import Path.Main as Path exposing (Path(..), Edge(..))
 
 
 ---- MODEL ----
@@ -16,28 +16,55 @@ type alias Rotation =
     Int
 
 
-type alias Card =
-    { paths : List Path
-    , rotation : Rotation
-    , id : ID
-    , selected : Bool
-    , field : Field.Field
-    }
+type Card
+    = Card
+        { paths : List Path
+        , rotation : Rotation
+        , id : ID
+        , selected : Bool
+        , field : Field
+        }
 
 
-card : ID -> Field.Field -> Card
+card : ID -> Field -> Card
 card id field =
-    { paths =
-        [ ( BottomLeft, TopRight )
-        , ( BottomRight, RightBottom )
-        , ( RightTop, LeftTop )
-        , ( LeftBottom, TopLeft )
-        ]
-    , rotation = 0
-    , id = id
-    , selected = False
-    , field = field
-    }
+    Card
+        { paths =
+            [ Path ( BottomLeft, TopRight )
+            , Path ( BottomRight, RightBottom )
+            , Path ( RightTop, LeftTop )
+            , Path ( LeftBottom, TopLeft )
+            ]
+        , rotation = 0
+        , id = id
+        , selected = False
+        , field = field
+        }
+
+
+id : Card -> ID
+id (Card { id }) =
+    id
+
+
+selected : Card -> Bool
+selected (Card { selected }) =
+    selected
+
+
+field : Card -> Field
+field (Card { field }) =
+    field
+
+
+rotation : Card -> Int
+rotation (Card { rotation }) =
+    rotation
+
+
+paths : Card -> List Path
+paths (Card { paths }) =
+    paths
 
 
 
@@ -48,23 +75,23 @@ type Action
     = Rotate
     | Select
     | Deselect
-    | Move Field.Field
+    | Move Field
 
 
 update : Action -> Card -> Card
-update action card =
+update action (Card cardConfig) =
     case action of
         Rotate ->
-            { card | rotation = card.rotation + 1 }
+            Card { cardConfig | rotation = cardConfig.rotation + 1 }
 
         Select ->
-            { card | selected = True }
+            Card { cardConfig | selected = True }
 
         Deselect ->
-            { card | selected = False }
+            Card { cardConfig | selected = False }
 
         Move field ->
-            { card | field = field }
+            Card { cardConfig | field = field }
 
 
 
@@ -80,37 +107,33 @@ view address card =
 
         clickAction : Action
         clickAction =
-            if card.selected then
+            if (selected card) then
                 Rotate
             else
                 Select
 
-        field : Field.Field
-        field =
-            card.field
-
         zIndex : String
         zIndex =
-            if card.selected then
+            if (selected card) then
                 "1"
             else
                 "0"
+
+        styleAttribute : List ( String, String )
+        styleAttribute =
+            [ ( "transform", transformString (rotation card) )
+            , ( "z-index", zIndex )
+            ]
+                ++ (Field.positionStyle (field card))
     in
         div
             [ classList
                 [ ( "shortcut-card", True )
                 , ( "shortcut-box", True )
-                , ( "selected", card.selected )
+                , ( "selected", (selected card) )
                 ]
-            , key (toString card.id)
+            , key (toString (id card))
             , onClick address clickAction
-            , style
-                [ ( "transform", transformString card.rotation )
-                , ( "z-index", zIndex )
-                , ( "top", toString field.y ++ "px" )
-                , ( "left", toString field.x ++ "px" )
-                , ( "width", toString field.size ++ "px" )
-                , ( "height", toString field.size ++ "px" )
-                ]
+            , style styleAttribute
             ]
-            (List.map Path.view card.paths)
+            (List.map Path.view (paths card))

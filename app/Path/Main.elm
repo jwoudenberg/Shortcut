@@ -1,4 +1,4 @@
-module Path.Main (Edge(..), Path, view) where
+module Path.Main (Edge(..), Path(..), view) where
 
 import Path.Svg
 import Html exposing (Html)
@@ -19,8 +19,13 @@ type Edge
     | Unconnected
 
 
-type alias Path =
-    ( Edge, Edge )
+type Path
+    = Path ( Edge, Edge )
+
+
+edges : Path -> ( Edge, Edge )
+edges (Path edges) =
+    edges
 
 
 
@@ -44,8 +49,8 @@ transformedShape path =
         -- A numerical representation of the edges.
         edgeNumbers : ( Int, Int )
         edgeNumbers =
-            ( edgeNumber (fst path)
-            , edgeNumber (snd path)
+            ( edgeNumber (fst (edges path))
+            , edgeNumber (snd (edges path))
             )
 
         -- Assign a numeric value to each edge.

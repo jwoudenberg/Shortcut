@@ -1,16 +1,16 @@
-module Board (Board, Action(..), empty, view) where
+module Board (Board(..), Action(..), empty, view) where
 
 import Dict exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Field
+import Field exposing (Field(..))
 
 
 ---- UPDATE ----
 
 
 type Action
-    = PlaceCard Field.Field
+    = PlaceCard Field
 
 
 
@@ -21,8 +21,13 @@ type alias Place =
     ( Int, Int )
 
 
-type alias Board =
-    Dict Place Field.Field
+type Board
+    = Board (Dict Place Field)
+
+
+fields : Board -> Dict Place Field
+fields (Board fields) =
+    fields
 
 
 empty : Int -> Int -> Board
@@ -32,14 +37,15 @@ empty boardSize fieldSize =
         places boardSize =
             selfprod [0..(boardSize - 1)]
 
-        field : Place -> Field.Field
+        field : Place -> Field
         field ( row, col ) =
-            { x = row * (fieldSize - 1)
-            , y = col * (fieldSize - 1)
-            , size = fieldSize
-            }
+            Field
+                { x = row * (fieldSize - 1)
+                , y = col * (fieldSize - 1)
+                , size = fieldSize
+                }
 
-        cell : Place -> Board
+        cell : Place -> Dict Place Field
         cell place =
             Dict.singleton
                 place
@@ -47,6 +53,7 @@ empty boardSize fieldSize =
     in
         List.map cell (places boardSize)
             |> List.foldr Dict.union Dict.empty
+            |> Board
 
 
 selfprod : List a -> List ( a, a )
@@ -71,15 +78,15 @@ xprod xs ys =
 view : Signal.Address Action -> Board -> Html
 view address board =
     let
-        fieldAddress : Field.Field -> Signal.Address ()
+        fieldAddress : Field -> Signal.Address ()
         fieldAddress field =
             Signal.forwardTo address (\_ -> PlaceCard field)
 
-        viewField : Field.Field -> Html
+        viewField : Field -> Html
         viewField field =
             Field.view (fieldAddress field) field
     in
         div
             [ class "shortcut-board"
             ]
-            (List.map viewField (Dict.values board))
+            (List.map viewField (Dict.values (fields board)))

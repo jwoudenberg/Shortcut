@@ -1,14 +1,19 @@
-module Deck (Deck, Action(..), view) where
+module Deck (Deck(..), Action(..), field, view) where
 
 import Html exposing (Html)
-import Field
+import Field exposing (Field(..))
 
 
 ---- MODEL ----
 
 
-type alias Deck =
-    Field.Field
+type Deck
+    = Deck Field
+
+
+field : Deck -> Field
+field (Deck field') =
+    field'
 
 
 
@@ -30,4 +35,4 @@ view address deck =
         fieldAddress =
             Signal.forwardTo address (\_ -> Draw)
     in
-        Field.view fieldAddress deck
+        Field.view fieldAddress (field deck)
