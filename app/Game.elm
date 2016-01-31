@@ -13,38 +13,38 @@ import Card exposing (Card(..))
 
 
 type Game
-    = Game
-        { board : Board
-        , cards : List Card
-        , deck : Deck
-        , selectedCardId : ID
-        , nextId : ID
-        }
+  = Game
+      { board : Board
+      , cards : List Card
+      , deck : Deck
+      , selectedCardId : ID
+      , nextId : ID
+      }
 
 
 board : Game -> Board
 board (Game { board }) =
-    board
+  board
 
 
 cards : Game -> List Card
 cards (Game { cards }) =
-    cards
+  cards
 
 
 deck : Game -> Deck
 deck (Game { deck }) =
-    deck
+  deck
 
 
 selectedCardId : Game -> ID
 selectedCardId (Game { selectedCardId }) =
-    selectedCardId
+  selectedCardId
 
 
 nextId : Game -> ID
 nextId (Game { nextId }) =
-    nextId
+  nextId
 
 
 
@@ -52,110 +52,110 @@ nextId (Game { nextId }) =
 
 
 type Action
-    = CardAction ID Card.Action
-    | BoardAction Board.Action
-    | DeckAction Deck.Action
+  = CardAction ID Card.Action
+  | BoardAction Board.Action
+  | DeckAction Deck.Action
 
 
 update : Action -> Game -> Game
 update gameAction game =
-    case gameAction of
-        CardAction id cardAction ->
-            case cardAction of
-                Card.Select ->
-                    selectCard id game
+  case gameAction of
+    CardAction id cardAction ->
+      case cardAction of
+        Card.Select ->
+          selectCard id game
 
-                _ ->
-                    updateCard id cardAction game
+        _ ->
+          updateCard id cardAction game
 
-        BoardAction boardAction ->
-            case boardAction of
-                Board.PlaceCard field ->
-                    moveCard field game
+    BoardAction boardAction ->
+      case boardAction of
+        Board.PlaceCard field ->
+          moveCard field game
 
-        DeckAction deckAction ->
-            case deckAction of
-                Deck.Draw ->
-                    drawCard game
+    DeckAction deckAction ->
+      case deckAction of
+        Deck.Draw ->
+          drawCard game
 
 
 updateCard : ID -> Card.Action -> Game -> Game
 updateCard id cardAction (Game gameConfig) =
-    let
-        maybeUpdate : Card -> Card
-        maybeUpdate card =
-            if (Card.id card) == id then
-                Card.update cardAction card
-            else
-                card
-    in
-        Game
-            { gameConfig | cards = List.map maybeUpdate gameConfig.cards }
+  let
+    maybeUpdate : Card -> Card
+    maybeUpdate card =
+      if (Card.id card) == id then
+        Card.update cardAction card
+      else
+        card
+  in
+    Game
+      { gameConfig | cards = List.map maybeUpdate gameConfig.cards }
 
 
 selectCard : ID -> Game -> Game
 selectCard newSelectedCardId (Game gameConfig) =
-    let
-        updateCard : Card -> Card
-        updateCard card =
-            if (Card.id card) == newSelectedCardId then
-                Card.update Card.Select card
-            else
-                Card.update Card.Deselect card
-    in
-        Game
-            { gameConfig
-                | selectedCardId = newSelectedCardId
-                , cards = List.map updateCard gameConfig.cards
-            }
+  let
+    updateCard : Card -> Card
+    updateCard card =
+      if (Card.id card) == newSelectedCardId then
+        Card.update Card.Select card
+      else
+        Card.update Card.Deselect card
+  in
+    Game
+      { gameConfig
+        | selectedCardId = newSelectedCardId
+        , cards = List.map updateCard gameConfig.cards
+      }
 
 
 moveCard : Field -> Game -> Game
 moveCard field game =
-    let
-        cardAction : Action
-        cardAction =
-            CardAction (selectedCardId game) (Card.Move field)
-    in
-        update cardAction game
+  let
+    cardAction : Action
+    cardAction =
+      CardAction (selectedCardId game) (Card.Move field)
+  in
+    update cardAction game
 
 
 drawCard : Game -> Game
 drawCard game =
-    let
-        deckField : Field
-        deckField =
-            Deck.field (deck game)
+  let
+    deckField : Field
+    deckField =
+      Deck.field (deck game)
 
-        newCardId : ID
-        newCardId =
-            nextId game
+    newCardId : ID
+    newCardId =
+      nextId game
 
-        newCard : Card
-        newCard =
-            Card.card newCardId deckField
+    newCard : Card
+    newCard =
+      Card.card newCardId deckField
 
-        incrementId : ID -> ID
-        incrementId (ID n) =
-            ID (n + 1)
+    incrementId : ID -> ID
+    incrementId (ID n) =
+      ID (n + 1)
 
-        addCard : Game -> Game
-        addCard (Game gameConfig) =
-            Game
-                { gameConfig
-                    | nextId = incrementId gameConfig.nextId
-                    , cards = newCard :: gameConfig.cards
-                }
+    addCard : Game -> Game
+    addCard (Game gameConfig) =
+      Game
+        { gameConfig
+          | nextId = incrementId gameConfig.nextId
+          , cards = newCard :: gameConfig.cards
+        }
 
-        selectAddedCard : Game -> Game
-        selectAddedCard game =
-            update
-                (CardAction newCardId Card.Select)
-                game
-    in
+    selectAddedCard : Game -> Game
+    selectAddedCard game =
+      update
+        (CardAction newCardId Card.Select)
         game
-            |> addCard
-            |> selectAddedCard
+  in
+    game
+      |> addCard
+      |> selectAddedCard
 
 
 
@@ -164,29 +164,29 @@ drawCard game =
 
 view : Signal.Address Action -> Game -> Html
 view address game =
-    let
-        cardAddress : Card -> Signal.Address Card.Action
-        cardAddress card =
-            Signal.forwardTo address (CardAction (Card.id card))
+  let
+    cardAddress : Card -> Signal.Address Card.Action
+    cardAddress card =
+      Signal.forwardTo address (CardAction (Card.id card))
 
-        boardAddress : Signal.Address Board.Action
-        boardAddress =
-            Signal.forwardTo address BoardAction
+    boardAddress : Signal.Address Board.Action
+    boardAddress =
+      Signal.forwardTo address BoardAction
 
-        deckAddress : Signal.Address Deck.Action
-        deckAddress =
-            Signal.forwardTo address DeckAction
+    deckAddress : Signal.Address Deck.Action
+    deckAddress =
+      Signal.forwardTo address DeckAction
 
-        viewCard : Card -> Html
-        viewCard card =
-            Card.view (cardAddress card) card
-    in
-        div
-            [ class "shortcut-game"
-            ]
-            [ Board.view boardAddress (board game)
-            , Deck.view deckAddress (deck game)
-            , div
-                []
-                (List.map viewCard (cards game))
-            ]
+    viewCard : Card -> Html
+    viewCard card =
+      Card.view (cardAddress card) card
+  in
+    div
+      [ class "shortcut-game"
+      ]
+      [ Board.view boardAddress (board game)
+      , Deck.view deckAddress (deck game)
+      , div
+          []
+          (List.map viewCard (cards game))
+      ]

@@ -8,12 +8,12 @@ import Field exposing (Field(..))
 
 
 type Deck
-    = Deck Field
+  = Deck Field
 
 
 field : Deck -> Field
 field (Deck field') =
-    field'
+  field'
 
 
 
@@ -21,7 +21,7 @@ field (Deck field') =
 
 
 type Action
-    = Draw
+  = Draw
 
 
 
@@ -30,9 +30,9 @@ type Action
 
 view : Signal.Address Action -> Deck -> Html
 view address deck =
-    let
-        fieldAddress : Signal.Address ()
-        fieldAddress =
-            Signal.forwardTo address (\_ -> Draw)
-    in
-        Field.view fieldAddress (field deck)
+  let
+    fieldAddress : Signal.Address ()
+    fieldAddress =
+      Signal.forwardTo address (\_ -> Draw)
+  in
+    Field.view fieldAddress (field deck)

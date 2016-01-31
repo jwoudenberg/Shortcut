@@ -10,11 +10,11 @@ import Html.Events exposing (onClick)
 
 
 type Field
-    = Field
-        { x : Int
-        , y : Int
-        , size : Int
-        }
+  = Field
+      { x : Int
+      , y : Int
+      , size : Int
+      }
 
 
 
@@ -23,18 +23,18 @@ type Field
 
 view : Signal.Address () -> Field -> Html
 view address field =
-    div
-        [ class "shortcut-field shortcut-box"
-        , onClick address ()
-        , style (positionStyle field)
-        ]
-        []
+  div
+    [ class "shortcut-field shortcut-box"
+    , onClick address ()
+    , style (positionStyle field)
+    ]
+    []
 
 
 positionStyle : Field -> List ( String, String )
 positionStyle (Field { x, y, size }) =
-    [ ( "top", toString y ++ "px" )
-    , ( "left", toString x ++ "px" )
-    , ( "width", toString size ++ "px" )
-    , ( "height", toString size ++ "px" )
-    ]
+  [ ( "top", toString y ++ "px" )
+  , ( "left", toString x ++ "px" )
+  , ( "width", toString size ++ "px" )
+  , ( "height", toString size ++ "px" )
+  ]
