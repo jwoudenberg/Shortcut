@@ -1,40 +1,42 @@
-module Field (Field(..), view, positionStyle) where
+module Field exposing (Model, Msg, view)
 
-import Signal
-import Html exposing (..)
-import Html.Attributes exposing (..)
+import Html exposing (Html, div)
+import Html.Attributes exposing (class, style)
 import Html.Events exposing (onClick)
 
 
----- MODEL ----
+-- MODEL
 
 
-type Field
-  = Field
-      { x : Int
-      , y : Int
-      , size : Int
-      }
+type alias Model =
+    { x : Int
+    , y : Int
+    , size : Int
+    }
+
+
+type Msg
+    = Click
 
 
 
----- VIEW ----
+-- VIEW
 
 
-view : Signal.Address () -> Field -> Html
-view address field =
-  div
-    [ class "shortcut-field shortcut-box"
-    , onClick address ()
-    , style (positionStyle field)
+view : Model -> Html Msg
+view model =
+    div
+        [ class "shortcut-field shortcut-box"
+        , onClick Click
+        , style (positionStyle model)
+        ]
+        []
+
+
+positionStyle : Model -> List ( String, String )
+positionStyle { x, y, size } =
+    [ ( "top", toString y ++ "px" )
+    , ( "left", toString x ++ "px" )
+    , ( "width", toString size ++ "px" )
+    , ( "height", toString size ++ "px" )
     ]
-    []
-
-
-positionStyle : Field -> List ( String, String )
-positionStyle (Field { x, y, size }) =
-  [ ( "top", toString y ++ "px" )
-  , ( "left", toString x ++ "px" )
-  , ( "width", toString size ++ "px" )
-  , ( "height", toString size ++ "px" )
-  ]

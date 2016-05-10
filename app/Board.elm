@@ -1,92 +1,84 @@
-module Board (Board(..), Action(..), empty, view) where
+module Board exposing (Model, Msg, init, view)
 
-import Dict exposing (..)
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Field exposing (Field(..))
-
-
----- UPDATE ----
+import Dict exposing (Dict)
+import Html exposing (Html, div)
+import Html.App exposing (map)
+import Html.Attributes exposing (class)
+import Field
 
 
-type Action
-  = PlaceCard Field
-
-
-
----- MODEL ----
+-- MODEL
 
 
 type alias Place =
-  ( Int, Int )
+    ( Int, Int )
 
 
-type Board
-  = Board (Dict Place Field)
+type alias Model =
+    Dict Place Field.Model
 
 
-fields : Board -> Dict Place Field
-fields (Board fields) =
-  fields
+type Msg
+    = PlaceCard Field.Model
 
 
-empty : Int -> Int -> Board
-empty boardSize fieldSize =
-  let
-    places : Int -> List Place
-    places boardSize =
-      selfprod [0..(boardSize - 1)]
 
-    field : Place -> Field
-    field ( row, col ) =
-      Field
-        { x = row * (fieldSize - 1)
-        , y = col * (fieldSize - 1)
-        , size = fieldSize
-        }
+-- INIT
 
-    cell : Place -> Dict Place Field
-    cell place =
-      Dict.singleton
-        place
-        (field place)
-  in
-    List.map cell (places boardSize)
-      |> List.foldr Dict.union Dict.empty
-      |> Board
+
+init : Int -> Int -> Model
+init boardSize fieldSize =
+    let
+        places : Int -> List Place
+        places boardSize =
+            selfprod [0..(boardSize - 1)]
+
+        field : Place -> Field.Model
+        field ( row, col ) =
+            { x = row * (fieldSize - 1)
+            , y = col * (fieldSize - 1)
+            , size = fieldSize
+            }
+
+        cell : Place -> Model
+        cell place =
+            Dict.singleton place
+                (field place)
+    in
+        List.map cell (places boardSize)
+            |> List.foldr Dict.union Dict.empty
 
 
 selfprod : List a -> List ( a, a )
 selfprod xs =
-  xprod xs xs
+    xprod xs xs
 
 
 xprod : List a -> List a -> List ( a, a )
 xprod xs ys =
-  case xs of
-    [] ->
-      []
+    case xs of
+        [] ->
+            []
 
-    x :: xs' ->
-      (List.map ((,) x) ys) ++ (xprod xs' ys)
+        x :: xs' ->
+            (List.map ((,) x) ys) ++ (xprod xs' ys)
 
 
 
 ---- VIEW ----
 
 
-view : Signal.Address Action -> Board -> Html
-view address board =
-  let
-    fieldAddress : Field -> Signal.Address ()
-    fieldAddress field =
-      Signal.forwardTo address (\_ -> PlaceCard field)
+view : Model -> Html Msg
+view model =
+    let
+        fields =
+            Dict.values model
 
-    viewField : Field -> Html
-    viewField field =
-      Field.view (fieldAddress field) field
-  in
-    div
-      [ class "shortcut-board"
-      ]
-      (List.map viewField (Dict.values (fields board)))
+        drawField : Field.Model -> Html Msg
+        drawField field =
+            map (\_ -> PlaceCard field) (Field.view field)
+    in
+        div
+            [ class "shortcut-board"
+            ]
+            (List.map drawField fields)

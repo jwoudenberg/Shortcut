@@ -1,5 +1,5 @@
-module Base (ID(..)) where
+module Base exposing (ID(..))
 
 
 type ID
-  = ID Int
+    = ID Int

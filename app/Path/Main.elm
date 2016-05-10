@@ -1,141 +1,150 @@
-module Path.Main (Edge(..), Path(..), view) where
+module Path.Main exposing (Model, Edge, view)
 
-import Path.Svg
+import Path.Shape as Shape
 import Html exposing (Html)
 
 
----- MODEL ----
+-- MODEL
 
 
 type Edge
-  = BottomLeft
-  | BottomRight
-  | RightBottom
-  | RightTop
-  | TopRight
-  | TopLeft
-  | LeftTop
-  | LeftBottom
-  | Unconnected
+    = BottomLeft
+    | BottomRight
+    | RightBottom
+    | RightTop
+    | TopRight
+    | TopLeft
+    | LeftTop
+    | LeftBottom
+    | Unconnected
 
 
-type Path
-  = Path ( Edge, Edge )
-
-
-edges : Path -> ( Edge, Edge )
-edges (Path edges) =
-  edges
+type alias Model =
+    ( Edge, Edge )
 
 
 
 ---- View ----
 
 
-type TransformedShape
-  = TransformedShape Path.Svg.Shape Path.Svg.Mirrored Path.Svg.Rotation
+type alias TransformedShape =
+    { shape : Shape.Model
+    , mirrored : Bool
+    , rotation : Int
+    }
 
 
-view : Path -> Html
-view path =
-  case (transformedShape path) of
-    TransformedShape shape mirrored rotation ->
-      Path.Svg.svgElement shape mirrored rotation
+view : Model -> Html msg
+view model =
+    let
+        { shape, mirrored, rotation } =
+            transformedShape model
+    in
+        Shape.view shape mirrored rotation
 
 
-transformedShape : Path -> TransformedShape
-transformedShape path =
-  let
-    -- A numerical representation of the edges.
-    edgeNumbers : ( Int, Int )
-    edgeNumbers =
-      ( edgeNumber (fst (edges path))
-      , edgeNumber (snd (edges path))
-      )
+transformedShape : Model -> TransformedShape
+transformedShape model =
+    let
+        -- A numerical representation of the edges.
+        edgeNumbers : ( Int, Int )
+        edgeNumbers =
+            ( edgeNumber (fst model)
+            , edgeNumber (snd model)
+            )
 
-    -- Assign a numeric value to each edge.
-    edgeNumber : Edge -> Int
-    edgeNumber edge =
-      case edge of
-        BottomLeft ->
-          0
+        -- Assign a numeric value to each edge.
+        edgeNumber : Edge -> Int
+        edgeNumber edge =
+            case edge of
+                BottomLeft ->
+                    0
 
-        BottomRight ->
-          1
+                BottomRight ->
+                    1
 
-        RightBottom ->
-          2
+                RightBottom ->
+                    2
 
-        RightTop ->
-          3
+                RightTop ->
+                    3
 
-        TopRight ->
-          4
+                TopRight ->
+                    4
 
-        TopLeft ->
-          5
+                TopLeft ->
+                    5
 
-        LeftTop ->
-          6
+                LeftTop ->
+                    6
 
-        LeftBottom ->
-          7
+                LeftBottom ->
+                    7
 
-        Unconnected ->
-          8
+                Unconnected ->
+                    8
 
-    -- Function called recursively to reduce any set of edge numbers to a base path transformed in some way.
-    toTransformedShape : ( Int, Int ) -> TransformedShape
-    toTransformedShape edgeNumbers =
-      case edgeNumbers of
-        ( 0, 1 ) ->
-          TransformedShape Path.Svg.UTurn False 0
+        -- Function called recursively to reduce any set of edge numbers to a base path transformed in some way.
+        toTransformedShape : ( Int, Int ) -> TransformedShape
+        toTransformedShape edgeNumbers =
+            case edgeNumbers of
+                ( 0, 1 ) ->
+                    { shape = Shape.UTurn, mirrored = False, rotation = 0 }
 
-        ( 0, 2 ) ->
-          TransformedShape Path.Svg.LTurn False 0
+                ( 0, 2 ) ->
+                    { shape = Shape.LTurn, mirrored = False, rotation = 0 }
 
-        ( 0, 3 ) ->
-          TransformedShape Path.Svg.WideTurn False 0
+                ( 0, 3 ) ->
+                    { shape = Shape.WideTurn, mirrored = False, rotation = 0 }
 
-        ( 0, 4 ) ->
-          TransformedShape Path.Svg.STurn False 0
+                ( 0, 4 ) ->
+                    { shape = Shape.STurn, mirrored = False, rotation = 0 }
 
-        ( 0, 5 ) ->
-          TransformedShape Path.Svg.Straight False 0
+                ( 0, 5 ) ->
+                    { shape = Shape.Straight, mirrored = False, rotation = 0 }
 
-        ( 0, 6 ) ->
-          TransformedShape Path.Svg.LTurn False 3
+                ( 0, 6 ) ->
+                    { shape = Shape.LTurn, mirrored = False, rotation = 3 }
 
-        ( 0, 7 ) ->
-          TransformedShape Path.Svg.SharpTurn False 0
+                ( 0, 7 ) ->
+                    { shape = Shape.SharpTurn, mirrored = False, rotation = 0 }
 
-        ( 0, 8 ) ->
-          TransformedShape Path.Svg.DeadEnd False 0
+                ( 0, 8 ) ->
+                    { shape = Shape.DeadEnd, mirrored = False, rotation = 0 }
 
-        ( 1, 8 ) ->
-          TransformedShape Path.Svg.DeadEnd True 0
+                ( 1, 8 ) ->
+                    { shape = Shape.DeadEnd, mirrored = True, rotation = 0 }
 
-        ( 1, e2 ) ->
-          case (toTransformedShape ( 0, 9 - e2 )) of
-            TransformedShape transformedShape mirrored turns ->
-              TransformedShape transformedShape (not mirrored) -turns
+                ( 1, e2 ) ->
+                    let
+                        { shape, mirrored, rotation } =
+                            toTransformedShape ( 0, 9 - e2 )
+                    in
+                        { shape = shape
+                        , mirrored = (not mirrored)
+                        , rotation = -rotation
+                        }
 
-        ( e1, e2 ) ->
-          let
-            lowEdge =
-              min e1 e2
+                ( e1, e2 ) ->
+                    let
+                        lowEdge =
+                            min e1 e2
 
-            highEdge =
-              max e1 e2
+                        highEdge =
+                            max e1 e2
 
-            turns =
-              lowEdge // 2
+                        rotation' =
+                            lowEdge // 2
 
-            shift =
-              2 * turns
-          in
-            case (toTransformedShape ( lowEdge - shift, highEdge - shift )) of
-              TransformedShape transformedShape mirrored turns' ->
-                TransformedShape transformedShape mirrored (turns' + turns)
-  in
-    toTransformedShape edgeNumbers
+                        shift =
+                            2 * rotation
+
+                        { shape, mirrored, rotation } =
+                            toTransformedShape ( lowEdge - shift, highEdge - shift )
+                    in
+                        { shape = shape
+                        , mirrored = mirrored
+                        , rotation = (rotation + rotation)
+                        }
+    in
+        toTransformedShape edgeNumbers

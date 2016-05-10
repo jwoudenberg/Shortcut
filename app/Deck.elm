@@ -1,38 +1,26 @@
-module Deck (Deck(..), Action(..), field, view) where
+module Deck exposing (Model, Msg, view)
 
 import Html exposing (Html)
-import Field exposing (Field(..))
+import Html.App exposing (map)
+import Field
 
 
----- MODEL ----
+-- MODEL
 
 
-type Deck
-  = Deck Field
+type alias Model =
+    Field.Model
 
 
-field : Deck -> Field
-field (Deck field') =
-  field'
-
-
-
----- UPDATE ----
-
-
-type Action
-  = Draw
+type Msg
+    = Draw
 
 
 
 ---- VIEW ----
 
 
-view : Signal.Address Action -> Deck -> Html
-view address deck =
-  let
-    fieldAddress : Signal.Address ()
-    fieldAddress =
-      Signal.forwardTo address (\_ -> Draw)
-  in
-    Field.view fieldAddress (field deck)
+view : Model -> Html Msg
+view model =
+    Field.view model
+        |> map (\_ -> Draw)
