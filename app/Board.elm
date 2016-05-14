@@ -1,4 +1,4 @@
-module Board exposing (Model, Msg, init, view)
+module Board exposing (Model, Msg(..), init, view)
 
 import Dict exposing (Dict)
 import Html exposing (Html, div)

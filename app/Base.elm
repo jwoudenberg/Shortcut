@@ -1,5 +1,5 @@
-module Base exposing (ID(..))
+module Base exposing (ID)
 
 
-type ID
-    = ID Int
+type alias ID =
+    Int

@@ -1,12 +1,8 @@
 module Shortcut exposing (..)
 
-import Signal
 import Html.App as Html
-import Board exposing (Board(..))
-import Game exposing (Game(..))
-import Deck exposing (Deck(..))
-import Field exposing (Field(..))
-import Base exposing (ID(..))
+import Board
+import Game
 
 
 fieldSize : Int
@@ -19,50 +15,32 @@ boardSize =
     4
 
 
-init : Game
+startGame : Game.Model
+startGame =
+    { cards = []
+    , board = Board.init boardSize fieldSize
+    , deck = { x = (boardSize + 1) * fieldSize, y = 0, size = fieldSize }
+    , nextId = 1
+    , selectedCardId = 0
+    }
+
+
+init : ( Game.Model, Cmd a )
 init =
-    Game
-        { cards = []
-        , board = Board.empty boardSize fieldSize
-        , deck = Deck (Field { x = (boardSize + 1) * fieldSize, y = 0, size = fieldSize })
-        , nextId = ID 1
-        , selectedCardId = ID 0
-        }
+    ( startGame, Cmd.none )
 
 
-main : Program
+update : Game.Msg -> Game.Model -> ( Game.Model, Cmd a )
+update msg model =
+    Game.update msg model
+        |> \model -> ( model, Cmd.none )
+
+
+main : Program Never
 main =
     Html.program
         { init = init
         , view = Game.view
-        , update = Game.update
+        , update = update
         , subscriptions = \_ -> Sub.none
         }
-
-
-start :
-    { init : model
-    , update : action -> model -> model
-    , view : Signal.Address action -> model -> Html
-    }
-    -> Signal Html
-start { init, update, view } =
-    let
-        actions =
-            Signal.mailbox Nothing
-
-        address =
-            Signal.forwardTo actions.address Just
-
-        update' maybeAction model =
-            case maybeAction of
-                Just action ->
-                    update action model
-
-                Nothing ->
-                    model
-
-        model =
-            Signal.foldp update' init actions.signal
-    in
-        Signal.map (view address) model

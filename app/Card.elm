@@ -1,139 +1,119 @@
-module Card exposing (Card, Action(..), card, id, view, update)
+module Card exposing (Model, Msg(..), update, view, init)
 
-import Signal
-import Html exposing (..)
-import Html.Attributes exposing (..)
+import Html exposing (Html, div)
+import Base exposing (ID)
+import Html.Attributes exposing (style, classList)
 import Html.Events exposing (onClick)
-import Base exposing (..)
-import Field exposing (Field(..))
-import Path.Main as Path exposing (Path(..), Edge(..))
+import Field
+import Path.Main as Path
+import Path.Edge as Edge
 
 
----- MODEL ----
+-- MODEL
 
 
 type alias Rotation =
     Int
 
 
-type Card
-    = Card
-        { paths : List Path
-        , rotation : Rotation
-        , id : ID
-        , selected : Bool
-        , field : Field
-        }
-
-
-card : ID -> Field -> Card
-card id field =
-    Card
-        { paths =
-            [ Path ( BottomLeft, TopRight )
-            , Path ( BottomRight, RightBottom )
-            , Path ( RightTop, LeftTop )
-            , Path ( LeftBottom, TopLeft )
-            ]
-        , rotation = 0
-        , id = id
-        , selected = False
-        , field = field
-        }
-
-
-id : Card -> ID
-id (Card { id }) =
-    id
-
-
-selected : Card -> Bool
-selected (Card { selected }) =
-    selected
-
-
-field : Card -> Field
-field (Card { field }) =
-    field
-
-
-rotation : Card -> Int
-rotation (Card { rotation }) =
-    rotation
-
-
-paths : Card -> List Path
-paths (Card { paths }) =
-    paths
+type alias Model =
+    { paths : List Path.Model
+    , rotation : Int
+    , id : ID
+    , selected : Bool
+    , field : Field.Model
+    }
 
 
 
----- UPDATE ----
+-- INIT
 
 
-type Action
+init : ID -> Field.Model -> Model
+init id field =
+    { paths =
+        [ ( Edge.BottomLeft, Edge.TopRight )
+        , ( Edge.BottomRight, Edge.RightBottom )
+        , ( Edge.RightTop, Edge.LeftTop )
+        , ( Edge.LeftBottom, Edge.TopLeft )
+        ]
+    , rotation = 0
+    , id = id
+    , selected = False
+    , field = field
+    }
+
+
+
+-- MSG
+
+
+type Msg
     = Rotate
     | Select
     | Deselect
-    | Move Field
+    | Move Field.Model
 
 
-update : Action -> Card -> Card
-update action (Card cardConfig) =
-    case action of
+
+-- UPDATE
+
+
+update : Msg -> Model -> Model
+update msg model =
+    case msg of
         Rotate ->
-            Card { cardConfig | rotation = cardConfig.rotation + 1 }
+            { model | rotation = model.rotation + 1 }
 
         Select ->
-            Card { cardConfig | selected = True }
+            { model | selected = True }
 
         Deselect ->
-            Card { cardConfig | selected = False }
+            { model | selected = False }
 
-        Move field ->
-            Card { cardConfig | field = field }
-
-
-
----- VIEW ----
+        Move newField ->
+            { model | field = newField }
 
 
-view : Signal.Address Action -> Card -> Html
-view address card =
+
+-- VIEW
+
+
+view : Model -> Html Msg
+view model =
     let
         transformString : Int -> String
         transformString angle =
             "rotate(" ++ toString (angle * 90) ++ "deg)"
 
-        clickAction : Action
-        clickAction =
-            if (selected card) then
+        clickMsg : Msg
+        clickMsg =
+            if model.selected then
                 Rotate
             else
                 Select
 
         zIndex : String
         zIndex =
-            if (selected card) then
+            if model.selected then
                 "1"
             else
                 "0"
 
         styleAttribute : List ( String, String )
         styleAttribute =
-            [ ( "transform", transformString (rotation card) )
+            [ ( "transform", transformString model.rotation )
             , ( "z-index", zIndex )
             ]
-                ++ (Field.positionStyle (field card))
+                ++ (Field.positionStyle model.field)
     in
         div
             [ classList
                 [ ( "shortcut-card", True )
                 , ( "shortcut-box", True )
-                , ( "selected", (selected card) )
+                , ( "selected", model.selected )
                 ]
-            , key (toString (id card))
-            , onClick address clickAction
+            , onClick clickMsg
             , style styleAttribute
             ]
-            (List.map Path.view (paths card))
+            (List.map Path.view model.paths)

@@ -1,4 +1,4 @@
-module Field exposing (Model, Msg, view)
+module Field exposing (Model, Msg(..), view, positionStyle)
 
 import Html exposing (Html, div)
 import Html.Attributes exposing (class, style)

@@ -1,5 +1,6 @@
-module Path.Main exposing (Model, Edge, view)
+module Path.Main exposing (Model, view)
 
+import Path.Edge as Edge
 import Path.Shape as Shape
 import Html exposing (Html)
 
@@ -7,20 +8,8 @@ import Html exposing (Html)
 -- MODEL
 
 
-type Edge
-    = BottomLeft
-    | BottomRight
-    | RightBottom
-    | RightTop
-    | TopRight
-    | TopLeft
-    | LeftTop
-    | LeftBottom
-    | Unconnected
-
-
 type alias Model =
-    ( Edge, Edge )
+    ( Edge.Model, Edge.Model )
 
 
 
@@ -54,34 +43,34 @@ transformedShape model =
             )
 
         -- Assign a numeric value to each edge.
-        edgeNumber : Edge -> Int
+        edgeNumber : Edge.Model -> Int
         edgeNumber edge =
             case edge of
-                BottomLeft ->
+                Edge.BottomLeft ->
                     0
 
-                BottomRight ->
+                Edge.BottomRight ->
                     1
 
-                RightBottom ->
+                Edge.RightBottom ->
                     2
 
-                RightTop ->
+                Edge.RightTop ->
                     3
 
-                TopRight ->
+                Edge.TopRight ->
                     4
 
-                TopLeft ->
+                Edge.TopLeft ->
                     5
 
-                LeftTop ->
+                Edge.LeftTop ->
                     6
 
-                LeftBottom ->
+                Edge.LeftBottom ->
                     7
 
-                Unconnected ->
+                Edge.Unconnected ->
                     8
 
         -- Function called recursively to reduce any set of edge numbers to a base path transformed in some way.
@@ -137,14 +126,13 @@ transformedShape model =
                             lowEdge // 2
 
                         shift =
-                            2 * rotation
+                            2 * rotation'
 
-                        { shape, mirrored, rotation } =
+                        baseShape =
                             toTransformedShape ( lowEdge - shift, highEdge - shift )
                     in
-                        { shape = shape
-                        , mirrored = mirrored
-                        , rotation = (rotation + rotation)
+                        { baseShape
+                            | rotation = baseShape.rotation + rotation'
                         }
     in
         toTransformedShape edgeNumbers

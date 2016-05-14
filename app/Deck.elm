@@ -1,4 +1,4 @@
-module Deck exposing (Model, Msg, view)
+module Deck exposing (Model, Msg(..), view)
 
 import Html exposing (Html)
 import Html.App exposing (map)
