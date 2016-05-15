@@ -1,9 +1,10 @@
 # elm
 elm-stuff
-elm.js
 
 # build artefacts
-dist
+index.html
+style.css
+elm.js
 
 # vim
 *.sw[a-z]

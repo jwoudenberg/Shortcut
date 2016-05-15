@@ -3,7 +3,6 @@ module Board exposing (Model, Msg(..), init, view)
 import Base exposing (Context, Location, position)
 import Html exposing (Html, div)
 import Html.App exposing (map)
-import Html.Attributes exposing (class)
 import Field
 
 
@@ -56,7 +55,5 @@ view { fieldSize } model =
                 |> position fieldSize location
                 |> map (\_ -> PlaceCard location)
     in
-        div
-            [ class "shortcut-board"
-            ]
+        div []
             (List.map field model)

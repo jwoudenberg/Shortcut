@@ -1,11 +1,11 @@
 module Card exposing (Model, Msg(..), update, view, init)
 
 import Html exposing (Html, div)
-import Base exposing (ID)
-import Html.Attributes exposing (style, classList)
+import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
 import Path.Main as Path
 import Path.Edge as Edge
+import StyleCss exposing (shortcutNamespace, Classes(..))
 
 
 -- MODEL
@@ -98,10 +98,10 @@ view model =
             ]
     in
         div
-            [ classList
-                [ ( "shortcut-card", True )
-                , ( "shortcut-box", True )
-                , ( "selected", model.selected )
+            [ shortcutNamespace.classList
+                [ ( Card, True )
+                , ( Box, True )
+                , ( Selected, model.selected )
                 ]
             , onClick clickMsg
             , style styleAttribute

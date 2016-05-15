@@ -1,55 +1,51 @@
-/* GAME */
-.shortcut-game {
-  position: relative
+.shortcutGame {
+    position: relative;
 }
 
-/* BOX */
-.shortcut-positioner {
-  /* Move the component over the border of the containing component. */
-  transition: top ease-in-out 300ms, left ease-in-out 300ms;
+.shortcutPositioner {
+    transition: top ease-in-out 300ms, left ease-in-out 300ms;
 }
 
-.shortcut-box {
-  position: absolute;
-  margin: -1px 0 0 -1px;
-  width: inherit;
-  height: inherit;
-  box-sizing: border-box;
+.shortcutBox {
+    position: absolute;
+    width: inherit;
+    height: inherit;
+    box-sizing: border-box;
+    margin: -1px 0 0 -1px;
 }
 
-/* PATH */
-.shortcut-path-container {
-  opacity:        0.6;
-  stroke:         #444444;
-  stroke-width:   14;
-  fill:           #444444;
-  transition:     opacity 1s, fill 1s, stroke 1s;
+.shortcutPathContainer {
+    opacity: 0.6;
+    stroke: #444444;
+    stroke-width: 14;
+    fill: #444444;
+    transition: opacity 1s, fill 1s, stroke 1s;
 }
 
-.shortcut-path-fill {
-  stroke:         none;
-  opacity:        0.2;
-  transition:     opacity 1s;
+.shortcutPathFill {
+    opacity: 0.2;
+    stroke: none;
+    transition: opacity 1s;
 }
 
-.shortcut-path-border {
-  fill:           none;
+.shortcutPathBorder {
+    fill: none;
 }
 
-/* CARD */
-.shortcut-card {
-  border:     1px solid #aaa;
-  background: #eee;
-  z-index:    1;
-  transition: transform ease-in-out 300ms, box-shadow 100ms;
-  overflow:   hidden;
+.shortcutCard {
+    border: 1px solid #aaa;
+    background-color: #eee;
+    z-index: 1;
+    transition: transform ease-in-out 300ms, box-shadow 100ms;
+    overflow: hidden;
+    width: 100px;
+    height: 100px;
 }
 
-.shortcut-card.selected {
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+.shortcutCard.shortcutSelected {
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 }
 
-/* FIELD */
-.shortcut-field {
-  border: 1px solid #ddd;
+.shortcutField {
+    border: 1px solid #ddd;
 }

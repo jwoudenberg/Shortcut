@@ -1,7 +1,9 @@
 module Base exposing (ID, Context, Location, position)
 
 import Html exposing (Html, div)
-import Html.Attributes exposing (style, class)
+import Html.Attributes exposing (style)
+import StyleCss exposing (shortcutNamespace, Classes(..))
+import Css exposing (asPairs, top, left, width, height, px)
 
 
 type alias ID =
@@ -23,7 +25,7 @@ position : Int -> Location -> Html msg -> Html msg
 position size location node =
     div
         [ style (positionStyle size location)
-        , class "shortcut-box shortcut-positioner"
+        , shortcutNamespace.class [ Positioner, Box ]
         ]
         [ node
         ]
@@ -38,8 +40,9 @@ positionStyle size { row, col } =
         y =
             row * (size - 1)
     in
-        [ ( "top", toString y ++ "px" )
-        , ( "left", toString x ++ "px" )
-        , ( "width", toString size ++ "px" )
-        , ( "height", toString size ++ "px" )
-        ]
+        asPairs
+            [ top (px y)
+            , left (px x)
+            , width (px size)
+            , height (px size)
+            ]

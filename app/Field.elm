@@ -1,8 +1,8 @@
 module Field exposing (Msg(..), view)
 
 import Html exposing (Html, div)
-import Html.Attributes exposing (class, style)
 import Html.Events exposing (onClick)
+import StyleCss exposing (shortcutNamespace, Classes(..))
 
 
 type Msg
@@ -16,7 +16,7 @@ type Msg
 view : Html Msg
 view =
     div
-        [ class "shortcut-field shortcut-box"
+        [ shortcutNamespace.class [ Field, Box ]
         , onClick Click
         ]
         []
