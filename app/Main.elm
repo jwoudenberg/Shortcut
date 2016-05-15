@@ -1,13 +1,14 @@
 module Shortcut exposing (..)
 
 import Html.App as Html
+import Base exposing (Context)
 import Board
 import Game
 
 
-fieldSize : Int
-fieldSize =
-    100
+context : Context
+context =
+    { fieldSize = 100 }
 
 
 boardSize : Int
@@ -17,9 +18,9 @@ boardSize =
 
 startGame : Game.Model
 startGame =
-    { cards = []
-    , board = Board.init boardSize fieldSize
-    , deck = { x = (boardSize + 1) * fieldSize, y = 0, size = fieldSize }
+    { positionedCards = []
+    , board = Board.init boardSize
+    , deckLocation = { col = (boardSize + 1), row = 0 }
     , nextId = 1
     , selectedCardId = 0
     }
@@ -40,7 +41,7 @@ main : Program Never
 main =
     Html.program
         { init = init
-        , view = Game.view
+        , view = (Game.view context)
         , update = update
         , subscriptions = \_ -> Sub.none
         }

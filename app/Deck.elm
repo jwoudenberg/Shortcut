@@ -1,4 +1,4 @@
-module Deck exposing (Model, Msg(..), view)
+module Deck exposing (Msg(..), view)
 
 import Html exposing (Html)
 import Html.App exposing (map)
@@ -6,10 +6,6 @@ import Field
 
 
 -- MODEL
-
-
-type alias Model =
-    Field.Model
 
 
 type Msg
@@ -20,7 +16,7 @@ type Msg
 ---- VIEW ----
 
 
-view : Model -> Html Msg
-view model =
-    Field.view model
+view : Html Msg
+view =
+    Field.view
         |> map (\_ -> Draw)

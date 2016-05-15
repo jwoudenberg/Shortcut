@@ -3,9 +3,8 @@ module Game exposing (Model, Msg, update, view)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.App exposing (map)
-import Base exposing (ID)
+import Base exposing (Context, ID, Location, position)
 import Board
-import Field
 import Deck
 import Card
 
@@ -13,10 +12,17 @@ import Card
 -- MODEL
 
 
+type alias PositionedCard =
+    { card : Card.Model
+    , id : ID
+    , location : Location
+    }
+
+
 type alias Model =
     { board : Board.Model
-    , cards : List Card.Model
-    , deck : Deck.Model
+    , positionedCards : List PositionedCard
+    , deckLocation : Location
     , selectedCardId : ID
     , nextId : ID
     }
@@ -49,8 +55,8 @@ update msg model =
 
         BoardMsg msg ->
             case msg of
-                Board.PlaceCard field ->
-                    moveCard field model
+                Board.PlaceCard location ->
+                    updatePositionedCard model.selectedCardId (moveCard location) model
 
         DeckMsg msg ->
             case msg of
@@ -58,57 +64,70 @@ update msg model =
                     drawCard model
 
 
+updatePositionedCard : ID -> (PositionedCard -> PositionedCard) -> Model -> Model
+updatePositionedCard id update model =
+    let
+        maybeUpdate : PositionedCard -> PositionedCard
+        maybeUpdate positionedCard =
+            if positionedCard.id == id then
+                update positionedCard
+            else
+                positionedCard
+    in
+        { model | positionedCards = List.map maybeUpdate model.positionedCards }
+
+
 updateCard : ID -> Card.Msg -> Model -> Model
 updateCard id msg model =
     let
-        maybeUpdate : Card.Model -> Card.Model
-        maybeUpdate card =
-            if card.id == id then
-                Card.update msg card
-            else
-                card
+        update : PositionedCard -> PositionedCard
+        update positionedCard =
+            { positionedCard | card = Card.update msg positionedCard.card }
     in
-        { model | cards = List.map maybeUpdate model.cards }
+        updatePositionedCard id update model
+
+
+moveCard : Location -> PositionedCard -> PositionedCard
+moveCard newLocation card =
+    { card | location = newLocation }
 
 
 selectCard : ID -> Model -> Model
 selectCard newSelectedCardId model =
     let
-        updateCard : Card.Model -> Card.Model
-        updateCard card =
-            if card.id == newSelectedCardId then
-                Card.update Card.Select card
-            else
-                Card.update Card.Deselect card
+        updatePositionedCard : PositionedCard -> PositionedCard
+        updatePositionedCard positionedCard =
+            let
+                msg : Card.Msg
+                msg =
+                    if positionedCard.id == newSelectedCardId then
+                        Card.Select
+                    else
+                        Card.Deselect
+            in
+                { positionedCard | card = (Card.update msg) positionedCard.card }
     in
         { model
             | selectedCardId = newSelectedCardId
-            , cards = List.map updateCard model.cards
+            , positionedCards = List.map updatePositionedCard model.positionedCards
         }
-
-
-moveCard : Field.Model -> Model -> Model
-moveCard field model =
-    let
-        msg : Msg
-        msg =
-            CardMsg model.selectedCardId (Card.Move field)
-    in
-        update msg model
 
 
 drawCard : Model -> Model
 drawCard model =
     let
-        newCard : Card.Model
+        newCard : PositionedCard
         newCard =
-            Card.init model.nextId model.deck
+            { id = model.nextId
+            , location = model.deckLocation
+            , card = Card.init
+            }
 
         addCard : Model -> Model
         addCard model =
             { model
                 | nextId = model.nextId + 1
-                , cards = model.cards ++ [ newCard ]
+                , positionedCards = model.positionedCards ++ [ newCard ]
             }
 
         selectAddedCard : Model -> Model
@@ -122,25 +141,27 @@ drawCard model =
 
 
 
----- VIEW ----
+-- VIEW
 
 
-view : Model -> Html Msg
-view model =
+view : Context -> Model -> Html Msg
+view context model =
     let
-        viewCard : Card.Model -> Html Msg
-        viewCard card =
-            Card.view card
-                |> map (CardMsg card.id)
+        viewCard : PositionedCard -> Html Msg
+        viewCard positionedCard =
+            Card.view positionedCard.card
+                |> position context.fieldSize positionedCard.location
+                |> map (CardMsg positionedCard.id)
 
         board : Html Msg
         board =
-            Board.view model.board
+            Board.view context model.board
                 |> map BoardMsg
 
         deck : Html Msg
         deck =
-            Deck.view model.deck
+            Deck.view
+                |> position context.fieldSize model.deckLocation
                 |> map DeckMsg
     in
         div
@@ -149,5 +170,5 @@ view model =
             [ board
             , deck
             , div []
-                (List.map viewCard model.cards)
+                (List.map viewCard model.positionedCards)
             ]

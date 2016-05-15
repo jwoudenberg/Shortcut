@@ -4,13 +4,17 @@
 }
 
 /* BOX */
+.shortcut-positioner {
+  /* Move the component over the border of the containing component. */
+  transition: top ease-in-out 300ms, left ease-in-out 300ms;
+}
+
 .shortcut-box {
   position: absolute;
+  margin: -1px 0 0 -1px;
   width: inherit;
   height: inherit;
   box-sizing: border-box;
-  /* Move the component over the border of the containing component. */
-  margin: -1px 0 0 -1px;
 }
 
 /* PATH */
@@ -23,13 +27,13 @@
 }
 
 .shortcut-path-fill {
-  stroke:         none !important;
+  stroke:         none;
   opacity:        0.2;
   transition:     opacity 1s;
 }
 
 .shortcut-path-border {
-  fill:           none !important;
+  fill:           none;
 }
 
 /* CARD */
@@ -37,10 +41,8 @@
   border:     1px solid #aaa;
   background: #eee;
   z-index:    1;
-  transition: transform ease-in-out 300ms, top ease-in-out 300ms, left ease-in-out 300ms, box-shadow 100ms;
+  transition: transform ease-in-out 300ms, box-shadow 100ms;
   overflow:   hidden;
-  width:      100px;
-  height:     100px
 }
 
 .shortcut-card.selected {

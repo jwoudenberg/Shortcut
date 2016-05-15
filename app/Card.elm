@@ -4,7 +4,6 @@ import Html exposing (Html, div)
 import Base exposing (ID)
 import Html.Attributes exposing (style, classList)
 import Html.Events exposing (onClick)
-import Field
 import Path.Main as Path
 import Path.Edge as Edge
 
@@ -19,9 +18,7 @@ type alias Rotation =
 type alias Model =
     { paths : List Path.Model
     , rotation : Int
-    , id : ID
     , selected : Bool
-    , field : Field.Model
     }
 
 
@@ -29,8 +26,8 @@ type alias Model =
 -- INIT
 
 
-init : ID -> Field.Model -> Model
-init id field =
+init : Model
+init =
     { paths =
         [ ( Edge.BottomLeft, Edge.TopRight )
         , ( Edge.BottomRight, Edge.RightBottom )
@@ -38,9 +35,7 @@ init id field =
         , ( Edge.LeftBottom, Edge.TopLeft )
         ]
     , rotation = 0
-    , id = id
     , selected = False
-    , field = field
     }
 
 
@@ -52,7 +47,6 @@ type Msg
     = Rotate
     | Select
     | Deselect
-    | Move Field.Model
 
 
 
@@ -70,9 +64,6 @@ update msg model =
 
         Deselect ->
             { model | selected = False }
-
-        Move newField ->
-            { model | field = newField }
 
 
 
@@ -105,7 +96,6 @@ view model =
             [ ( "transform", transformString model.rotation )
             , ( "z-index", zIndex )
             ]
-                ++ (Field.positionStyle model.field)
     in
         div
             [ classList

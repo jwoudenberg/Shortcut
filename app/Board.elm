@@ -1,6 +1,6 @@
 module Board exposing (Model, Msg(..), init, view)
 
-import Dict exposing (Dict)
+import Base exposing (Context, Location, position)
 import Html exposing (Html, div)
 import Html.App exposing (map)
 import Html.Attributes exposing (class)
@@ -10,43 +10,22 @@ import Field
 -- MODEL
 
 
-type alias Place =
-    ( Int, Int )
-
-
 type alias Model =
-    Dict Place Field.Model
+    List Location
 
 
 type Msg
-    = PlaceCard Field.Model
+    = PlaceCard Location
 
 
 
 -- INIT
 
 
-init : Int -> Int -> Model
-init boardSize fieldSize =
-    let
-        places : Int -> List Place
-        places boardSize =
-            selfprod [0..(boardSize - 1)]
-
-        field : Place -> Field.Model
-        field ( row, col ) =
-            { x = row * (fieldSize - 1)
-            , y = col * (fieldSize - 1)
-            , size = fieldSize
-            }
-
-        cell : Place -> Model
-        cell place =
-            Dict.singleton place
-                (field place)
-    in
-        List.map cell (places boardSize)
-            |> List.foldr Dict.union Dict.empty
+init : Int -> Model
+init boardSize =
+    selfprod [0..(boardSize - 1)]
+        |> List.map (\( row, col ) -> { row = row, col = col })
 
 
 selfprod : List a -> List ( a, a )
@@ -65,20 +44,19 @@ xprod xs ys =
 
 
 
----- VIEW ----
+-- VIEW
 
 
-view : Model -> Html Msg
-view model =
+view : Context -> Model -> Html Msg
+view { fieldSize } model =
     let
-        fields =
-            Dict.values model
-
-        drawField : Field.Model -> Html Msg
-        drawField field =
-            map (\_ -> PlaceCard field) (Field.view field)
+        field : Location -> Html Msg
+        field location =
+            Field.view
+                |> position fieldSize location
+                |> map (\_ -> PlaceCard location)
     in
         div
             [ class "shortcut-board"
             ]
-            (List.map drawField fields)
+            (List.map field model)
