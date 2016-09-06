@@ -7,3 +7,7 @@ This is a project I originally started to learn Javascript (old version sits in 
 Since then I've been returning to it as a means of teaching myself new concepts.
 
 In this altest iteration, I'm trying to rebuild in in elm-lang.
+
+Check below for another not completed version in a further stage of development.
+Place some cards and hover over paths.
+http://shortcut.jasperwoudenberg.com/
