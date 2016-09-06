@@ -1,12 +1,13 @@
 module Game exposing (Model, Msg, update, view)
 
 import Html exposing (Html, div)
+import Html.Attributes exposing (style)
 import Html.App exposing (map)
 import Base exposing (Context, ID, Location, position)
+import Styles
 import Board
 import Deck
 import Card
-import StyleCss exposing (shortcutNamespace, Classes(..))
 
 
 -- MODEL
@@ -165,7 +166,7 @@ view context model =
                 |> map DeckMsg
     in
         div
-            [ shortcutNamespace.class [ Game ]
+            [ style Styles.gameStyle
             ]
             [ board
             , deck

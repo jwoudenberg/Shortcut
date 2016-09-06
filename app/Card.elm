@@ -5,7 +5,7 @@ import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
 import Path.Main as Path
 import Path.Edge as Edge
-import StyleCss exposing (shortcutNamespace, Classes(..))
+import Styles
 
 
 -- MODEL
@@ -73,37 +73,15 @@ update msg model =
 view : Model -> Html Msg
 view model =
     let
-        transformString : Int -> String
-        transformString angle =
-            "rotate(" ++ toString (angle * 90) ++ "deg)"
-
         clickMsg : Msg
         clickMsg =
             if model.selected then
                 Rotate
             else
                 Select
-
-        zIndex : String
-        zIndex =
-            if model.selected then
-                "1"
-            else
-                "0"
-
-        styleAttribute : List ( String, String )
-        styleAttribute =
-            [ ( "transform", transformString model.rotation )
-            , ( "z-index", zIndex )
-            ]
     in
         div
-            [ shortcutNamespace.classList
-                [ ( Card, True )
-                , ( Box, True )
-                , ( Selected, model.selected )
-                ]
-            , onClick clickMsg
-            , style styleAttribute
+            [ onClick clickMsg
+            , style (Styles.cardStyle model.rotation model.selected)
             ]
             (List.map Path.view model.paths)

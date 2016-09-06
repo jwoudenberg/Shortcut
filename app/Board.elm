@@ -32,7 +32,7 @@ selfprod xs =
     xprod xs xs
 
 
-xprod : List a -> List a -> List ( a, a )
+xprod : List a -> List b -> List ( a, b )
 xprod xs ys =
     case xs of
         [] ->
