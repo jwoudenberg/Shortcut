@@ -1,6 +1,7 @@
-module Model exposing (Model, PositionedCard, Location, Msg(..), update, initBoard)
+module Model exposing (Model, ID, PositionedCard, Location, Msg(..), update, initBoard)
 
 import Card.Model as Card
+import List.Extra
 
 
 type alias Model =
@@ -17,6 +18,7 @@ type alias PositionedCard =
     { card : Card.Model
     , id : ID
     , location : Location
+    , rotation : Int
     }
 
 
@@ -31,8 +33,9 @@ type alias Location =
 
 
 type Msg
-    = CardMsg ID Card.Msg
-    | PlaceCard Location
+    = SelectCard ID
+    | RotateCard ID
+    | MoveSelectedCard Location
     | DrawCard
 
 
@@ -44,13 +47,13 @@ update msg model =
 update' : Msg -> Model -> Model
 update' msg model =
     case msg of
-        CardMsg id (Card.Select) ->
+        SelectCard id ->
             selectCard id model
 
-        CardMsg id msg ->
-            updateCard id msg model
+        RotateCard id ->
+            updatePositionedCard id rotateCard model
 
-        PlaceCard location ->
+        MoveSelectedCard location ->
             updatePositionedCard model.selectedCardId (moveCard location) model
 
         DrawCard ->
@@ -58,79 +61,53 @@ update' msg model =
 
 
 updatePositionedCard : ID -> (PositionedCard -> PositionedCard) -> Model -> Model
-updatePositionedCard id update model =
-    let
-        maybeUpdate : PositionedCard -> PositionedCard
-        maybeUpdate positionedCard =
-            if positionedCard.id == id then
-                update positionedCard
-            else
-                positionedCard
-    in
-        { model | positionedCards = List.map maybeUpdate model.positionedCards }
-
-
-updateCard : ID -> Card.Msg -> Model -> Model
-updateCard id msg model =
-    let
-        update : PositionedCard -> PositionedCard
-        update positionedCard =
-            { positionedCard | card = Card.update msg positionedCard.card }
-    in
-        updatePositionedCard id update model
+updatePositionedCard id fn model =
+    { model
+        | positionedCards =
+            List.Extra.updateIf
+                (.id >> (==) id)
+                fn
+                model.positionedCards
+    }
 
 
 moveCard : Location -> PositionedCard -> PositionedCard
-moveCard newLocation card =
-    { card | location = newLocation }
+moveCard newLocation positionedCard =
+    { positionedCard
+        | location = newLocation
+    }
+
+
+rotateCard : PositionedCard -> PositionedCard
+rotateCard positionedCard =
+    { positionedCard
+        | rotation = positionedCard.rotation + 1
+    }
 
 
 selectCard : ID -> Model -> Model
 selectCard newSelectedCardId model =
-    let
-        updatePositionedCard : PositionedCard -> PositionedCard
-        updatePositionedCard positionedCard =
-            let
-                msg : Card.Msg
-                msg =
-                    if positionedCard.id == newSelectedCardId then
-                        Card.Select
-                    else
-                        Card.Deselect
-            in
-                { positionedCard | card = (Card.update msg) positionedCard.card }
-    in
-        { model
-            | selectedCardId = newSelectedCardId
-            , positionedCards = List.map updatePositionedCard model.positionedCards
-        }
+    { model
+        | selectedCardId = newSelectedCardId
+    }
+
+
+initPositionedCard : ID -> Location -> PositionedCard
+initPositionedCard id location =
+    { id = id
+    , location = location
+    , card = Card.init
+    , rotation = 0
+    }
 
 
 drawCard : Model -> Model
 drawCard model =
-    let
-        newCard : PositionedCard
-        newCard =
-            { id = model.nextId
-            , location = model.deckLocation
-            , card = Card.init
-            }
-
-        addCard : Model -> Model
-        addCard model =
-            { model
-                | nextId = model.nextId + 1
-                , positionedCards = model.positionedCards ++ [ newCard ]
-            }
-
-        selectAddedCard : Model -> Model
-        selectAddedCard model =
-            update' (CardMsg newCard.id Card.Select)
-                model
-    in
-        model
-            |> addCard
-            |> selectAddedCard
+    { model
+        | positionedCards = model.positionedCards ++ [ initPositionedCard model.nextId model.deckLocation ]
+        , selectedCardId = model.nextId
+        , nextId = model.nextId + 1
+    }
 
 
 initBoard : Int -> List Location

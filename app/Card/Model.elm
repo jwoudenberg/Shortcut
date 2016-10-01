@@ -1,4 +1,4 @@
-module Card.Model exposing (Model, Path, Edge(..), Msg(..), update, init)
+module Card.Model exposing (Model, Path, Edge(..), Msg(..), init)
 
 
 type alias Rotation =
@@ -6,10 +6,7 @@ type alias Rotation =
 
 
 type alias Model =
-    { paths : List Path
-    , rotation : Int
-    , selected : Bool
-    }
+    List Path
 
 
 type alias Path =
@@ -29,32 +26,13 @@ type Edge
 
 
 type Msg
-    = Rotate
-    | Select
-    | Deselect
+    = Clicked
 
 
 init : Model
 init =
-    { paths =
-        [ ( BottomLeft, TopRight )
-        , ( BottomRight, RightBottom )
-        , ( RightTop, LeftTop )
-        , ( LeftBottom, TopLeft )
-        ]
-    , rotation = 0
-    , selected = False
-    }
-
-
-update : Msg -> Model -> Model
-update msg model =
-    case msg of
-        Rotate ->
-            { model | rotation = model.rotation + 1 }
-
-        Select ->
-            { model | selected = True }
-
-        Deselect ->
-            { model | selected = False }
+    [ ( BottomLeft, TopRight )
+    , ( BottomRight, RightBottom )
+    , ( RightTop, LeftTop )
+    , ( LeftBottom, TopLeft )
+    ]

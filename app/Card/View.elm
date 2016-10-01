@@ -27,21 +27,13 @@ type alias TransformedShape =
     }
 
 
-view : Model -> Html Msg
-view model =
-    let
-        clickMsg : Msg
-        clickMsg =
-            if model.selected then
-                Rotate
-            else
-                Select
-    in
-        div
-            [ onClick clickMsg
-            , style (Styles.cardStyle model.rotation model.selected)
-            ]
-            (List.map pathView model.paths)
+view : { rotation : Int, selected : Bool } -> Model -> Html Msg
+view { rotation, selected } model =
+    div
+        [ onClick Clicked
+        , style (Styles.cardStyle rotation selected)
+        ]
+        (List.map pathView model)
 
 
 pathView : Path -> Html msg

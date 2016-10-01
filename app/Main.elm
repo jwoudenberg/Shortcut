@@ -10,22 +10,27 @@ boardSize =
     4
 
 
-startGame : Model
-startGame =
+fieldSize : Int
+fieldSize =
+    100
+
+
+initModel : Model
+initModel =
     { positionedCards = []
     , board = Model.initBoard boardSize
     , deckLocation = { col = (boardSize + 1), row = 0 }
     , nextId = 1
     , selectedCardId = 0
-    , fieldSize = 100
+    , fieldSize = fieldSize
     }
 
 
 main : Program Never
 main =
     App.program
-        { init = startGame ! []
+        { init = initModel ! []
         , view = View.view
         , update = Model.update
-        , subscriptions = \_ -> Sub.none
+        , subscriptions = always Sub.none
         }

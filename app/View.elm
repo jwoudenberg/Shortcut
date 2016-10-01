@@ -1,7 +1,9 @@
 module View exposing (view)
 
-import Model exposing (Model, PositionedCard, Location, Msg(..))
+import Model exposing (Model, ID, PositionedCard, Location, Msg(..))
+import List.Extra
 import Card.View as Card
+import Card.Model
 import Html exposing (..)
 import Html.App as App
 import Html.Attributes exposing (..)
@@ -16,16 +18,35 @@ view model =
         ]
         [ boardView model.fieldSize model.board
         , deckView model.fieldSize model.deckLocation
-        , div []
-            (List.map (positionedCardView model.fieldSize) model.positionedCards)
+        , cardsView model.fieldSize model.selectedCardId model.positionedCards
         ]
 
 
-positionedCardView : Int -> PositionedCard -> Html Msg
-positionedCardView fieldSize positionedCard =
-    [ Card.view positionedCard.card ]
-        |> div [ style (Styles.positionStyle fieldSize positionedCard.location) ]
-        |> App.map (CardMsg positionedCard.id)
+cardsView : Int -> ID -> List PositionedCard -> Html Msg
+cardsView fieldSize selectedCardId positionedCards =
+    div []
+        (List.map
+            (\card -> positionedCardView fieldSize (card.id == selectedCardId) card)
+            positionedCards
+        )
+
+
+positionedCardView : Int -> Bool -> PositionedCard -> Html Msg
+positionedCardView fieldSize selected positionedCard =
+    Card.view { selected = selected, rotation = positionedCard.rotation } positionedCard.card
+        |> App.map (mapCardMsg selected positionedCard.id)
+        |> List.Extra.singleton
+        |> div
+            [ style (Styles.positionStyle fieldSize positionedCard.location)
+            ]
+
+
+mapCardMsg : Bool -> ID -> Card.Model.Msg -> Msg
+mapCardMsg selected id (Card.Model.Clicked) =
+    if selected then
+        RotateCard id
+    else
+        SelectCard id
 
 
 boardView : Int -> List Location -> Html Msg
@@ -38,7 +59,7 @@ fieldView : Int -> Location -> Html Msg
 fieldView fieldSize location =
     div
         [ style (Styles.fieldStyle fieldSize location)
-        , onClick (PlaceCard location)
+        , onClick (MoveSelectedCard location)
         ]
         []
 
