@@ -1,14 +1,8 @@
-module Shortcut exposing (..)
+module Shortcut exposing (main)
 
-import Html.App as Html
-import Base exposing (Context)
-import Board
-import Game
-
-
-context : Context
-context =
-    { fieldSize = 100 }
+import Html.App as App
+import Model exposing (..)
+import View
 
 
 boardSize : Int
@@ -16,32 +10,22 @@ boardSize =
     4
 
 
-startGame : Game.Model
+startGame : Model
 startGame =
     { positionedCards = []
-    , board = Board.init boardSize
+    , board = Model.initBoard boardSize
     , deckLocation = { col = (boardSize + 1), row = 0 }
     , nextId = 1
     , selectedCardId = 0
+    , fieldSize = 100
     }
-
-
-init : ( Game.Model, Cmd a )
-init =
-    ( startGame, Cmd.none )
-
-
-update : Game.Msg -> Game.Model -> ( Game.Model, Cmd a )
-update msg model =
-    Game.update msg model
-        |> \model -> ( model, Cmd.none )
 
 
 main : Program Never
 main =
-    Html.program
-        { init = init
-        , view = (Game.view context)
-        , update = update
+    App.program
+        { init = startGame ! []
+        , view = View.view
+        , update = Model.update
         , subscriptions = \_ -> Sub.none
         }

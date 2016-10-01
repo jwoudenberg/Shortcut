@@ -1,16 +1,16 @@
-module Game exposing (Model, Msg, update, view)
+module Model exposing (Model, PositionedCard, Location, Msg(..), update, initBoard)
 
-import Html exposing (Html, div)
-import Html.Attributes exposing (style)
-import Html.App exposing (map)
-import Base exposing (Context, ID, Location, position)
-import Styles
-import Board
-import Deck
-import Card
+import Card.Model as Card
 
 
--- MODEL
+type alias Model =
+    { board : List Location
+    , positionedCards : List PositionedCard
+    , deckLocation : Location
+    , selectedCardId : ID
+    , nextId : ID
+    , fieldSize : Int
+    }
 
 
 type alias PositionedCard =
@@ -20,49 +20,41 @@ type alias PositionedCard =
     }
 
 
-type alias Model =
-    { board : Board.Model
-    , positionedCards : List PositionedCard
-    , deckLocation : Location
-    , selectedCardId : ID
-    , nextId : ID
+type alias ID =
+    Int
+
+
+type alias Location =
+    { row : Int
+    , col : Int
     }
-
-
-
--- MSG
 
 
 type Msg
     = CardMsg ID Card.Msg
-    | BoardMsg Board.Msg
-    | DeckMsg Deck.Msg
+    | PlaceCard Location
+    | DrawCard
 
 
-
--- UPDATE
-
-
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
+    (update' msg model) ! []
+
+
+update' : Msg -> Model -> Model
+update' msg model =
     case msg of
+        CardMsg id (Card.Select) ->
+            selectCard id model
+
         CardMsg id msg ->
-            case msg of
-                Card.Select ->
-                    selectCard id model
+            updateCard id msg model
 
-                _ ->
-                    updateCard id msg model
+        PlaceCard location ->
+            updatePositionedCard model.selectedCardId (moveCard location) model
 
-        BoardMsg msg ->
-            case msg of
-                Board.PlaceCard location ->
-                    updatePositionedCard model.selectedCardId (moveCard location) model
-
-        DeckMsg msg ->
-            case msg of
-                Deck.Draw ->
-                    drawCard model
+        DrawCard ->
+            drawCard model
 
 
 updatePositionedCard : ID -> (PositionedCard -> PositionedCard) -> Model -> Model
@@ -133,7 +125,7 @@ drawCard model =
 
         selectAddedCard : Model -> Model
         selectAddedCard model =
-            update (CardMsg newCard.id Card.Select)
+            update' (CardMsg newCard.id Card.Select)
                 model
     in
         model
@@ -141,35 +133,22 @@ drawCard model =
             |> selectAddedCard
 
 
+initBoard : Int -> List Location
+initBoard boardSize =
+    selfprod [0..(boardSize - 1)]
+        |> List.map (\( row, col ) -> { row = row, col = col })
 
--- VIEW
+
+selfprod : List a -> List ( a, a )
+selfprod xs =
+    xprod xs xs
 
 
-view : Context -> Model -> Html Msg
-view context model =
-    let
-        viewCard : PositionedCard -> Html Msg
-        viewCard positionedCard =
-            Card.view positionedCard.card
-                |> position context.fieldSize positionedCard.location
-                |> map (CardMsg positionedCard.id)
+xprod : List a -> List b -> List ( a, b )
+xprod xs ys =
+    case xs of
+        [] ->
+            []
 
-        board : Html Msg
-        board =
-            Board.view context model.board
-                |> map BoardMsg
-
-        deck : Html Msg
-        deck =
-            Deck.view
-                |> position context.fieldSize model.deckLocation
-                |> map DeckMsg
-    in
-        div
-            [ style Styles.gameStyle
-            ]
-            [ board
-            , deck
-            , div []
-                (List.map viewCard model.positionedCards)
-            ]
+        x :: xs' ->
+            (List.map ((,) x) ys) ++ (xprod xs' ys)

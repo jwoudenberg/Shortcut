@@ -72,12 +72,13 @@ cardStyle rotation selected =
         ]
 
 
-fieldStyle : List ( String, String )
-fieldStyle =
+fieldStyle : Int -> { row : Int, col : Int } -> List ( String, String )
+fieldStyle size location =
     Css.asPairs
         [ border3 (px 1) solid (hex "ddd")
         ]
         ++ boxStyle
+        ++ positionStyle size location
 
 
 pathStyle : List ( String, String )
@@ -96,13 +97,13 @@ boxStyle =
         ]
 
 
-positionStyle : Int -> Int -> Int -> List ( String, String )
-positionStyle size row col =
-    boxStyle
-        ++ Css.asPairs
-            [ property "transition" "top ease-in-out 300ms, left ease-in-out 300ms"
-            , top (px <| toFloat <| row * (size - 1))
-            , left (px <| toFloat <| col * (size - 1))
-            , width (px <| toFloat size)
-            , height (px <| toFloat size)
-            ]
+positionStyle : Int -> { row : Int, col : Int } -> List ( String, String )
+positionStyle size { row, col } =
+    Css.asPairs
+        [ property "transition" "top ease-in-out 300ms, left ease-in-out 300ms"
+        , position absolute
+        , top (px <| toFloat <| row * (size - 1))
+        , left (px <| toFloat <| col * (size - 1))
+        , width (px <| toFloat size)
+        , height (px <| toFloat size)
+        ]
